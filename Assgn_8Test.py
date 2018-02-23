@@ -31,8 +31,29 @@ class BasicTest(unittest.TestCase):
         b = 0
 
         kab = getEnergyDensity(dims, intpt, xa, a, b)
+        
         # come back to this answer and check
         correct = [[1.84551963e+11, 8.88583526e+10], [8.88583526e+10, 1.84551963e+11]]
+        for i in range(len(kab)):  # for every row...
+            for j in range(len(kab)):  # for every column...
+                self.assertAlmostEqual(kab[i][j]/correct[i][j], 1)
+
+    # finally, we test the 3D outputs of the integrand
+    def test_getEnDen3D(self):
+        dims = 3
+        intpt = 0
+        xa = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+              [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+        a = 0
+        b = 0
+
+        kab = getEnergyDensity(dims, intpt, xa, a, b)
+        
+        # come back to this answer and check
+        correct = [[  1.63686149e+11,   7.44027950e+10,   7.44027950e+10],
+                   [  7.44027950e+10,   1.63686149e+11,   7.44027950e+10],
+                   [  7.44027950e+10,   7.44027950e+10,   1.63686149e+11]]
+        
         for i in range(len(kab)):  # for every row...
             for j in range(len(kab)):  # for every column...
                 self.assertAlmostEqual(kab[i][j]/correct[i][j], 1)
