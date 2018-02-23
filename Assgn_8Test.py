@@ -16,10 +16,14 @@ class BasicTest(unittest.TestCase):
         dims = 1
         intpt = 0
         xa = [[0, 0, 0], [1, 0, 0]]
+        basis = getBasis(dims)
+        Bmats, scale = getBandScale(dims, basis, intpt, xa)
+        D = getStiff(dims)  # the 'D' matrix
+
         # Next, we test for all combinations of 'a' and 'b'
         for i in range(2):  # for every 'a' or local element #...
             for j in range(2):  # for every 'b'...
-                kab = getEnergyDensity(dims, intpt, xa, i, j)
+                kab = getEnergyDensity(D, Bmats[i], Bmats[j])
                 self.assertAlmostEqual(kab, (-1)**(i+j)*200e9)
 
     # next, we test in 2D
@@ -29,8 +33,11 @@ class BasicTest(unittest.TestCase):
         xa = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]
         a = 0
         b = 0
+        basis = getBasis(dims)
+        Bmats, scale = getBandScale(dims, basis, intpt, xa)
+        D = getStiff(dims)  # the 'D' matrix
 
-        kab = getEnergyDensity(dims, intpt, xa, a, b)
+        kab = getEnergyDensity(D, Bmats[a], Bmats[b])
         
         # come back to this answer and check
         correct = [[1.84551963e+11, 8.88583526e+10], [8.88583526e+10, 1.84551963e+11]]
@@ -46,8 +53,11 @@ class BasicTest(unittest.TestCase):
               [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
         a = 0
         b = 0
+        basis = getBasis(dims)
+        Bmats, scale = getBandScale(dims, basis, intpt, xa)
+        D = getStiff(dims)  # the 'D' matrix
 
-        kab = getEnergyDensity(dims, intpt, xa, a, b)
+        kab = getEnergyDensity(D, Bmats[a], Bmats[b])
         
         # come back to this answer and check
         correct = [[  1.63686149e+11,   7.44027950e+10,   7.44027950e+10],
