@@ -22,28 +22,57 @@ from Assignment_6 import getStiff, getBandScale
 
 # The outputs are:
 
-def getEnergyDensity(dims, intpt, xa, a, b):
-    D = getStiff(dims)  # the 'D' matrix
-    basis = getBasis(dims)
-    # now, get the 'Bmat' for the integration point
-    Bmats = getBandScale(dims, basis, intpt, xa)
-
+def getEnergyDensity(D, Ba, Bb):
     # Now, get the matrix product
-    k_ab = np.dot(np.transpose(Bmats[a]), np.dot(np.array(D), Bmats[b]))
+    k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
 
     return k_ab
 
 ##########################################################################
 
-# One essential function that is needed will return the stiffness matrix 'K' for the system.
+# Before we can successfully calculate the stiffness matrix, we need to implement
+# an integral of the energy density function in this file.
 
 # The inputs are:
 
 # The outputs are:
 
+def gaussIntKMat(func, dims, xa):
+    basis = getBasis(dims)
+    numA = dims**2
+    D = getStiff(dims)  # the 'D' matrix
+    w = 1  # the gauss point integral weight (2 pts)
+    ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
 
-def getKmatrix():
+    for i in range(len(basis[0])):  # for every integration point...
+        # now, get the 'Bmat' for the integration point
+        Bmats, scale = getBandScale(dims, basis, intpt, xa)
 
+        for j in range(numA):  # for the 'a'-th basis function...
+            for k in range(numA):  # for the 'b'-th basis function...
+                kab = getEnergyDensity(D, Bmats[j], Bmats[k])
+
+                # then, we assemble 'kab' into the appropriate slot in 'ke'
+                for m in range(len(kab)):  # for every row...
+                    for n in range(len(kab[0])):  # for every column...
+                        ke[j*dims + m][k*dims + n] = kab[m][n]
+    return ke
+
+############################################################################################
+
+# One essential function that is needed will return the stiffness matrix 'K' for the system.
+
+# The inputs are:
+# 'dims' - number of problem dimensions (1, 2, 3)
+
+# The outputs are:
+
+
+def getElemKmatrix(dims):
+    # to get the elemental stiffness matrix, we need to integrate every combination of
+    # elemental integrand.
+    
+    
     return 0
 
 ###################################################################
