@@ -64,7 +64,7 @@ def getXaArray(e, nodes, ien):
 # This function gets the 'B' matrix for the given number of dimensions.
 # The inputs are:
 # 'numD' - the number of dimensions of the main (problem) domain 'sigma'
-# 'basis' - the basis function evaluations at all element integration points
+# 'basis' - the complete set of basis function evaluations at all element integration points
 # 'intpt' - the particular integration (Gauss) point in question
 # 'a' - the basis function index (0, 1, 2...) at the element level (not global A)
 # 'xa' - a vector of the 3D coordinates of the element nodes of size
