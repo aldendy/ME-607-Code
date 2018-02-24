@@ -25,6 +25,9 @@ from Assignment_6 import getStiff, getBandScale
 def getEnergyDensity(D, Ba, Bb):
     # Now, get the matrix product
     k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
+    
+    if type(k_ab).__name__ != 'ndarray':
+        k_ab = [[k_ab]]
 
     return k_ab
 
@@ -39,11 +42,11 @@ def getEnergyDensity(D, Ba, Bb):
 
 def gaussIntKMat(dims, xa):
     basis = getBasis(dims)
-    numA = dims**2
+    numA = 2**dims
     D = getStiff(dims)  # the 'D' matrix
     w = 1  # the gauss point integral weight (2 pts)
     ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
-
+    
     for i in range(len(basis[0])):  # for every integration point...
         # now, get the 'Bmat' for the integration point
         Bmats, scale = getBandScale(dims, basis, i, xa)
@@ -51,7 +54,7 @@ def gaussIntKMat(dims, xa):
         for j in range(numA):  # for the 'a'-th basis function...
             for k in range(numA):  # for the 'b'-th basis function...
                 kab = getEnergyDensity(D, Bmats[j], Bmats[k])
-
+                
                 # then, we assemble 'kab' into the appropriate slot in 'ke'
                 for m in range(len(kab)):  # for every row...
                     for n in range(len(kab[0])):  # for every column...

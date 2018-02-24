@@ -24,7 +24,7 @@ class EnergyDensityTest(unittest.TestCase):
         for i in range(2):  # for every 'a' or local element #...
             for j in range(2):  # for every 'b'...
                 kab = getEnergyDensity(D, Bmats[i], Bmats[j])
-                self.assertAlmostEqual(kab, (-1)**(i+j)*200e9)
+                self.assertAlmostEqual(kab[0][0], (-1)**(i+j)*200e9)
 
     # next, we test in 2D
     def test_getEnDen2D(self):
@@ -77,10 +77,10 @@ class ElementStiffMatrixTest(unittest.TestCase):
         dims = 1  # one dimension
         xa = [[0, 0, 0], [1, 0, 0]]  # the real coordinates of the elem. nodes
         emat = gaussIntKMat(dims, xa)
-        print(emat)
+        
         for i in range(len(emat)):  # for every row...
             for j in range(len(emat[0])):  # for every column...
-                self.assertAlmostEqual(emat[i][j], 1)
+                self.assertAlmostEqual(emat[i][j], (-1)**(i+j)*2e11)
 
 ################################################################
 
