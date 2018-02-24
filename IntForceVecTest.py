@@ -244,7 +244,8 @@ class IntForceVecAssemblyTest(unittest.TestCase):
                 self.ndim3 = 3
                 self.numE3 = 1
                 self.deform3 = [0, 0, 0, 0.1, 0, 0, 0, -0.03, 0, 0.1, -0.03, 0,
-                                0, 0, -0.03, 0.1, 0, -0.03, 0, -0.03, -0.03, 0.1, -0.03, -0.03]  
+                                0, 0, -0.03, 0.1, 0, -0.03, 0, -0.03, -0.03, 0.1,
+                                -0.03, -0.03]  
 
         # next, we test the force vector stackup process for one dimension
         def test_intForceVecOutput1D(self):

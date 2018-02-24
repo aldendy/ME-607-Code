@@ -67,7 +67,8 @@ def nodeList(M, N, P, m, n=0, p=0):  # dimensions other than 'x' default to zero
 # 'n' - the number of elements in the y-direction (optional)
 # 'p' - the number of elements in the z-direction (optional)
 
-# This function returns and array 'global node #' = ien('e = element #', 'a = local node number')
+# This function returns and array
+# 'global node #' = ien('e = element #', 'a = local node number')
 
 def get_ien(m, n=0, p=0):
 	size = 2  # the number of nodes per edge
@@ -77,7 +78,7 @@ def get_ien(m, n=0, p=0):
 		
 		for e in range(m):
 			for i in range(size):
-				ien[e][i] = e*(size-1) + i 
+				ien[e][i] = e*(size-1) + i
 			
 	if (n > 0) and (p == 0):
 		ien = np.zeros([m*n, size**2])  # the connectivity array with two edges worth of nodes
