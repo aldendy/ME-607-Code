@@ -37,7 +37,7 @@ def getEnergyDensity(D, Ba, Bb):
 
 # The outputs are:
 
-def gaussIntKMat(func, dims, xa):
+def gaussIntKMat(dims, xa):
     basis = getBasis(dims)
     numA = dims**2
     D = getStiff(dims)  # the 'D' matrix
@@ -46,7 +46,7 @@ def gaussIntKMat(func, dims, xa):
 
     for i in range(len(basis[0])):  # for every integration point...
         # now, get the 'Bmat' for the integration point
-        Bmats, scale = getBandScale(dims, basis, intpt, xa)
+        Bmats, scale = getBandScale(dims, basis, i, xa)
 
         for j in range(numA):  # for the 'a'-th basis function...
             for k in range(numA):  # for the 'b'-th basis function...
@@ -55,7 +55,7 @@ def gaussIntKMat(func, dims, xa):
                 # then, we assemble 'kab' into the appropriate slot in 'ke'
                 for m in range(len(kab)):  # for every row...
                     for n in range(len(kab[0])):  # for every column...
-                        ke[j*dims + m][k*dims + n] = kab[m][n]
+                        ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
     return ke
 
 ############################################################################################
