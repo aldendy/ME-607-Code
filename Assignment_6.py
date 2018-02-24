@@ -257,7 +257,8 @@ def intForceVec(nodes, ien, numD, numE, deform):
                 # for this particular element vector, we then assemble it into the global vector 
                 for j in range(len(basis[0][0])):  # for each basis function...
                         for k in range(numD):  # for each dimension...
-                                Fint[numD*ien[i][j] + k] += fai[numD*j + k][0] # assemble the correct values 
+                                # assemble the correct values 
+                                Fint[numD*int(ien[i][j]) + k] += fai[numD*j + k][0] 
                 
         return Fint 
         

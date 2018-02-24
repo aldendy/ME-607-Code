@@ -10,7 +10,7 @@ from Assignment_8 import *
 # The first test to implement will determine if the stiffnes matrix
 # integrand in 'getEnergyDensity' is working properly.
 
-class BasicTest(unittest.TestCase):
+class EnergyDensityTest(unittest.TestCase):
     # Here, we perform a simple test on the integrand.
     def test_getEnDen1D(self):
         dims = 1
@@ -24,7 +24,7 @@ class BasicTest(unittest.TestCase):
         for i in range(2):  # for every 'a' or local element #...
             for j in range(2):  # for every 'b'...
                 kab = getEnergyDensity(D, Bmats[i], Bmats[j])
-                self.assertAlmostEqual(kab, (-1)**(i+j)*200e9)
+                self.assertAlmostEqual(kab[0][0], (-1)**(i+j)*200e9)
 
     # next, we test in 2D
     def test_getEnDen2D(self):
@@ -70,10 +70,51 @@ class BasicTest(unittest.TestCase):
 
 ###################################################################
 
+# Here, we perform testing on the element stiffness matrix
+class ElementStiffMatrixTest(unittest.TestCase):
+    # Here, we test the integration in 1D
+    def test_1DElemStiffMat(self):
+        dims = 1  # one dimension
+        xa = [[0, 0, 0], [1, 0, 0]]  # the real coordinates of the elem. nodes
+        emat = gaussIntKMat(dims, xa)
+        
+        for i in range(len(emat)):  # for every row...
+            for j in range(len(emat[0])):  # for every column...
+                self.assertAlmostEqual(emat[i][j], (-1)**(i+j)*2e11)
+
+    # Next, we test the 2D case. Currently, we only test for symmetry and that
+    # the matix is the correct size
+    def test_2DElemStiffMat(self):
+        dims = 2
+        xa = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]
+        emat = gaussIntKMat(dims, xa)
+        
+        for i in range(len(emat)):  # for every row...
+            for j in range(len(emat[0])):  # for every column...
+                # at the very least, the matrix should be symmetric
+                self.assertAlmostEqual(emat[i][j], emat[j][i])
+                self.assertEqual(len(emat), 8)
+
+    # Finally, we test the 3D variant for symmetry and the correct size
+    def test_3DElemStiffMat(self):
+        dims = 3
+        xa = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+              [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+        emat = gaussIntKMat(dims, xa)
+        
+        for i in range(len(emat)):  # for every row...
+            for j in range(len(emat[0])):  # for every column...
+                # at the very least, the matrix should be symmetric
+                self.assertAlmostEqual(emat[i][j]/emat[j][i], 1)
+                self.assertEqual(len(emat), 24)
+
+################################################################
+
 # Now the testing.
         
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(BasicTest)
+Suite1 = unittest.TestLoader().loadTestsFromTestCase(EnergyDensityTest)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(ElementStiffMatrixTest)
 
-FullSuite = unittest.TestSuite([Suite1])
+FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
