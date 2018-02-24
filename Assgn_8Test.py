@@ -82,6 +82,32 @@ class ElementStiffMatrixTest(unittest.TestCase):
             for j in range(len(emat[0])):  # for every column...
                 self.assertAlmostEqual(emat[i][j], (-1)**(i+j)*2e11)
 
+    # Next, we test the 2D case. Currently, we only test for symmetry and that
+    # the matix is the correct size
+    def test_2DElemStiffMat(self):
+        dims = 2
+        xa = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]
+        emat = gaussIntKMat(dims, xa)
+        
+        for i in range(len(emat)):  # for every row...
+            for j in range(len(emat[0])):  # for every column...
+                # at the very least, the matrix should be symmetric
+                self.assertAlmostEqual(emat[i][j], emat[j][i])
+                self.assertEqual(len(emat), 8)
+
+    # Finally, we test the 3D variant for symmetry and the correct size
+    def test_3DElemStiffMat(self):
+        dims = 3
+        xa = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+              [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+        emat = gaussIntKMat(dims, xa)
+        
+        for i in range(len(emat)):  # for every row...
+            for j in range(len(emat[0])):  # for every column...
+                # at the very least, the matrix should be symmetric
+                self.assertAlmostEqual(emat[i][j]/emat[j][i], 1)
+                self.assertEqual(len(emat), 24)
+
 ################################################################
 
 # Now the testing.
