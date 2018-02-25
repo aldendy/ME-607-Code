@@ -2,6 +2,8 @@
 
 
 import unittest
+from Assignment_1 import *
+from Assignment_2 import *
 from Assignment_8 import *
 
 
@@ -110,11 +112,31 @@ class ElementStiffMatrixTest(unittest.TestCase):
 
 ################################################################
 
+# This class intends to test the stiffness matrix assembly process
+
+class StiffMatrixAssemblyTest(unittest.TestCase):
+    # Here, we test a 1D case of the problem
+    def test_1DstiffMat(self):
+        enum = 2  # number of elements
+        nodes = nodeList(1, 1, 1, enum)
+        ien = get_ien(enum)
+        ien = get_ien(enum)
+        cons, loads = load_and_cons(enum, len(nodes), 1)
+        kmat = getStiffMatrix(nodes, ien, cons)
+
+        self.assertEqual(len(kmat), len(nodes))  # checks number of rows
+        self.assertEqual(len(kmat[0]), len(nodes))  # checks row size
+
+    # Next, we test the 2D case
+
+################################################################
+
 # Now the testing.
         
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(EnergyDensityTest)
 Suite2 = unittest.TestLoader().loadTestsFromTestCase(ElementStiffMatrixTest)
+Suite3 = unittest.TestLoader().loadTestsFromTestCase(StiffMatrixAssemblyTest)
 
-FullSuite = unittest.TestSuite([Suite1, Suite2])
+FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

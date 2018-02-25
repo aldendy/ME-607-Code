@@ -4,7 +4,7 @@
 
 import numpy as np
 from Assignment_4 import getBasis
-from Assignment_6 import getStiff, getBandScale
+from Assignment_6 import getStiff, getBandScale, getXaArray
 
 
 ####################################################################
@@ -34,11 +34,17 @@ def getEnergyDensity(D, Ba, Bb):
 ##########################################################################
 
 # Before we can successfully calculate the stiffness matrix, we need to implement
-# an integral of the energy density function in this file.
+# an integral of the energy density function in this file. This integral takes
+# place over all the basis functions in the element and the return is the element
+# stiffness matrix.
 
 # The inputs are:
+# 'dims' - the number of problem dimensions
+# 'xa' - the 3D real coordinates of the element nodes arranged in a list
 
 # The outputs are:
+# 'ke' - the element stiffness matrix of dimensions
+#       [(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
 
 def gaussIntKMat(dims, xa):
     basis = getBasis(dims)
@@ -63,19 +69,40 @@ def gaussIntKMat(dims, xa):
 
 ############################################################################################
 
-# One essential function that is needed will return the stiffness matrix 'K' for the system.
+# The essential task of this function is to assemble the element stiffness
+# matrices into a global stiffness matrix, excluding the constrained degrees
+# of freedom.
 
 # The inputs are:
-# 'dims' - number of problem dimensions (1, 2, 3)
+# 'nodes' - a list of the 3D locations of all the problem nodes
+# 'ien' - the ien array for the problem implementing the map
+#         [global eqn. #] = ien[elem. #][local basis func. #]
+# 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
 
 # The outputs are:
+# 'kmat' - the global stiffness matrix of size
+#       [(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
+def getStiffMatrix(nodes, ien, cons):
+    dims = len(cons)  # 'cons' should always contain the problem dimensionality
+    numA = 2**dims  # the number of element basis functions
+    totA = len(nodes)*dims  # the number of stiffness matrix equations
+    # the return global stiffness matrix
+    kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
 
-def getElemKmatrix(dims):
-    # to get the elemental stiffness matrix, we need to integrate every combination of
-    # elemental integrand.
-    
-    
-    return 0
+    for i in range(len(ien)):  # for every element...
+        xa = getXaArray(i, nodes, ien)  # get the element nodal locations (global)
+        ke = gaussIntKMat(dims, xa)
+
+        for j in range(len(ke)):  # for every row in 'ke'...
+            for k in range(len(ke[0])):  # for every column in 'ke'...
+                P = int(ien[i][j/dims])  # the global row number
+                Q = int(ien[i][k/dims])  # the global column number
+                pp = j%dims  # the dof num. for the row number
+                qq = j%dims  # the dof num. for the column number
+                print(P, pp, Q, qq)
+                if (cons[pp][P] == 'n') and (cons[qq][Q] == 'n'):
+                    kmat[P*dims + pp][Q*dims + qq] += ke[i][j]
+    return kmat
 
 ###################################################################
