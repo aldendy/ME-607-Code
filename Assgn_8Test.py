@@ -6,7 +6,7 @@ from Assignment_1 import *
 from Assignment_2 import *
 from Assignment_4 import getBasis
 from Assignment_6 import getBandScale, getStiff
-from Assignment_8 import getEnergyDensity, gaussIntKMat, getStiffMatrix
+from Assignment_8 import getIDArray, getEnergyDensity, gaussIntKMat, getStiffMatrix
 
 
 ###################################################################
@@ -122,34 +122,55 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 		enum = 2  # number of elements
 		nodes = nodeList(1, 1, 1, enum)
 		ien = get_ien(enum)
+
 		cons, loads = load_and_cons(enum, len(nodes), 1)
-		cons[0][0] = 0
+		cons[0][0] = 0  # set arbitrary constraints
+		cons[0][2] = 0.1
+		ida, ncons = getIDArray(cons)
+		
 		kmat = getStiffMatrix(nodes, ien, cons)
 		
-		self.assertEqual(len(kmat), len(nodes))	 # checks number of rows
-		self.assertEqual(len(kmat[0]), len(nodes))	# checks row size
+		self.assertEqual(len(kmat), len(nodes) - ncons)	 # checks number of rows
+		self.assertEqual(len(kmat[0]), len(nodes) - ncons)	# checks row size
 
 	# Next, we test the 2D case
 	def test_2DstiffMat(self):
 		enum = 2  # number of elements
 		nodes = nodeList(1, 1, 1, enum, 1)
 		ien = get_ien(enum, 1)
+		
 		cons, loads = load_and_cons(enum, len(nodes), 2)  # 2 dimensions
+		cons[0][0] = 0
+		cons[1][0] = 0
+		cons[0][3] = 0
+		cons[1][3] = 0
+		ida, ncons = getIDArray(cons)
+		
 		kmat = getStiffMatrix(nodes, ien, cons)
 
-		self.assertEqual(len(kmat), 2*len(nodes))  # checks number of rows
-		self.assertEqual(len(kmat[0]), 2*len(nodes))  # checks row size
+		self.assertEqual(len(kmat), 2*len(nodes) - ncons)  # checks number of rows
+		self.assertEqual(len(kmat[0]), 2*len(nodes) - ncons)  # checks row size
 	
 	# Finally, we test in 3 dimensions
 	def test_3DstiffMat(self):
 		enum = 2  # number of elements
 		nodes = nodeList(1, 1, 1, enum, 1, 1)
 		ien = get_ien(enum, 1, 1)
+		
 		cons, loads = load_and_cons(enum, len(nodes), 3)  # 2 dimensions
+		cons[0][0] = 0
+		cons[1][0] = 0
+		cons[2][0] = 0
+		cons[0][3] = 0
+		cons[1][3] = 0
+		cons[2][3] = 0
+		cons[0][6] = 0
+		ida, ncons = getIDArray(cons)
+
 		kmat = getStiffMatrix(nodes, ien, cons)
 
-		self.assertEqual(len(kmat), 3*len(nodes))  # checks number of rows
-		self.assertEqual(len(kmat[0]), 3*len(nodes))  # checks row size
+		self.assertEqual(len(kmat), 3*len(nodes) - ncons)  # checks number of rows
+		self.assertEqual(len(kmat[0]), 3*len(nodes) - ncons)  # checks row
 		
 	# These tests allow us to conclude that the output matrix is of the appropriate size
 
