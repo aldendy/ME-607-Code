@@ -7,7 +7,7 @@
 # Inputs are:
 # 'e' - the number of elements
 # 'n' - the number of nodes
-# 'nd' - the number of dimensions
+# 'nd' - the number of problem dimensions
 
 # Outputs are:
 # 'cons' - a blank array of size [# dimensions]x[# nodes] containing 'n'
