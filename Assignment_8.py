@@ -20,20 +20,20 @@ from Assignment_6 import getStiff, getBandScale, getXaArray
 # 'ncons' - the number of constraints applied
 
 def getIDArray(cons):
-	id = []	 # initialize the array
+	ida = []	 # initialize the array
 	count = 0  # counter needed to assign equation map
 	
 	for i in range(len(cons[0])):  # for every global node...
 		for j in range(len(cons)):	# for every problem dimension...
 			if cons[j][i] == 'n':  # if no constraint...
-				id.append(count)
+				ida.append(count)
 				count += 1	# increment the counter
 			else:
-				id.append('n')	# indicates dof shouldn't be included
+				ida.append('n')	# indicates dof shouldn't be included
 	
-	ncons = len(cons)*len(cons[0]) - (count + 1)  # number of constraints
+	ncons = len(cons)*len(cons[0]) - count  # number of constraints
 	
-	return id, ncons
+	return ida, ncons
 
 ####################################################################
 
@@ -118,11 +118,11 @@ def gaussIntKMat(dims, xa):
 def getStiffMatrix(nodes, ien, cons):
 	dims = len(cons)  # 'cons' should always contain the problem dimensionality
 	numA = 2**dims	# the number of element basis functions
-	id, ncons = getIDArray(cons)
+	ida, ncons = getIDArray(cons)
 	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
 	# the return global stiffness matrix
 	kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
-	print(len(kmat), 'hello')
+	
 	for i in range(len(ien)):  # for every element...
 		xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
 		ke = gaussIntKMat(dims, xa)
@@ -135,9 +135,9 @@ def getStiffMatrix(nodes, ien, cons):
 				qq = j%dims	 # the dof num. for the column number
 				
 				if (cons[pp][P] == 'n') and (cons[qq][Q] == 'n'):
-					kmat[id[P*dims + pp]][id[Q*dims + qq]] += ke[i][j]
+					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[i][j]
 	
-	return kmat, len(kmat)
+	return kmat
 
 ###################################################################
 
