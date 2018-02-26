@@ -9,6 +9,34 @@ from Assignment_6 import getStiff, getBandScale, getXaArray
 
 ####################################################################
 
+# Constructing the stiffness matrix requires knowledge of the 'ID' array mapping the 
+# problem degrees of freedom onto the available degrees of freedom.
+
+# The inputs are:
+# 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
+
+# The output is:
+# 'id' - an array implementing the map (Global Eqn. #) = ID[(# dims)(Node #) + (DOF #)]
+# 'ncons' - the number of constraints applied
+
+def getIDArray(cons):
+	id = []	 # initialize the array
+	count = 0  # counter needed to assign equation map
+	
+	for i in range(len(cons[0])):  # for every global node...
+		for j in range(len(cons)):	# for every problem dimension...
+			if cons[j][i] == 'n':  # if no constraint...
+				id.append(count)
+				count += 1	# increment the counter
+			else:
+				id.append('n')	# indicates dof shouldn't be included
+	
+	ncons = len(cons)*len(cons[0]) - (count + 1)  # number of constraints
+	
+	return id, ncons
+
+####################################################################
+
 # Before the stiffness matrix can be calculated, we need a function that returns the
 # energy density at a particular integration point (Bt D B)
 
@@ -16,22 +44,26 @@ from Assignment_6 import getStiff, getBandScale, getXaArray
 # 'dims' - number of problem dimensions (1, 2, 3)
 # 'intpt' - the specific integration point number (0, 1, ...)
 # 'xa' - a vector of the 3D coordinates of the element nodes of size
-#       [# element nodes]x[3]
+#		[# element nodes]x[3]
 # 'a' - the first elemental matrix subcoordinate (A in the notes) (0, 1, ...)
 # 'b' - the second elemental matrix subcoordinate (B in the notes) (0, 1, ...)
 
 # The outputs are:
 
 def getEnergyDensity(D, Ba, Bb):
-    # Now, get the matrix product
-    k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
-    
-    if type(k_ab).__name__ != 'ndarray':
-        k_ab = [[k_ab]]
+	# Now, get the matrix product
+	k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
+	
+	if type(k_ab).__name__ != 'ndarray':
+		k_ab = [[k_ab]]
 
-    return k_ab
+	return k_ab
 
 ##########################################################################
+
+# Test function
+def getotherstiff(a, b, c):
+	return a + b + c
 
 # Before we can successfully calculate the stiffness matrix, we need to implement
 # an integral of the energy density function in this file. This integral takes
@@ -44,28 +76,28 @@ def getEnergyDensity(D, Ba, Bb):
 
 # The outputs are:
 # 'ke' - the element stiffness matrix of dimensions
-#       [(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
+#		[(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
 
 def gaussIntKMat(dims, xa):
-    basis = getBasis(dims)
-    numA = 2**dims
-    D = getStiff(dims)  # the 'D' matrix
-    w = 1  # the gauss point integral weight (2 pts)
-    ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
-    
-    for i in range(len(basis[0])):  # for every integration point...
-        # now, get the 'Bmat' for the integration point
-        Bmats, scale = getBandScale(dims, basis, i, xa)
+	basis = getBasis(dims)
+	numA = 2**dims
+	D = getStiff(dims)	# the 'D' matrix
+	w = 1  # the gauss point integral weight (2 pts)
+	ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
+	
+	for i in range(len(basis[0])):	# for every integration point...
+		# now, get the 'Bmat' for the integration point
+		Bmats, scale = getBandScale(dims, basis, i, xa)
 
-        for j in range(numA):  # for the 'a'-th basis function...
-            for k in range(numA):  # for the 'b'-th basis function...
-                kab = getEnergyDensity(D, Bmats[j], Bmats[k])
-                
-                # then, we assemble 'kab' into the appropriate slot in 'ke'
-                for m in range(len(kab)):  # for every row...
-                    for n in range(len(kab[0])):  # for every column...
-                        ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
-    return ke
+		for j in range(numA):  # for the 'a'-th basis function...
+			for k in range(numA):  # for the 'b'-th basis function...
+				kab = getEnergyDensity(D, Bmats[j], Bmats[k])
+				
+				# then, we assemble 'kab' into the appropriate slot in 'ke'
+				for m in range(len(kab)):  # for every row...
+					for n in range(len(kab[0])):  # for every column...
+						ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
+	return ke
 
 ############################################################################################
 
@@ -76,33 +108,37 @@ def gaussIntKMat(dims, xa):
 # The inputs are:
 # 'nodes' - a list of the 3D locations of all the problem nodes
 # 'ien' - the ien array for the problem implementing the map
-#         [global eqn. #] = ien[elem. #][local basis func. #]
+#		  [global eqn. #] = ien[elem. #][local basis func. #]
 # 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
 
 # The outputs are:
 # 'kmat' - the global stiffness matrix of size
-#       [(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
+#		[(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
 def getStiffMatrix(nodes, ien, cons):
-    dims = len(cons)  # 'cons' should always contain the problem dimensionality
-    numA = 2**dims  # the number of element basis functions
-    totA = len(nodes)*dims  # the number of stiffness matrix equations
-    # the return global stiffness matrix
-    kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
+	dims = len(cons)  # 'cons' should always contain the problem dimensionality
+	numA = 2**dims	# the number of element basis functions
+	id, ncons = getIDArray(cons)
+	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
+	# the return global stiffness matrix
+	kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
+	print(len(kmat), 'hello')
+	for i in range(len(ien)):  # for every element...
+		xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
+		ke = gaussIntKMat(dims, xa)
 
-    for i in range(len(ien)):  # for every element...
-        xa = getXaArray(i, nodes, ien)  # get the element nodal locations (global)
-        ke = gaussIntKMat(dims, xa)
-
-        for j in range(len(ke)):  # for every row in 'ke'...
-            for k in range(len(ke[0])):  # for every column in 'ke'...
-                P = int(ien[i][j/dims])  # the global row number
-                Q = int(ien[i][k/dims])  # the global column number
-                pp = j%dims  # the dof num. for the row number
-                qq = j%dims  # the dof num. for the column number
-                print(P, pp, Q, qq)
-                if (cons[pp][P] == 'n') and (cons[qq][Q] == 'n'):
-                    kmat[P*dims + pp][Q*dims + qq] += ke[i][j]
-    return kmat
+		for j in range(len(ke)):  # for every row in 'ke'...
+			for k in range(len(ke[0])):	 # for every column in 'ke'...
+				P = int(ien[i][j/dims])	 # the global node row number
+				Q = int(ien[i][k/dims])	 # the global node column number
+				pp = j%dims	 # the dof num. for the row number
+				qq = j%dims	 # the dof num. for the column number
+				
+				if (cons[pp][P] == 'n') and (cons[qq][Q] == 'n'):
+					kmat[id[P*dims + pp]][id[Q*dims + qq]] += ke[i][j]
+	
+	return kmat, len(kmat)
 
 ###################################################################
+
+
