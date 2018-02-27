@@ -98,6 +98,12 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
     # Here, we initialize the necessary load data for the test
     def setUp(self):
         cons2, loads2 = load_and_cons(1, 4, 2)  # one 2D element
+        cons2[0][0] = 0
+        cons2[1][0] = 0
+        cons2[0][3] = 0
+        cons2[1][3] = 0
+        self.ida2, self.ncons2 = getIDArray(cons2)
+                
         loads2[0][0] = [-1, 0, 0]  # body force
         loads2[2][0] = [1, 0, 0]  # traction force (right face)
         loads2[4][0] = 3
@@ -108,6 +114,15 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
         self.ien2 = get_ien(1, 1)
 
         cons3, loads3 = load_and_cons(1, 8, 3)  # one 2D element
+        cons3[0][0] = 0
+        cons3[1][0] = 0
+        cons3[2][0] = 0
+        cons3[0][3] = 0
+        cons3[1][3] = 0
+        cons3[2][3] = 0
+        cons3[0][6] = 0
+        self.ida3, self.ncons3 = getIDArray(cons3)
+        
         loads3[0][0] = [0, 0, -4]  # body force
         loads3[2][0] = [1, 0, 0]  # traction force (right face)
         loads3[4][0] = 8
@@ -120,15 +135,16 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
         
     # Next, we test the force vector generator ability to process loads
     def test_ExtForceVecLoadProcessing2D(self):
-        correct = [-0.25,  0,    0.25,  0,   -0.25,  1.5,   0.25,  1.5]
+        correct = [0.25,  0,   -0.25,  1.5]
         for i in range(len(correct)):  # for every component of 'correct'...
-            self.assertAlmostEqual(getExtForceVec(self.loads2, self.b2, self.nodes2, self.ien2)[i], correct[i])
+            self.assertAlmostEqual(getExtForceVec(self.loads2, self.b2, self.nodes2, self.ien2,
+                                                  self.ida2, self.ncons2)[i], correct[i])
 
     # Next, we perform this test for a 3D case
     def test_ExtForceVecLoadProcess3D(self):
-        correct = [ 0, 0, -0.5, 0.25, 0, -0.5, 0, 2, -0.5, 0.25, 2, -0.5, 0.5,
-                    0, -0.5, 0.75, 0, -0.5, 0.5, 2, -0.5, 0.75, 2, -0.5]
-        answer = getExtForceVec(self.loads3, self.b3, self.nodes3, self.ien3)
+        correct = [ 0.25, 0, -0.5, 0, 2, -0.5, 0.5,
+                    0, -0.5, 0.75, 0, -0.5, 2, -0.5, 0.75, 2, -0.5]
+        answer = getExtForceVec(self.loads3, self.b3, self.nodes3, self.ien3, self.ida3, self.ncons3)
         for i in range(len(correct)):  # for every component of 'correct'...
             self.assertAlmostEqual(answer[i], correct[i])
         

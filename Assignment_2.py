@@ -26,11 +26,11 @@ def load_and_cons(e, n, nd):
 	# elements are lines, quads or bricks. To do that, we must find
 	# how many s's. This array relates (# element regions (s)) =
 	# array(# of dimensions)
-	numS = [2, 5, 7]  
+	numS = [3, 5, 7]  
 	
 	# This array will contain an 'n' when no load or body force is
 	# applied and either a vector for a load/body force or a scalar for
 	# a pressure applied at the boundary.
 	loads = [['n' for j in range(e)] for i in range(numS[nd-1])]
-
+        
 	return cons, loads

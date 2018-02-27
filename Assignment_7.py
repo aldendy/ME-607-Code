@@ -70,26 +70,30 @@ def gaussInt(data, s, j, fj, xa0):
 # This function performs the correct integrations and assembles the external force vector
 
 # The inputs are:
-# 'load' - an array containing either traction vectors, scalar pressures or chars indicating no load
+# 'loads' - an array containing either traction vectors, scalar pressures or chars indicating no load
 #           indexed by [element region (0 - interior, 1,2.. bounds)][element #]
 # 'basis' - the appropriate basis for the problem dimensionality (contains the basis function evals)
 #           indexed by [element region][int. pt. #][basis func. #][0 - value, 1, 2,... - dN/dxi_i]
 # 'nodes' - the list of problem nodes
 # 'ien' - ien array for the problem coding mapping (Global Eqn. #) = ien[Element #][Local Eqn. # 'a']
+# 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
+# 'ncons' - the number of dof constraints
 
 # The outputs are:
+# 'forceVec' - a vector of the external forces for every dof of every node
 
-
-def getExtForceVec(loads, basis, nodes, ien):
-    numD = {2:1, 5:2, 7:3}  # array mapping (# dimensions) = array[# element regions]
+def getExtForceVec(loads, basis, nodes, ien, ida, ncons):
+    numD = {3:1, 5:2, 7:3}  # array mapping (# dimensions) = array[# element regions]
     dims = numD[len(loads)]  # the number of dimensions
     numA = len(nodes)  # the number of global function 'A' that must be filled.
-    forceVec = np.array(dims*numA*[0.0])  # initializes the force vector array to appropriate size
+    forceVec = np.array((dims*numA - ncons)*[0.0])  # initializes the force vector array to appropriate size
     
     for i in range(len(loads[0])):  # for every element...
         xai = getXaArray(i, nodes, ien)  # get the coordinates of the element nodes
         
         for j in range(len(loads)):  # for every element region...
+            
+            integral = np.array(dims*len(basis[j][0])*[0.0])
             
             for k in range(dims):  # for every degree of freedom...
                 dtype = type(loads[j][i]).__name__  # the data type
@@ -102,13 +106,15 @@ def getExtForceVec(loads, basis, nodes, ien):
                     normal = boundNormal(j, jaci)
                     p_vec = (loads[j][i])*np.array(normal)
                     integral = gaussInt(basis[j], j, k, p_vec[k], xai)
-
+                    
                 # Next, we assembly the proper components
                 for m in range(len(integral)):  # for every item in the integral...
-                    a = int(m/dims)  # number of element basis functions
+                    a = int(m/dims)  # local number of the element basis function
                     jj = int(m%dims)  # the degree of freedom for the element of 'integral'
                     bigA = int(ien[i][a])  # global equation number
-                    forceVec[bigA*dims + jj] += integral[m]
+
+                    if ida[bigA*dims + jj] != 'n':  # if there is an available dof...
+                        forceVec[ida[bigA*dims + jj]] += integral[m]
                     integral[m] = 0
                 
     return forceVec

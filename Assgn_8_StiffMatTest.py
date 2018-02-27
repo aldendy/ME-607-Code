@@ -6,7 +6,7 @@ from Assignment_1 import *
 from Assignment_2 import *
 from Assignment_4 import getBasis
 from Assignment_6 import getBandScale, getStiff
-from Assignment_8 import getIDArray, getEnergyDensity, gaussIntKMat, getStiffMatrix
+from Assignment_8 import getEnergyDensity, gaussIntKMat, getStiffMatrix
 
 
 ###################################################################
@@ -40,6 +40,7 @@ class EnergyDensityTest(unittest.TestCase):
 		basis = getBasis(dims)
 		Bmats, scale = getBandScale(dims, basis, intpt, xa)
 		D = getStiff(dims)	# the 'D' matrix
+
 
 		kab = getEnergyDensity(D, Bmats[a], Bmats[b])
 		
@@ -128,7 +129,7 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 		cons[0][2] = 0.1
 		ida, ncons = getIDArray(cons)
 		
-		kmat = getStiffMatrix(nodes, ien, cons)
+		kmat = getStiffMatrix(nodes, ien, ida, ncons)
 		
 		self.assertEqual(len(kmat), len(nodes) - ncons)	 # checks number of rows
 		self.assertEqual(len(kmat[0]), len(nodes) - ncons)	# checks row size
@@ -146,7 +147,7 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 		cons[1][3] = 0
 		ida, ncons = getIDArray(cons)
 		
-		kmat = getStiffMatrix(nodes, ien, cons)
+		kmat = getStiffMatrix(nodes, ien, ida, ncons)
 
 		self.assertEqual(len(kmat), 2*len(nodes) - ncons)  # checks number of rows
 		self.assertEqual(len(kmat[0]), 2*len(nodes) - ncons)  # checks row size
@@ -167,7 +168,7 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 		cons[0][6] = 0
 		ida, ncons = getIDArray(cons)
 
-		kmat = getStiffMatrix(nodes, ien, cons)
+		kmat = getStiffMatrix(nodes, ien, ida, ncons)
 
 		self.assertEqual(len(kmat), 3*len(nodes) - ncons)  # checks number of rows
 		self.assertEqual(len(kmat[0]), 3*len(nodes) - ncons)  # checks row

@@ -5,6 +5,7 @@ import numpy as np
 from Assignment_6 import *
 from Assignment_5 import *
 from Assignment_4 import *
+from Assignment_2 import load_and_cons
 from Assignment_1 import nodeList, get_ien
 
         
@@ -39,6 +40,7 @@ class MechanicsTest(unittest.TestCase):
         def test_1DstrainCalcs(self):
                 strain = strainVec(1, self.enum1, self.deform1, self.ien1,
                                    self.Bmats1)
+                
                 self.assertAlmostEqual(strain[0][0], self.strain)
 
         # This function tests simple strain in 2D
@@ -233,11 +235,22 @@ class IntForceVecAssemblyTest(unittest.TestCase):
                 self.numE1 = 1
                 self.deform1 = [0, 0.1]
 
+                cons, loads = load_and_cons(self.numE1, len(self.nodes1), 1)
+                cons[0][0] = 0  # set arbitrary constraints
+                self.ida1, self.ncons1 = getIDArray(cons)
+
                 self.nodes2 = nodeList(1, 1, 1, 1, 1)  # for one dimension...
                 self.ien2 = get_ien(1, 1)
                 self.ndim2 = 2
                 self.numE2 = 1
                 self.deform2 = [0, 0, 0.1, 0, 0, -0.03, 0.1, -0.03]
+
+                cons, loads = load_and_cons(self.numE2, len(self.nodes2), 2)  # 2 dimensions
+                cons[0][0] = 0
+                cons[1][0] = 0
+                cons[0][3] = 0
+                cons[1][3] = 0
+                self.ida2, self.ncons2 = getIDArray(cons)
 
                 self.nodes3 = nodeList(1, 1, 1, 1, 1, 1)  # for one dimension...
                 self.ien3 = get_ien(1, 1, 1)
@@ -245,29 +258,42 @@ class IntForceVecAssemblyTest(unittest.TestCase):
                 self.numE3 = 1
                 self.deform3 = [0, 0, 0, 0.1, 0, 0, 0, -0.03, 0, 0.1, -0.03, 0,
                                 0, 0, -0.03, 0.1, 0, -0.03, 0, -0.03, -0.03, 0.1,
-                                -0.03, -0.03]  
+                                -0.03, -0.03]
 
+                cons, loads = load_and_cons(self.numE3, len(self.nodes3), 3)  # 2 dimensions
+                cons[0][0] = 0
+                cons[1][0] = 0
+                cons[2][0] = 0
+                cons[0][3] = 0
+                cons[1][3] = 0
+                cons[2][3] = 0
+                cons[0][6] = 0
+                self.ida3, self.ncons3 = getIDArray(cons)
+        
         # next, we test the force vector stackup process for one dimension
         def test_intForceVecOutput1D(self):
-                Fint = intForceVec(self.nodes1, self.ien1, self.ndim1, self.numE1, self.deform1)
-                correct = [-2e10, 2e10]
+                Fint = intForceVec(self.nodes1, self.ien1, self.ida1, self.ncons1,self.ndim1,
+                                   self.numE1, self.deform1)
+                correct = [2e10]
                 
                 for i in range(len(Fint)):  # for every element component...
                         self.assertAlmostEqual(Fint[i]/correct[i], 1, 4)
 
         # This function attempts the same verification in 2D
         def test_intForceVecOutput2D(self):
-                Fint = intForceVec(self.nodes2, self.ien2, self.ndim2, self.numE2, self.deform2)
-                correct = [-1e10, 0, 1e10, 0, -1e10, 0, 1e10, 0]
+                Fint = intForceVec(self.nodes2, self.ien2, self.ida2, self.ncons2, self.ndim2,
+                                   self.numE2, self.deform2)
+                correct = [1e10, 0, -1e10, 0]
                 
                 for i in range(len(Fint)):  # for every element component...
                         self.assertAlmostEqual((Fint[i]+1)/(correct[i]+1), 1, 4)
 
         # Lastly, we test the assembly process in 3D
         def test_intForceVecOutput3D(self):
-                Fint = intForceVec(self.nodes3, self.ien3, self.ndim3, self.numE3, self.deform3)
-                correct = [-5e9, 0, 0, 5e9, 0, 0, -5e9, 0, 0, 5e9, 0, 0, -5e9, 0, 0,
-                           5e9, 0, 0, -5e9, 0, 0, 5e9, 0, 0]
+                Fint = intForceVec(self.nodes3, self.ien3, self.ida3, self.ncons3, self.ndim3,
+                                   self.numE3, self.deform3)
+                correct = [5e9, 0, 0, -5e9, 0, 0, -5e9, 0, 0,
+                           5e9, 0, 0, 0, 0, 5e9, 0, 0]
                 
                 for i in range(len(Fint)):  # for every element component...
                         self.assertAlmostEqual((Fint[i]+1)/(correct[i]+1), 1, 4)

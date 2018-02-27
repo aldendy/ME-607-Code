@@ -2,7 +2,7 @@
 # the weak form. 
 
 import numpy as np
-from Assignment_1 import nodeList, get_ien
+from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_4 import *
 from Assignment_5 import posAndJac, scaling, realN
 
@@ -16,14 +16,14 @@ from Assignment_5 import posAndJac, scaling, realN
 # The output is 'num', the number of elements
 
 def numElements(m, n=0, p=0):
-        set = [m, n, p]  # the collection
-        num = m  # There will be at least 'm' elements
-        for i in range(2):
-                if set[i+1] == 0:
-                        set[i+1] = 1
-                num *= set[i+1]
-        
-        return num
+    sets = [m, n, p]  # the collection
+    num = m  # There will be at least 'm' elements
+    for i in range(2):
+        if sets[i+1] == 0:
+            sets[i+1] = 1
+        num *= sets[i+1]
+    
+    return num
 
 ####################################################################
 
@@ -34,12 +34,12 @@ def numElements(m, n=0, p=0):
 # 'p' - the number of elements in the z-direction (optional)
 
 def numDims(m, n=0, p=0):
-        sets = [m, n, p]  # defines the collection
-        numD = 0  # the number of dimensions in the problem
-        for i in range(3):
-                if sets[i] > 0:
-                        numD += 1
-        return numD
+    sets = [m, n, p]  # defines the collection
+    numD = 0  # the number of dimensions in the problem
+    for i in range(3):
+        if sets[i] > 0:
+            numD += 1
+    return numD
 
 #########################################################################
 
@@ -53,11 +53,11 @@ def numDims(m, n=0, p=0):
 # Returns a vector of the 3D coordinates of the element nodes of size [# element nodes]x[3]
 
 def getXaArray(e, nodes, ien):
-        nodeNum = ien[e]  # get the node locations
-        xa = []  # contains the desired nodal coordinates
-        for i in range(len(nodeNum)):
-                xa.append(nodes[int(nodeNum[i])])
-        return xa
+    nodeNum = ien[e]  # get the node locations
+    xa = []  # contains the desired nodal coordinates
+    for i in range(len(nodeNum)):
+        xa.append(nodes[int(nodeNum[i])])
+    return xa
 
 ##########################################################################
 
@@ -75,28 +75,28 @@ def getXaArray(e, nodes, ien):
 #       the order of the element nodes. All derivatives are in the real domain.
 
 def getBandScale(numD, basis, intpt, xa):
-        x, jac = posAndJac(basis[0][intpt], xa)  # get the element global position and jacobian
-        scale = scaling(0, jac)  # get the element interior integration scaling
-        
-        Bmats = []  # initialize the array
-        for i in range(len(basis[0][intpt])):  # for every basis function...
-            dNdxi = realN(basis[0][intpt], i, jac)
-            if numD == 1:
-                Bmat = dNdxi[0]  # derivative in 'x'
-            if numD == 2:
-                n1 = dNdxi[0]
-                n2 = dNdxi[1]
-                # as in notes
-                Bmat = np.array([[n1, 0], [0, n2], [n2, n1]])  
-            if numD == 3:
-                n1 = dNdxi[0]
-                n2 = dNdxi[1]
-                n3 = dNdxi[2]
-                Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2], [n3, 0, n1],
-                                 [n2, n1, 0]])
-            Bmats.append(Bmat)
+    x, jac = posAndJac(basis[0][intpt], xa)  # get the element global position and jacobian
+    scale = scaling(0, jac)  # get the element interior integration scaling
+    
+    Bmats = []  # initialize the array
+    for i in range(len(basis[0][intpt])):  # for every basis function...
+      dNdxi = realN(basis[0][intpt], i, jac)
+      if numD == 1:
+        Bmat = dNdxi[0]  # derivative in 'x'
+      if numD == 2:
+        n1 = dNdxi[0]
+        n2 = dNdxi[1]
+        # as in notes
+        Bmat = np.array([[n1, 0], [0, n2], [n2, n1]])  
+      if numD == 3:
+        n1 = dNdxi[0]
+        n2 = dNdxi[1]
+        n3 = dNdxi[2]
+        Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2], [n3, 0, n1],
+                 [n2, n1, 0]])
+      Bmats.append(Bmat)
 
-        return Bmats, scale
+    return Bmats, scale
 
 ######################################################################
 
@@ -108,30 +108,30 @@ def getBandScale(numD, basis, intpt, xa):
 # The output is the 'D' matrix in 1D, 3D or 6D.
 
 def getStiff(n):
-        E = 200.0*10**9    # modulus of elasticity (Pa)
-        v = 0.3         # Poisson's ratio
-        ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
-        mu = E/(2*(1 + v))
+    E = 200.0*10**9    # modulus of elasticity (Pa)
+    v = 0.3         # Poisson's ratio
+    ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
+    mu = E/(2*(1 + v))
 
-        aa = E/(1-v**2)  # 2D stiffness parameters
-        bb = aa*(1 - v)/2
-        cc = aa*v
-        
-        if n == 1:
-                D = E
-        if n == 2:
-                D =     [[aa, cc, 0],
-                         [cc, aa, 0],
-                         [0,   0, bb]]
-        if n == 3:
-                D =     [[ld + 2*mu,    ld,             ld,             0,      0,      0],
-                        [ ld,           ld + 2*mu,      ld,             0,      0,      0],
-                        [ ld,           ld,             ld + 2*mu,      0,      0,      0],
-                        [ 0,            0,              0,              mu,     0,      0],
-                        [ 0,            0,              0,              0,      mu,     0],
-                        [ 0,            0,              0,              0,      0,      mu]]
-        
-        return D
+    aa = E/(1-v**2)  # 2D stiffness parameters
+    bb = aa*(1 - v)/2
+    cc = aa*v
+    
+    if n == 1:
+        D = E
+    if n == 2:
+        D =     [[aa, cc, 0],
+             [cc, aa, 0],
+             [0,   0, bb]]
+    if n == 3:
+        D =     [[ld + 2*mu,    ld,             ld,             0,      0,      0],
+            [ ld,           ld + 2*mu,      ld,             0,      0,      0],
+            [ ld,           ld,             ld + 2*mu,      0,      0,      0],
+            [ 0,            0,              0,              mu,     0,      0],
+            [ 0,            0,              0,              0,      mu,     0],
+            [ 0,            0,              0,              0,      0,      mu]]
+    
+    return D
 
 #################################################################################
 
@@ -148,17 +148,17 @@ def getStiff(n):
 #           [1 - 1D, 3 - 2D, 6 - 3D]x[1]
 
 def strainVec(numD, e, deform, ien, Bmats):
-    sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
-    strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
+  sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
+  strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
+  
+  for k in range(len(Bmats)):  # for every element basis function...
+    first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
+    second = first + numD  # location of c_ky (2D) in global 'deform'
+    cmat = np.transpose(np.array([deform[first:second]]))
     
-    for k in range(len(Bmats)):  # for every element basis function...
-        first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
-        second = first + numD  # location of c_ky (2D) in global 'deform'
-        cmat = np.transpose(np.array([deform[first:second]]))
-        
-        strain += np.dot(np.array(Bmats[k]), cmat)
-    
-    return strain 
+    strain += np.dot(np.array(Bmats[k]), cmat)
+  
+  return strain 
 
 ########################################################################
 
@@ -171,7 +171,7 @@ def strainVec(numD, e, deform, ien, Bmats):
 # The output is the stress vector in Voigt notation 
 
 def stressVec(numD, strain):
-    return np.dot(np.array(getStiff(numD)), strain)
+  return np.dot(np.array(getStiff(numD)), strain)
 
 ################################################################################
 
@@ -189,21 +189,21 @@ def stressVec(numD, strain):
 # The output is the nodal evaluation of the force vector element at an integration point 
 
 def func(deform, basis, ien, e, i, xa):
-        numD = len(basis[0][0][0]) - 1  # the number of dimensions
-        Bmats, scale = getBandScale(numD, basis, i, xa)
-        
-        strain = strainVec(numD, e, deform, ien, Bmats)
-        stress = stressVec(numD, strain)
-        
-        # the force vector for all nodes 'a' over element 'e'
-        f = np.array(numD*len(basis[0][0])*[[0.0]])  
-        
-        for k in range(len(basis[0][0])):  # for every element basis function...
-            ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scale
-            for j in range(numD):  # for every dimension
-                f[numD*k + j] = ff[j]
-        
-        return f
+    numD = len(basis[0][0][0]) - 1  # the number of dimensions
+    Bmats, scale = getBandScale(numD, basis, i, xa)
+    
+    strain = strainVec(numD, e, deform, ien, Bmats)
+    stress = stressVec(numD, strain)
+    
+    # the force vector for all nodes 'a' over element 'e'
+    f = np.array(numD*len(basis[0][0])*[[0.0]])  
+    
+    for k in range(len(basis[0][0])):  # for every element basis function...
+      ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scale
+      for j in range(numD):  # for every dimension
+        f[numD*k + j] = ff[j]
+    
+    return f
 
 ################################################################################
 
@@ -221,15 +221,15 @@ def func(deform, basis, ien, e, i, xa):
 # The output is the integral of 'func' over the domain given in 'basis'
 
 def GaussInt(func, deform, basis, e, ien, xa):
-        numD = len(basis[0][0][0]) - 1  # the number of dimensions
-        # initialize the integral value to an array of size [(# basis funcs) x (# dimensions)] x [1]
-        area = np.array(numD*len(basis[0][0])*[[0.0]])   
-        weights = len(basis[0])*[1]  # the weights for the integration process
-        
-        for i in range(len(basis[0])):  # for every integration point...
-            area += func(deform, basis, ien, e, i, xa)*weights[i]
+    numD = len(basis[0][0][0]) - 1  # the number of dimensions
+    # initialize the integral value to an array of size [(# basis funcs) x (# dimensions)] x [1]
+    area = np.array(numD*len(basis[0][0])*[[0.0]])   
+    weights = len(basis[0])*[1]  # the weights for the integration process
     
-        return area
+    for i in range(len(basis[0])):  # for every integration point...
+      area += func(deform, basis, ien, e, i, xa)*weights[i]
+  
+    return area
 
 ################################################################################
 
@@ -245,30 +245,25 @@ def GaussInt(func, deform, basis, e, ien, xa):
 
 # The output of this function is the internal force vector (global) of size = '[# nodes x 3]x[1]
 
-def intForceVec(nodes, ien, numD, numE, deform):
-        basis = getBasis(numD)  # get the integration point and function data
-        Fint = np.array(numD*len(nodes)*[0.0])  # initialize the internal force vector 
+def intForceVec(nodes, ien, ida, ncons, numD, numE, deform):
+    basis = getBasis(numD)  # get the integration point and function data
+    Fint = np.array((numD*len(nodes) - ncons)*[0.0])  # initialize the internal force vector 
+    
+    for i in range(numE):  # for every element...
+        xa = getXaArray(i, nodes, ien)  # get the global coordinates of the element nodes
         
-        for i in range(numE):  # for every element...
-                xa = getXaArray(i, nodes, ien)  # get the global coordinates of the element nodes
-                
-                fai = GaussInt(func, deform, basis, i, ien, xa)  # the internal force for a basis function 'a' over
-                                                                 # element 'i'
-                # for this particular element vector, we then assemble it into the global vector 
-                for j in range(len(basis[0][0])):  # for each basis function...
-                        for k in range(numD):  # for each dimension...
-                                # assemble the correct values 
-                                Fint[numD*int(ien[i][j]) + k] += fai[numD*j + k][0] 
-                
-        return Fint 
+        fai = GaussInt(func, deform, basis, i, ien, xa)  # the internal force for a basis function 'a' over
+                                 # element 'i'
+        # for this particular element vector, we then assemble it into the global vector 
+        for j in range(len(basis[0][0])):  # for each basis function...
+            for k in range(numD):  # for each dimension...
+                # assemble the correct values
+                if ida[numD*int(ien[i][j]) + k] != 'n':  # if there is an available dof...
+                    Fint[ida[numD*int(ien[i][j]) + k]] += fai[numD*j + k][0] 
         
+    return Fint 
+    
 #################################################################################
-
-# Information to-do list
-
-# Assemble the force element matrices into a global array
-
-#########################################################
 
 # Here, we define the problem, initial deformation and mesh and generate the internal force array
 
@@ -281,13 +276,13 @@ def intForceVec(nodes, ien, numD, numE, deform):
 # 'p' - the number of elements in the z-direction (optional)
 
 def initialize(M, N, P, m, n=0, p=0):
-        nodes = nodeList(M, N, P, m, n, p)  # get the nodes for the problem
-        ien = get_ien(m, n, p)  # get the ien array
-        numD = numDims(m, n, p)  # get the number of problem dimensions
-        numE = numElements(m, n, p)
-        deformation = numD*len(nodes)*[0]  # initialize the deformation array of size [# nodes]x[# dimensions]
-        
-        Fint = intForceVec(nodes, ien, numD, numE, deformation)
+    nodes = nodeList(M, N, P, m, n, p)  # get the nodes for the problem
+    ien = get_ien(m, n, p)  # get the ien array
+    numD = numDims(m, n, p)  # get the number of problem dimensions
+    numE = numElements(m, n, p)
+    deformation = numD*len(nodes)*[0]  # initialize the deformation array of size [# nodes]x[# dimensions]
+    
+    Fint = intForceVec(nodes, ien, numD, numE, deformation)
 
 ##########################################################
 
