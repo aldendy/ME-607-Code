@@ -93,9 +93,11 @@ def getExtForceVec(loads, basis, nodes, ien, ida, ncons):
         
         for j in range(len(loads)):  # for every element region...
             
+            integral = np.array(dims*len(basis[j][0])*[0.0])
+            
             for k in range(dims):  # for every degree of freedom...
                 dtype = type(loads[j][i]).__name__  # the data type
-                print(dtype)
+                
                 if dtype == 'list':  # if the load is a traction...
                     integral = gaussInt(basis[j], j, k, loads[j][i][k], xai)
                     
