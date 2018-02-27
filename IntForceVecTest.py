@@ -40,6 +40,7 @@ class MechanicsTest(unittest.TestCase):
         def test_1DstrainCalcs(self):
                 strain = strainVec(1, self.enum1, self.deform1, self.ien1,
                                    self.Bmats1)
+                
                 self.assertAlmostEqual(strain[0][0], self.strain)
 
         # This function tests simple strain in 2D
