@@ -10,7 +10,7 @@ class IntPointTest(unittest.TestCase):
     # point locations
     def test_1Dpts(self):
         pts1 = getIntPts(1)
-        self.assertEqual(len(pts1), 2)
+        self.assertEqual(len(pts1), 3)  # should have three regions
 
     # In 2D...
     def test2Dpts(self):
