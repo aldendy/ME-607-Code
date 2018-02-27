@@ -31,7 +31,6 @@ class BasicTest(unittest.TestCase):
         correct = [0.0, 0.0]
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual(correct[i]/result[i], 1)
-        
     
 ###############################################################################
 
