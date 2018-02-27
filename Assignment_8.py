@@ -50,7 +50,7 @@ def getEnergyDensity(D, Ba, Bb):
 def gaussIntKMat(dims, xa):
 	basis = getBasis(dims)
 	numA = 2**dims
-	D = getStiff(dims)	# the 'D' matrix
+	D = getStiff(dims)  # the 'D' matrix
 	w = 1  # the gauss point integral weight (2 pts)
 	ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
 	
@@ -87,7 +87,7 @@ def gaussIntKMat(dims, xa):
 #		[(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
 def getStiffMatrix(nodes, ien, ida, ncons):
-	dims = len(ida)/len(nodes)  # 'cons' should always contain the problem dimensionality
+	dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
 	numA = 2**dims	# the number of element basis functions
 	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
 	# the return global stiffness matrix
@@ -96,16 +96,16 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 	for i in range(len(ien)):  # for every element...
 		xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
 		ke = gaussIntKMat(dims, xa)
-
+                
 		for j in range(len(ke)):  # for every row in 'ke'...
 			for k in range(len(ke[0])):	 # for every column in 'ke'...
 				P = int(ien[i][j/dims])	 # the global node row number
 				Q = int(ien[i][k/dims])	 # the global node column number
 				pp = j%dims	 # the dof num. for the row number
 				qq = j%dims	 # the dof num. for the column number
-				
+				#print(P, Q, pp, qq)
 				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
-					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[i][j]
+					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
 	
 	return kmat
 
