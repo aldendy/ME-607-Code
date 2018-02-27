@@ -4,7 +4,7 @@
 import unittest
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
-from Assignment_8 import solver
+from Assignment_8 import getFullDVec, solver
 
 
 ######################################################################
@@ -20,17 +20,29 @@ class BasicTest(unittest.TestCase):
         self.nodes1 = nodeList(1, 1, 1, enum)
         self.ien1 = get_ien(enum)
         self.cons1, self.load1 = load_and_cons(enum, len(self.nodes1), self.numD[0])
-        self.load1[2][0] = [1, 0, 0]  # load to right end
+        self.cons1[0][0] = 0.0
+        self.load1[2][0] = [3, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
+
+    # Another important test that we can run handles the merging process
+    # between the partial deformation vector and the complete version.
+    def test_deformationVectorMerge(self):
+        deform = [0.1]  # initialize the deformation vector
+        result = getFullDVec(self.ida1, deform, self.cons1)
+        correct = [0.0, 0.1]
+
+        for i in range(len(result)):  # for every component of the answer...
+            self.assertAlmostEqual(correct[i], result[i])
 
     # Here, we test the 1D solution process
     def test_solver(self):
         result = solver(self.numD[0], self.load1, self.nodes1, self.ien1, self.ida1,
-                        self.ncons1)
-
-        correct = [0.0, 0.0]
+                        self.ncons1, self.cons1)
+        
+        correct = [0.0, 3.0/(200e9)]
+        
         for i in range(len(result)):  # for every component...
-            self.assertAlmostEqual(correct[i]/result[i], 1)
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
     
 ###############################################################################
 
