@@ -16,12 +16,12 @@ from Assignment_5 import posAndJac, scaling, realN
 # The output is 'num', the number of elements
 
 def numElements(m, n=0, p=0):
-    set = [m, n, p]  # the collection
+    sets = [m, n, p]  # the collection
     num = m  # There will be at least 'm' elements
     for i in range(2):
-        if set[i+1] == 0:
-            set[i+1] = 1
-        num *= set[i+1]
+        if sets[i+1] == 0:
+            sets[i+1] = 1
+        num *= sets[i+1]
     
     return num
 
