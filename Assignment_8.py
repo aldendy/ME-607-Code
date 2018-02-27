@@ -131,7 +131,7 @@ def solver(numD, loads, nodes, ien, ida, ncons):
         extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
         deform = np.array(numD*len(nodes)*[0.0])
         i = 0  # starting iteration
-
+        print(len(extFV))
         while i < imax:
                 intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien), deform)
                 residual = np.array(extFV) - np.array(intFV)
