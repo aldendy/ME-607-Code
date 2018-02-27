@@ -4,36 +4,9 @@
 
 import numpy as np
 from Assignment_4 import getBasis
-from Assignment_6 import getStiff, getBandScale, getXaArray
+from Assignment_6 import getStiff, getBandScale, getXaArray, intForceVec
+from Assignment_7 import getExtForceVec
 
-
-####################################################################
-
-# Constructing the stiffness matrix requires knowledge of the 'ID' array mapping the 
-# problem degrees of freedom onto the available degrees of freedom.
-
-# The inputs are:
-# 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
-
-# The output is:
-# 'id' - an array implementing the map (Global Eqn. #) = ID[(# dims)(Node #) + (DOF #)]
-# 'ncons' - the number of constraints applied
-
-def getIDArray(cons):
-	ida = []	 # initialize the array
-	count = 0  # counter needed to assign equation map
-	
-	for i in range(len(cons[0])):  # for every global node...
-		for j in range(len(cons)):	# for every problem dimension...
-			if cons[j][i] == 'n':  # if no constraint...
-				ida.append(count)
-				count += 1	# increment the counter
-			else:
-				ida.append('n')	# indicates dof shouldn't be included
-	
-	ncons = len(cons)*len(cons[0]) - count  # number of constraints
-	
-	return ida, ncons
 
 ####################################################################
 
@@ -60,10 +33,6 @@ def getEnergyDensity(D, Ba, Bb):
 	return k_ab
 
 ##########################################################################
-
-# Test function
-def getotherstiff(a, b, c):
-	return a + b + c
 
 # Before we can successfully calculate the stiffness matrix, we need to implement
 # an integral of the energy density function in this file. This integral takes
@@ -110,15 +79,16 @@ def gaussIntKMat(dims, xa):
 # 'ien' - the ien array for the problem implementing the map
 #		  [global eqn. #] = ien[elem. #][local basis func. #]
 # 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
+# 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
+# 'ncons' - the number of dof constraints
 
 # The outputs are:
 # 'kmat' - the global stiffness matrix of size
 #		[(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
-def getStiffMatrix(nodes, ien, cons):
-	dims = len(cons)  # 'cons' should always contain the problem dimensionality
+def getStiffMatrix(nodes, ien, ida, ncons):
+	dims = len(ida)/len(nodes)  # 'cons' should always contain the problem dimensionality
 	numA = 2**dims	# the number of element basis functions
-	ida, ncons = getIDArray(cons)
 	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
 	# the return global stiffness matrix
 	kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
@@ -134,11 +104,49 @@ def getStiffMatrix(nodes, ien, cons):
 				pp = j%dims	 # the dof num. for the row number
 				qq = j%dims	 # the dof num. for the column number
 				
-				if (cons[pp][P] == 'n') and (cons[qq][Q] == 'n'):
+				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
 					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[i][j]
 	
 	return kmat
 
-###################################################################
+#############################################################################################
+
+# After getting the stiffness matrix, the next task is to implement the Newton-Raphson method
+
+# The inputs are:
+# 'numD' - the number of problem dimensions
+# 'loads' - an array containing either traction vectors, scalar pressures or chars indicating no load
+#           indexed by [element region (0 - interior, 1,2.. bounds)][element #]
+# 'nodes' - the list of the 3D coordinates of the problem nodes
+# 'ien' - ien array for the problem coding mapping (Global Eqn. #) = ien[Element #][Local Eqn. # 'a']
+# 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
+# 'ncons' - the number of dof constraints
+
+# The outputs are:
+# 'dFinal' - the final deformation vector giving the nodal deformations in all dof
+
+def solver(numD, loads, nodes, ien, ida, ncons):
+        basis = getBasis(numD)
+        imax = 10  # the maximum number of iterations tolerable
+        extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
+        deform = np.array(numD*len(nodes)*[0.0])
+        i = 0  # starting iteration
+
+        while i < imax:
+                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien), deform)
+                residual = np.array(extFV) - np.array(intFV)
+
+                if np.linalg.norm(residual) <= 10**(-10):  # if the error is small...
+                        return deform
+
+                stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                du = np.linalg.inv(np.array(stiff))*np.transpose(np.array(residual))
+                deform = deform + du
+                i += 1
+
+
+###############################################################################################
+
+
 
 
