@@ -111,6 +111,34 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 
 #############################################################################################
 
+# This function updates the 'd' vector using the partial 'd' vector found in the Newton-
+# Raphson method.
+
+# The inputs are:
+# 'ida' - the id array mapping (unconstrained eqn. #) = ID[Global Eqn. #]
+# 'deform' - the deformation array missing constrained degrees of freedom
+# 'cons' - the constraint vector indexed by [dimension #][node #]
+
+# The outputs are:
+# 'deform0' - the deformation array with the appropriate constrained dof's added
+
+def getFullDVec(ida, deform, cons):
+        deform0 = []  # initializes the array
+        numD = len(cons)  # this should correspond to the number of dimensions
+        
+        for i in range(len(ida)):  # for every part of the id array...
+                a = i/numD  # the equation number (node #)
+                dof = i%numD  # the degree of freedom number
+                
+                if ida[i] != 'n':  # if 'i' maps to an unconstrained dof...
+                        deform0.append(deform[ida[i]])
+                else:
+                        deform0.append(cons[dof][a])
+        
+        return deform0
+
+############################################################################################
+
 # After getting the stiffness matrix, the next task is to implement the Newton-Raphson method
 
 # The inputs are:
@@ -121,19 +149,21 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 # 'ien' - ien array for the problem coding mapping (Global Eqn. #) = ien[Element #][Local Eqn. # 'a']
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
 # 'ncons' - the number of dof constraints
+# 'cons' - the constraint vector indexed by [dimension #][node #]
 
 # The outputs are:
 # 'dFinal' - the final deformation vector giving the nodal deformations in all dof
 
-def solver(numD, loads, nodes, ien, ida, ncons):
+def solver(numD, loads, nodes, ien, ida, ncons, cons):
         basis = getBasis(numD)
         imax = 10  # the maximum number of iterations tolerable
         extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
-        deform = np.array(numD*len(nodes)*[0.0])
+        deform0 = np.array(numD*len(nodes)*[0.0])  # the complete deformation array
+        deform = np.array(numD*(len(nodes) - ncons)*[0.0])  # deformation array missing dof's
         i = 0  # starting iteration
-        print(len(extFV))
+        
         while i < imax:
-                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien), deform)
+                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien), deform0)
                 residual = np.array(extFV) - np.array(intFV)
 
                 if np.linalg.norm(residual) <= 10**(-10):  # if the error is small...
@@ -141,8 +171,12 @@ def solver(numD, loads, nodes, ien, ida, ncons):
 
                 stiff = getStiffMatrix(nodes, ien, ida, ncons)
                 du = np.linalg.inv(np.array(stiff))*np.transpose(np.array(residual))
-                deform = deform + du
+                deform += (np.transpose(du))[0]
+                deform0 = getFullDVec(ida, deform, cons)
                 i += 1
+                print(i)
+        
+        return deform0
 
 
 ###############################################################################################
