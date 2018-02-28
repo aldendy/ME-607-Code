@@ -158,12 +158,13 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
         basis = getBasis(numD)
         imax = 10  # the maximum number of iterations tolerable
         extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
-        deform0 = np.array(numD*len(nodes)*[0.0])  # the complete deformation array
         deform = np.array(numD*(len(nodes) - ncons)*[0.0])  # deformation array missing dof's
+        deform0 =  getFullDVec(ida, deform, cons) # the complete deformation array
         i = 0  # starting iteration
         
         while i < imax:
-                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien), deform0)
+                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien),
+                                    deform0)
                 residual = np.array(extFV) - np.array(intFV)
                 
                 # if the error is small...
@@ -172,9 +173,11 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
                         return deform0, i
 
                 stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                Kinv = np.linalg.inv(np.array(stiff))
+                b = np.transpose(np.array(residual))
+                du = np.dot(Kinv, b)
                 
-                du = np.linalg.inv(np.array(stiff))*np.transpose(np.array(residual))
-                deform += (np.transpose(du))[0]
+                deform += du
                 deform0 = getFullDVec(ida, deform, cons)
                 i += 1
         

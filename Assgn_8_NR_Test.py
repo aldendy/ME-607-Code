@@ -35,6 +35,13 @@ class BasicTest(unittest.TestCase):
         self.load2[2][1] = [2.0e6, 0, 0]  # load to right end
         self.ida2, self.ncons2 = getIDArray(self.cons2)
 
+        # for the displacement load sub-case...
+        self.cons3, self.load3 = load_and_cons(enum[1], len(self.nodes2),
+                                               self.numD[0])
+        self.cons3[0][0] = 0.0
+        self.cons3[0][2] = 1.0e-5
+        self.ida3, self.ncons3 = getIDArray(self.cons3)
+
     # Another important test that we can run handles the merging process
     # between the partial deformation vector and the complete version.
     def test_deformationVectorMerge(self):
@@ -62,7 +69,18 @@ class BasicTest(unittest.TestCase):
         
         correct = [0.0, 0.5*self.load1[2][0][0]/(200e9),
                    self.load1[2][0][0]/(200e9)]
-        print(correct)
+        
+        for i in range(len(result)):  # for every component...
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
+
+    # Now, we perform the same test but with a perscribed displacement on both
+    # ends of the two element, 1D problem.
+    def test_solver1D2ElemDisp(self):
+        result, steps = solver(self.numD[0], self.load3, self.nodes2, self.ien2,
+                               self.ida3, self.ncons3, self.cons3)
+        
+        correct = [0.0, 5.0e-6, 1.0e-5]
+        
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
     
@@ -73,5 +91,8 @@ class BasicTest(unittest.TestCase):
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(BasicTest)
 
 FullSuite = unittest.TestSuite([Suite1])
+
+SingleSuite = unittest.TestSuite()
+SingleSuite.addTest(BasicTest('test_solver1D2ElemDisp'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

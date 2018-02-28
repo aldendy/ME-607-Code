@@ -182,7 +182,11 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 
         self.assertEqual(len(kmat), 3*len(nodes) - ncons)  # checks number of rows
         self.assertEqual(len(kmat[0]), 3*len(nodes) - ncons)  # checks row
-        
+
+        for i in range(len(kmat)):  # for every row...
+                for j in range(len(kmat[0])):  # for every column...
+                        self.assertAlmostEqual((kmat[i][j]+1),(kmat[j][i]+1), 3)
+    
     # These tests allow us to conclude that the output matrix is of the appropriate size
 
 ################################################################
