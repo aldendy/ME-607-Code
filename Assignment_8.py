@@ -166,7 +166,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
                 intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien),
                                     deform0)
                 residual = np.array(extFV) - np.array(intFV)
-                #print(intFV, i)
+                print(intFV, i)
                 # if the error is small...
                 if abs(np.linalg.norm(residual)) < 10.0**(-7):
                         deform0 = getFullDVec(ida, deform, cons)

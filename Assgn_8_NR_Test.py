@@ -2,6 +2,7 @@
 
 
 import unittest
+import numpy as np
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
 from Assignment_8 import getFullDVec, solver
@@ -218,7 +219,7 @@ class SolverTest3D(unittest.TestCase):
         for i in [0, 2, 4, 6]:  # for every constrained node
             self.cons1[0][i] = 0.0
         
-        self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
+        self.load1[2][0] = [2.0e8, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
     # Here, we test to ensure that 3D tractions calculate correctly
@@ -230,7 +231,7 @@ class SolverTest3D(unittest.TestCase):
                    0.0, -3.0e-6, 0.0, 1.0e-5, -3.0e-6, 0.0,
                    0.0, 0.0, -3.0e-6, 1.0e-5, 0.0, -3.0e-6,
                    0.0, -3.0e-6, -3.0e-6, 1.0e-5, -3.0e-6, -3.0e-6]
-        
+        print(np.array(correct) - np.array(result))
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
