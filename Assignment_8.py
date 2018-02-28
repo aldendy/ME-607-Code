@@ -106,7 +106,7 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 				
 				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
 					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
-        
+     
 	return kmat
 
 #############################################################################################
