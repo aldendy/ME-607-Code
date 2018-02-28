@@ -91,15 +91,63 @@ class SolverTest1D(unittest.TestCase):
 # In this class, we implement testing on 2D elements to ensure that they respond
 # properly to different displacement, traction and pressure loads
 
+class SolverTest2D(unittest.TestCase):
+    # Here, we initialize all the variables and arrays that will be needed in
+    # the analysis
+    def setUp(self):
+        self.numD = 2  # the number of problem dimensions
+        enum = [1, 2]  # number of elements
+        self.nodes1 = nodeList(1, 1, 1, enum[0], enum[0])
+        self.ien1 = get_ien(enum[0], enum[0])
+        self.cons1, self.load1 = load_and_cons(enum[0], len(self.nodes1),
+                                               self.numD)
+        self.cons1[0][0] = 0.0
+        self.cons1[1][0] = 0.0
+        self.cons1[0][2] = 0.0
+        
+        self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
+        self.ida1, self.ncons1 = getIDArray(self.cons1)
+
+        # For the pressure load...
+        self.cons2, self.load2 = load_and_cons(enum[0], len(self.nodes1),
+                                               self.numD)
+        self.cons2[0][0] = 0.0
+        self.cons2[1][0] = 0.0
+        self.cons2[1][1] = 0.0
+        
+        self.load2[4][0] = 2.0e6  # pressure load to the top
+        self.ida2, self.ncons2 = getIDArray(self.cons2)
+
+    # Now, we simulate the deformation behavior
+    def test_2DTrac1Elem(self):
+        result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
+                               self.ida1, self.ncons1, self.cons1)
+        
+        correct = [0.0, 0.0, 1.0e-5, 0.0, 0.0, -0.3e-5, 1.0e-5, -0.3e-5]
+        
+        for i in range(len(result)):  # for every component...
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
+
+    # Next, we define a similar test using deformation loads
+    def test_2DPress1Elem(self):
+        result, steps = solver(self.numD, self.load2, self.nodes1, self.ien1,
+                               self.ida2, self.ncons2, self.cons2)
+        
+        correct = [0.0, 0.0, -0.3e-5, 0.0, 0.0, 1.0e-5, -0.3e-5, 1.0e-5]
+        
+        for i in range(len(result)):  # for every component...
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
+
 ##############################################################################
 
 # now, the testing
 
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(SolverTest1D)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(SolverTest2D)
 
-FullSuite = unittest.TestSuite([Suite1])
+FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest1D('test_solver1D2ElemDisp'))
+SingleSuite.addTest(SolverTest2D('test_2DPress1Elem'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
