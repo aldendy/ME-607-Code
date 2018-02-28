@@ -102,11 +102,11 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 				P = int(ien[i][j/dims])	 # the global node row number
 				Q = int(ien[i][k/dims])	 # the global node column number
 				pp = j%dims	 # the dof num. for the row number
-				qq = j%dims	 # the dof num. for the column number
-				#print(P, Q, pp, qq)
+				qq = k%dims	 # the dof num. for the column number
+				
 				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
 					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
-	
+        
 	return kmat
 
 #############################################################################################
@@ -165,18 +165,20 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
         while i < imax:
                 intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien), deform0)
                 residual = np.array(extFV) - np.array(intFV)
-
-                if np.linalg.norm(residual) <= 10**(-10):  # if the error is small...
-                        return deform
+                
+                # if the error is small...
+                if abs(np.linalg.norm(residual)) < 10.0**(-7):
+                        deform0 = getFullDVec(ida, deform, cons)
+                        return deform0, i
 
                 stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                
                 du = np.linalg.inv(np.array(stiff))*np.transpose(np.array(residual))
                 deform += (np.transpose(du))[0]
                 deform0 = getFullDVec(ida, deform, cons)
                 i += 1
-                print(i)
         
-        return deform0
+        return deform0, i
 
 
 ###############################################################################################

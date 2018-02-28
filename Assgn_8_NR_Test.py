@@ -21,7 +21,7 @@ class BasicTest(unittest.TestCase):
         self.ien1 = get_ien(enum)
         self.cons1, self.load1 = load_and_cons(enum, len(self.nodes1), self.numD[0])
         self.cons1[0][0] = 0.0
-        self.load1[2][0] = [3, 0, 0]  # load to right end
+        self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
     # Another important test that we can run handles the merging process
@@ -36,11 +36,11 @@ class BasicTest(unittest.TestCase):
 
     # Here, we test the 1D solution process
     def test_solver(self):
-        result = solver(self.numD[0], self.load1, self.nodes1, self.ien1, self.ida1,
-                        self.ncons1, self.cons1)
+        result, steps = solver(self.numD[0], self.load1, self.nodes1, self.ien1,
+                               self.ida1, self.ncons1, self.cons1)
         
-        correct = [0.0, 3.0/(200e9)]
-        
+        correct = [0.0, self.load1[2][0][0]/(200e9)]
+        print(result)
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
     

@@ -142,9 +142,9 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 
     # Next, we test the 2D case
     def test_2DstiffMat(self):
-        enum = 1  # number of elements
-        nodes = nodeList(1, 1, 1, enum, 1)
-        ien = get_ien(enum, 1)
+        enum = 2  # number of elements
+        nodes = nodeList(2, 2, 2, enum, enum)
+        ien = get_ien(enum, enum)
         
         cons, loads = load_and_cons(enum, len(nodes), 2)  # 2 dimensions
         #cons[0][0] = 0
@@ -160,7 +160,7 @@ class StiffMatrixAssemblyTest(unittest.TestCase):
 
         for i in range(len(kmat)):  # for every row...
                 for j in range(len(kmat[0])):  # for every column...
-                        self.assertAlmostEqual(kmat[i][j], kmat[j][i])
+                        self.assertAlmostEqual((kmat[i][j]+1),(kmat[j][i]+1), 3)
     
     # Finally, we test in 3 dimensions
     def test_3DstiffMat(self):
@@ -193,9 +193,9 @@ Suite1 = unittest.TestLoader().loadTestsFromTestCase(EnergyDensityTest)
 Suite2 = unittest.TestLoader().loadTestsFromTestCase(ElementStiffMatrixTest)
 Suite3 = unittest.TestLoader().loadTestsFromTestCase(StiffMatrixAssemblyTest)
 
-SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(StiffMatrixAssemblyTest('test_2DstiffMat'))
+#SingleSuite = unittest.TestSuite()
+#SingleSuite.addTest(StiffMatrixAssemblyTest('test_2DstiffMat'))
 
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(FullSuite)
