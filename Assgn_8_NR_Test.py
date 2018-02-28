@@ -16,13 +16,24 @@ class BasicTest(unittest.TestCase):
     # In this first function, we test the solver written in Assignment_8
     def setUp(self):
         self.numD = [1, 2, 3]  # the number of problem dimensions
-        enum = 1  # number of elements
-        self.nodes1 = nodeList(1, 1, 1, enum)
-        self.ien1 = get_ien(enum)
-        self.cons1, self.load1 = load_and_cons(enum, len(self.nodes1), self.numD[0])
+        enum = [1, 2]  # number of elements
+        self.nodes1 = nodeList(1, 1, 1, enum[0])
+        self.ien1 = get_ien(enum[0])
+        self.cons1, self.load1 = load_and_cons(enum[0], len(self.nodes1),
+                                               self.numD[0])
         self.cons1[0][0] = 0.0
         self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
+
+        # Here, we set up inputs for a two-element problem with either a traction
+        # or displacement load
+        self.nodes2 = nodeList(1, 1, 1, enum[1])
+        self.ien2 = get_ien(enum[1])
+        self.cons2, self.load2 = load_and_cons(enum[1], len(self.nodes2),
+                                               self.numD[0])
+        self.cons2[0][0] = 0.0
+        self.load2[2][1] = [2.0e6, 0, 0]  # load to right end
+        self.ida2, self.ncons2 = getIDArray(self.cons2)
 
     # Another important test that we can run handles the merging process
     # between the partial deformation vector and the complete version.
@@ -34,13 +45,24 @@ class BasicTest(unittest.TestCase):
         for i in range(len(result)):  # for every component of the answer...
             self.assertAlmostEqual(correct[i], result[i])
 
-    # Here, we test the 1D solution process
-    def test_solver(self):
+    # Here, we test the 1D solution process for a single element and traction
+    def test_solver_1D1Elem(self):
         result, steps = solver(self.numD[0], self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
         
         correct = [0.0, self.load1[2][0][0]/(200e9)]
-        print(result)
+        
+        for i in range(len(result)):  # for every component...
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
+
+    # The next test to run involves applying a traction load to two 1D elements
+    def test_solver1D2ElemTrac(self):
+        result, steps = solver(self.numD[0], self.load2, self.nodes2, self.ien2,
+                               self.ida2, self.ncons2, self.cons2)
+        
+        correct = [0.0, 0.5*self.load1[2][0][0]/(200e9),
+                   self.load1[2][0][0]/(200e9)]
+        print(correct)
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
     
