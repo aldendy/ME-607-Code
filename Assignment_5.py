@@ -50,7 +50,10 @@ def scaling(s, jac):
 	scale = 0  # initialize the result value
 	
 	if len(jac[0]) == 1:  # if the integral is 1D...
-		scale = jac[0][0]
+                if s == 0:
+        		scale = jac[0][0]
+        	else:
+                        scale = 1.0
 	
 	if len(jac[0]) == 2:  # if the integral is 2D...
 		v1 = [jac[0][0], jac[1][0], jac[2][0]]  # dx/dxi

@@ -40,7 +40,7 @@ class BasicTest(unittest.TestCase):
                                self.ida1, self.ncons1, self.cons1)
         
         correct = [0.0, self.load1[2][0][0]/(200e9)]
-        print(result)
+        #print(result)
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
     

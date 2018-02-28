@@ -60,7 +60,7 @@ def gaussInt(data, s, j, fj, xa0):
     for i in range(len(data)):  # for every integration point...
         x, jac = posAndJac(data[i], xa0)
         scale = scaling(s, jac)
-        #print(scale, s)
+        print(scale, s, jac)
         area += np.array(integrand(data[i], j, fj, scale, w))
     
     return area
