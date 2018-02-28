@@ -10,9 +10,11 @@ from Assignment_8 import getFullDVec, solver
 ######################################################################
 
 # This class tests the operation of the solver using a single element
-# problem as described in Assignment 8.
+# problem as described in Assignment 8. We also perform tests on 2D elements
+# using traction and displacement loads to ensure that 1D elements function
+# properly
 
-class BasicTest(unittest.TestCase):
+class SolverTest1D(unittest.TestCase):
     # In this first function, we test the solver written in Assignment_8
     def setUp(self):
         self.numD = [1, 2, 3]  # the number of problem dimensions
@@ -86,13 +88,18 @@ class BasicTest(unittest.TestCase):
     
 ###############################################################################
 
+# In this class, we implement testing on 2D elements to ensure that they respond
+# properly to different displacement, traction and pressure loads
+
+##############################################################################
+
 # now, the testing
 
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(BasicTest)
+Suite1 = unittest.TestLoader().loadTestsFromTestCase(SolverTest1D)
 
 FullSuite = unittest.TestSuite([Suite1])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(BasicTest('test_solver1D2ElemDisp'))
+SingleSuite.addTest(SolverTest1D('test_solver1D2ElemDisp'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
