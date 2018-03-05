@@ -216,6 +216,7 @@ class SolverTest3D(unittest.TestCase):
                                                self.numD)
         self.cons1[1][0] = 0.0  # constrain node 0 in all dof
         self.cons1[2][0] = 0.0
+        self.cons1[2][2] = 0.0  # prevent rotation about x
         for i in [0, 2, 4, 6]:  # for every constrained node
             self.cons1[0][i] = 0.0
         
@@ -226,12 +227,13 @@ class SolverTest3D(unittest.TestCase):
     def test_3DTrac1Elem(self):
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
+        dd = 1.0e-3
+        nn = 3.0e-4
+        correct = [0.0, 0.0, 0.0, dd, 0.0, 0.0,
+                   0.0, -nn, 0.0, dd, -nn, 0.0,
+                   0.0, 0.0, -nn, dd, 0.0, -nn,
+                   0.0, -nn, -nn, dd, -nn, -nn]
         
-        correct = [0.0, 0.0, 0.0, 1.0e-5, 0.0, 0.0,
-                   0.0, -3.0e-6, 0.0, 1.0e-5, -3.0e-6, 0.0,
-                   0.0, 0.0, -3.0e-6, 1.0e-5, 0.0, -3.0e-6,
-                   0.0, -3.0e-6, -3.0e-6, 1.0e-5, -3.0e-6, -3.0e-6]
-        print(np.array(correct) - np.array(result))
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
@@ -248,4 +250,4 @@ FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 SingleSuite = unittest.TestSuite()
 SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(FullSuite)
