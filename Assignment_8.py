@@ -158,7 +158,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
         basis = getBasis(numD)
         imax = 10  # the maximum number of iterations tolerable
         extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
-        deform = np.array(numD*(len(nodes) - ncons)*[0.0])  # deformation array missing dof's
+        deform = np.array((numD*len(nodes) - ncons)*[0.0])  # deformation array missing dof's
         deform0 =  getFullDVec(ida, deform, cons) # the complete deformation array
         i = 0  # starting iteration
         

@@ -36,6 +36,19 @@ class MechanicsTest(unittest.TestCase):
                 self.xa2 = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]
                 self.Bmats2, scale2 = getBandScale(2, self.b2, 0, self.xa2)
 
+                self.b3 = getBasis(3)
+                # deformation of four nodes in 2D
+                self.deform3 = [0, 0, 0, 0.1, 0, 0,
+                                0, -0.03, 0, 0.1, -0.03, 0,
+                                0, 0, -0.03, 0.1, 0, -0.03,
+                                0, -0.03, -0.03, 0.1, -0.03, -0.03]  
+                self.ien3 = get_ien(1, 1, 1)
+                self.enum3 = 0
+                self.i3 = 0
+                self.xa3 = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+                            [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+                self.Bmats3, scale3 = getBandScale(3, self.b3, 0, self.xa3)
+
         # Here, we test strain in 1D
         def test_1DstrainCalcs(self):
                 strain = strainVec(1, self.enum1, self.deform1, self.ien1,
@@ -47,6 +60,13 @@ class MechanicsTest(unittest.TestCase):
         def test_2DstrainCalcs(self):
                 strain = strainVec(2, 0, self.deform2, self.ien2, self.Bmats2)
                 correct = [0.1, -0.03, 0]  # correct answer
+                for i in range(len(strain)):  # for every component...
+                        self.assertAlmostEqual(strain[i], correct[i])
+
+        # Here, we test for strain in 3D
+        def test_3DstrainCalcs(self):
+                strain = strainVec(3, 0, self.deform3, self.ien3, self.Bmats3)
+                correct = [0.1, -0.03, -0.03, 0, 0, 0]  # correct answer
                 for i in range(len(strain)):  # for every component...
                         self.assertAlmostEqual(strain[i], correct[i])
 
@@ -63,6 +83,14 @@ class MechanicsTest(unittest.TestCase):
                 strain = strainVec(2, 0, self.deform2, self.ien2, self.Bmats2)
                 stress = stressVec(2, strain)
                 correct = [2e10, 0, 0]
+                for i in range(len(stress)):  # for each component...
+                        self.assertAlmostEqual(stress[i], correct[i], 5)
+
+        # Here, we test the 3D stress calculations
+        def test_3Dstress(self):
+                strain = strainVec(3, 0, self.deform3, self.ien3, self.Bmats3)
+                stress = stressVec(3, strain)
+                correct = [2e10, 0, 0, 0, 0, 0]
                 for i in range(len(stress)):  # for each component...
                         self.assertAlmostEqual(stress[i], correct[i], 5)
 
