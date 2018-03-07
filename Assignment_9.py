@@ -2,7 +2,11 @@
 # We also implement functions to simplify the process of generating a mesh and
 # establishing boundary conditions.
 
+
+from Assignment_1 import getIDArray
+from Assignment_2 import load_and_cons
 from Assignment_8 import solver
+
 
 #######################################################################
 
@@ -25,7 +29,8 @@ from Assignment_8 import solver
 
 # The return is:
 # 'nodeSet' - the node numbers (0, 1, 2...) locating each member of 'nodeSet' in
-#               'nodes', the global nodal array
+#               'nodes', the global nodal array. The members are the selected
+#               nodes in the mesh (a subset)
 
 def nsel(nodes, nodeNums, direction, selType, loc, tol):
     axis = {'x':0, 'y':1, 'z':2}  # associates each direction with a number
@@ -63,9 +68,29 @@ def nsel(nodes, nodeNums, direction, selType, loc, tol):
 
 # The inputs are:
 # 'nodes' - an array of the 3D locations of every node in the mesh
+# 'selSet' - selected node set (location of node in the 'nodes' array (0, 1...))
 # 'ien' - a map (global node #) = ien(element #, local eqn. #)
+# 'dof' - the degree of freedom constrained ('x', 'y', 'z')
+# 'd0'- the value of deformation applied (scalar)
 
+# The outputs are:
+# 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
+# 'ncons' - the number of dof constraints
+# 'cons' - the constraint vector indexed by [dimension #][node #]
 
+def constrain(nodes, selSet, ien, dof, d0):
+    dims = {2:1, 4:2, 8:3}  # dictionary maping the number of element nodes to
+                            # the number of dimensions
+    dofMap = {'x':0, 'y':1, 'z':2}  # maps the degree of freedom of interest to
+                                    # an appropriate dof number.
+    cons, loads = load_and_cons(len(ien), len(nodes), dims[len(ien[0])])
+
+    for i in range(len(selSet)):  # for every selected node...
+        cons[dofMap[dof]][selSet[i]] = d0  # apply the constraint
+
+    ida, ncons = getIDArray(cons)
+
+    return ida, ncons, cons
 
 ###########################################################################
 

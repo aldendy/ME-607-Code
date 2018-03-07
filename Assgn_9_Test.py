@@ -4,7 +4,7 @@
 import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien
-from Assignment_9 import nsel
+from Assignment_9 import nsel, constrain
 
 
 ################################################################
@@ -67,16 +67,47 @@ class nselTests(unittest.TestCase):
         
 #################################################################
 
+# Here, we test the behavior of the constraint funcion and ensure that it
+# applies loads properly.
 
+class constrainTest(unittest.TestCase):
+    # define initial variables
+    def setUp(self):
+        self.nodes = nodeList(1, 1, 1, 1, 1, 1)
+        self.ien = get_ien(1, 1, 1)
+        self.nnums = np.linspace(0, len(self.nodes)-1, len(self.nodes))
 
+        self.s0 = nsel(self.nodes, self.nnums, 'x', 'n', 1, 0.01)
+
+        self.ida, self.ncons, self.cons = constrain(self.nodes, self.s0,
+                                                    self.ien, 'y', 0)
+    # Here, we test the ida array
+    def test_idArray(self):
+        correct_ida = [0, 1, 2, 3, 'n', 4, 5, 6, 7, 8, 'n', 9,
+                       10, 11, 12, 13, 'n', 14, 15, 16, 17, 18, 'n', 19]
+        
+        for i in range(len(self.ida)):  # for every component...
+            self.assertAlmostEqual(self.ida[i], correct_ida[i])
+
+    # Next, we test the number of constraints and the constraint array
+    def test_constrainArray(self):
+        correct_cons = [['n', 'n', 'n', 'n', 'n', 'n', 'n', 'n'],
+                        ['n', 0, 'n', 0, 'n', 0, 'n', 0],
+                        ['n', 'n', 'n', 'n', 'n', 'n', 'n', 'n']]
+        
+        self.assertEqual(self.ncons, 4)
+        for i in range(len(self.cons)):  # for every degree of freedom...
+            for j in range(len(self.cons[0])):  # for every node...
+                self.assertAlmostEqual(self.cons[i][j], correct_cons[i][j])
 
 #####################################################################
 
 # testing
 
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(nselTests)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(constrainTest)
 
-FullSuite = unittest.TestSuite([Suite1])
+FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 #SingleSuite = unittest.TestSuite()
 #SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
