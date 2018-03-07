@@ -3,6 +3,9 @@
 # establishing boundary conditions.
 
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 from Assignment_1 import getIDArray
 from Assignment_2 import load_and_cons
 from Assignment_8 import solver
@@ -93,5 +96,46 @@ def constrain(nodes, selSet, ien, dof, d0):
     return ida, ncons, cons
 
 ###########################################################################
+
+# Another essential component to more advanced analyses is the capability to
+# plot results from simulations. This function is written to pring 2D fields
+# of data extracted from simulation results
+
+# The inputs are:
+# 'deform' - the deformations for each degree of freedom of each node indexed by
+#           [d1x, d1y, d2x, d2y...] for each node (1, 2...) and dof(x, y..)
+# 'nodes' - an array of the 3D locations of all nodes in the mesh
+# 'selSet' - a subset of selected nodes (positions in 'nodes') to plot
+# 'viewNormal' - the direction from which to view the results (3D vector)
+
+# The outputs are:
+
+def plotResults(deform, nodes, selSet, viewNormal):
+    plotName = {0:'Deformation', 1:'Stress', 2:'Strain'}  # contains plot titles
+    uvn = np.array(viewNormal)/np.linalg.norm(viewNormal)  # normalize view vec
+
+    
+    # for every node, find its position perpendicular to the view
+    #for i in range(len(selSet)):  # for every selected node...
+        
+    
+    matplotlib.rcParams['xtick.direction'] = 'out'
+    matplotlib.rcParams['ytick.direction'] = 'out'
+    a = [0, 0.5, 1]
+    b = [0, 0.3, 0.6, 1]
+    X, Y = np.meshgrid(a, b)
+    
+    Z1 = X + Y
+
+    plt.figure()
+    CS = plt.contour([0, 1, 0, 1], [0, 0, 1, 1], [0, 1, 1, 2])
+    plt.title('Simplest default with labels')
+    plt.clabel(CS, inline=1, fontsize=10, manual=1)
+    plt.show()
+    return 0
+
+################################################################################
+
+
 
 

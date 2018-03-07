@@ -4,7 +4,7 @@
 import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien
-from Assignment_9 import nsel, constrain
+from Assignment_9 import nsel, constrain, plotResults
 
 
 ################################################################
@@ -100,14 +100,27 @@ class constrainTest(unittest.TestCase):
             for j in range(len(self.cons[0])):  # for every node...
                 self.assertAlmostEqual(self.cons[i][j], correct_cons[i][j])
 
+#############################################################################
+
+# Now, we test the ability of the plotResults function to corrrectly display
+# 2D data.
+
+class plotDataTest(unittest.TestCase):
+    # Here, we perform a basic test
+    def test_basicPlot(self):
+        code = plotResults(1, 2, 3, 4)
+
+        self.assertEqual(code, 0)
+
 #####################################################################
 
 # testing
 
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(nselTests)
 Suite2 = unittest.TestLoader().loadTestsFromTestCase(constrainTest)
+Suite3 = unittest.TestLoader().loadTestsFromTestCase(plotDataTest)
 
-FullSuite = unittest.TestSuite([Suite1, Suite2])
+FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 #SingleSuite = unittest.TestSuite()
 #SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
