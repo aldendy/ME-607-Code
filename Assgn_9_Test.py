@@ -120,7 +120,7 @@ class plotDataTest(unittest.TestCase):
     def test_1Elem1DPlot(self):
         s0 = nsel(self.nodes1, self.nnums1, 'x', 'n', 0, 0.01)
         ida, ncons, cons, loads = constrain(self.nodes1, s0, self.ien1, 'x', 0)
-        loads[2][0] = [1.0e8, 0.0, 0.0]  #Pa
+        loads[2][0] = 1.0e8  #Pa
         deform, i = solver(1, loads, self.nodes1, self.ien1, ida, ncons, cons)
         #c = plotResults(deform, self.nodes1, self.nnums1, [1, 0, 0], 'x')
         self.assertEqual(0, 0)
