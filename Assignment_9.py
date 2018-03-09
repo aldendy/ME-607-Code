@@ -3,7 +3,6 @@
 # establishing boundary conditions.
 
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from Assignment_1 import getIDArray
@@ -75,25 +74,29 @@ def nsel(nodes, nodeNums, direction, selType, loc, tol):
 # 'ien' - a map (global node #) = ien(element #, local eqn. #)
 # 'dof' - the degree of freedom constrained ('x', 'y', 'z')
 # 'd0'- the value of deformation applied (scalar)
+# 'cons0' - the current set of constraints (defaults to 0 if not provided)
 
 # The outputs are:
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
 # 'ncons' - the number of dof constraints
 # 'cons' - the constraint vector indexed by [dimension #][node #]
+# 'loads' - the load array indexed by [region # (s)][element #]
 
-def constrain(nodes, selSet, ien, dof, d0):
+def constrain(nodes, selSet, ien, dof, d0, cons0='n'):
     dims = {2:1, 4:2, 8:3}  # dictionary maping the number of element nodes to
                             # the number of dimensions
     dofMap = {'x':0, 'y':1, 'z':2}  # maps the degree of freedom of interest to
                                     # an appropriate dof number.
     cons, loads = load_and_cons(len(ien), len(nodes), dims[len(ien[0])])
+    if cons0 != 'n':  # if a previous constraint set is provided...
+        cons = cons0
 
     for i in range(len(selSet)):  # for every selected node...
         cons[dofMap[dof]][selSet[i]] = d0  # apply the constraint
 
     ida, ncons = getIDArray(cons)
 
-    return ida, ncons, cons
+    return ida, ncons, cons, loads
 
 ###########################################################################
 
@@ -106,32 +109,28 @@ def constrain(nodes, selSet, ien, dof, d0):
 #           [d1x, d1y, d2x, d2y...] for each node (1, 2...) and dof(x, y..)
 # 'nodes' - an array of the 3D locations of all nodes in the mesh
 # 'selSet' - a subset of selected nodes (positions in 'nodes') to plot
-# 'viewNormal' - the direction from which to view the results (3D vector)
+# 'plotDir' - a 3D vector following the direction of the selected nodes
+# 'dof' - the particular degree of freedom of results desired ('x', 'y' or 'z')
 
 # The outputs are:
 
-def plotResults(deform, nodes, selSet, viewNormal):
+def plotResults(deform, nodes, selSet, plotDir, dof):
+    dims = int(len(deform)/len(nodes))  # the numer of problem dimensions
     plotName = {0:'Deformation', 1:'Stress', 2:'Strain'}  # contains plot titles
-    uvn = np.array(viewNormal)/np.linalg.norm(viewNormal)  # normalize view vec
+    dofN = {'x':0, 'y':1, 'z':2}  # maps degree of freedom to number
+    uvn = np.array(plotDir)/np.linalg.norm(plotDir)  # normalize view vec
 
+    x = []  # distances of the nods from the origin along 'viewDir'
+    y = []  # stores the values that will be plotted
     
-    # for every node, find its position perpendicular to the view
-    #for i in range(len(selSet)):  # for every selected node...
-        
-    
-    matplotlib.rcParams['xtick.direction'] = 'out'
-    matplotlib.rcParams['ytick.direction'] = 'out'
-    a = [0, 0.5, 1]
-    b = [0, 0.3, 0.6, 1]
-    X, Y = np.meshgrid(a, b)
-    
-    Z1 = X + Y
+    for i in range(len(selSet)):  # for every selected node...
+        xi = np.dot(uvn, np.array(nodes[selSet[i]]))
+        x.append(xi)  # add the appropriate distance
+        y.append(deform[dims*selSet[i] + dofN[dof]])
 
-    plt.figure()
-    CS = plt.contour([0, 1, 0, 1], [0, 0, 1, 1], [0, 1, 1, 2])
-    plt.title('Simplest default with labels')
-    plt.clabel(CS, inline=1, fontsize=10, manual=1)
+    plt.plot(x, y)
     plt.show()
+    
     return 0
 
 ################################################################################

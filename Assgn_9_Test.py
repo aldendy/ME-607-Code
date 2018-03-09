@@ -4,6 +4,7 @@
 import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien
+from Assignment_8 import solver
 from Assignment_9 import nsel, constrain, plotResults
 
 
@@ -79,7 +80,7 @@ class constrainTest(unittest.TestCase):
 
         self.s0 = nsel(self.nodes, self.nnums, 'x', 'n', 1, 0.01)
 
-        self.ida, self.ncons, self.cons = constrain(self.nodes, self.s0,
+        self.ida, self.ncons, self.cons, loads = constrain(self.nodes, self.s0,
                                                     self.ien, 'y', 0)
     # Here, we test the ida array
     def test_idArray(self):
@@ -106,11 +107,29 @@ class constrainTest(unittest.TestCase):
 # 2D data.
 
 class plotDataTest(unittest.TestCase):
-    # Here, we perform a basic test
-    def test_basicPlot(self):
-        code = plotResults(1, 2, 3, 4)
+    # Here, we set up the data needed to perform the tests
+    def setUp(self):
+        self.nodes = nodeList(1, 1, 1, 1, 1, 1)
+        self.ien = get_ien(1, 1, 1)
+        self.nnums = np.linspace(0, len(self.nodes)-1, len(self.nodes))
 
-        self.assertEqual(code, 0)
+    # Here, we test the plotting function for a single, 3D element
+    def test_1Elem3DPlot(self):
+        s0 = nsel(self.nodes, self.nnums, 'x', 'n', 0, 0.01)
+        ida, ncons, cons, loads = constrain(self.nodes, s0, self.ien, 'x', 0)
+        s1 = nsel(self.nodes, s0, 'z', 's', 0, 0.01)
+        ida, ncons, cons, loads = constrain(self.nodes, s1, self.ien, 'z', 0,
+                                            cons)
+        s2 = nsel(self.nodes, s1, 'y', 's', 0, 0.01)
+        ida, ncons, cons, loads = constrain(self.nodes, s2, self.ien, 'y', 0,
+                                            cons)
+        loads[2][0] = 1.0e8  #Pa
+        deform, i = solver(3, loads, self.nodes, self.ien, ida, ncons, cons)
+        ps0 = nsel(self.nodes, self.nnums, 'x', 'n', 0, 0.01)
+        ps1 = nsel(self.nodes, ps0, 'z', 's', 1, 0.01)
+        c = plotResults(deform, self.nodes, ps1, [0, 1, 0], 'x')
+
+        self.assertEqual(c, 0)
 
 #####################################################################
 
