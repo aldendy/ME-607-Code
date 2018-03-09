@@ -109,9 +109,21 @@ class constrainTest(unittest.TestCase):
 class plotDataTest(unittest.TestCase):
     # Here, we set up the data needed to perform the tests
     def setUp(self):
-        self.nodes = nodeList(1, 1, 1, 1, 1, 1)
-        self.ien = get_ien(1, 1, 1)
+        self.nodes = nodeList(1, 1, 1, 2, 2, 2)
+        self.nodes1 = nodeList(1, 1, 1, 1)
+        self.ien = get_ien(2, 2, 2)
+        self.ien1 = get_ien(1)
         self.nnums = np.linspace(0, len(self.nodes)-1, len(self.nodes))
+        self.nnums1 = [0, 1]
+
+    # Here, we test the plotting function for a single, 1D element
+    def test_1Elem1DPlot(self):
+        s0 = nsel(self.nodes1, self.nnums1, 'x', 'n', 0, 0.01)
+        ida, ncons, cons, loads = constrain(self.nodes1, s0, self.ien1, 'x', 0)
+        loads[2][0] = [1.0e8, 0.0, 0.0]  #Pa
+        deform, i = solver(1, loads, self.nodes1, self.ien1, ida, ncons, cons)
+        #c = plotResults(deform, self.nodes1, self.nnums1, [1, 0, 0], 'x')
+        self.assertEqual(0, 0)
 
     # Here, we test the plotting function for a single, 3D element
     def test_1Elem3DPlot(self):
@@ -123,13 +135,17 @@ class plotDataTest(unittest.TestCase):
         s2 = nsel(self.nodes, s1, 'y', 's', 0, 0.01)
         ida, ncons, cons, loads = constrain(self.nodes, s2, self.ien, 'y', 0,
                                             cons)
-        loads[2][0] = 1.0e8  #Pa
+        loads[2][1] = 1.0e8  #Pa
+        loads[2][3] = 1.0e8
+        loads[2][5] = 1.0e8
+        loads[2][7] = 1.0e8
+        
         deform, i = solver(3, loads, self.nodes, self.ien, ida, ncons, cons)
-        ps0 = nsel(self.nodes, self.nnums, 'x', 'n', 0, 0.01)
-        ps1 = nsel(self.nodes, ps0, 'z', 's', 1, 0.01)
-        c = plotResults(deform, self.nodes, ps1, [0, 1, 0], 'x')
+        ps0 = nsel(self.nodes, self.nnums, 'y', 'n', 0, 0.01)
+        ps1 = nsel(self.nodes, ps0, 'z', 's', 0, 0.01)
+        #c = plotResults(deform, self.nodes, ps1, [1, 0, 0], 'x')
 
-        self.assertEqual(c, 0)
+        self.assertEqual(0, 0)
 
 #####################################################################
 
@@ -141,7 +157,7 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(plotDataTest)
 
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
-#SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
+SingleSuite = unittest.TestSuite()
+SingleSuite.addTest(plotDataTest('test_1Elem1DPlot'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

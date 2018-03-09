@@ -28,8 +28,8 @@ class SolverTest1D(unittest.TestCase):
         self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
-        # Here, we set up inputs for a two-element problem with either a traction
-        # or displacement load
+        # Here, we set up inputs for a two-element problem with a traction,
+        # displacement or pressure load. First, the traction load case.
         self.nodes2 = nodeList(1, 1, 1, enum[1])
         self.ien2 = get_ien(enum[1])
         self.cons2, self.load2 = load_and_cons(enum[1], len(self.nodes2),
@@ -45,6 +45,13 @@ class SolverTest1D(unittest.TestCase):
         self.cons3[0][2] = 1.0e-5
         self.ida3, self.ncons3 = getIDArray(self.cons3)
 
+        # now, we test the pressure load sub-case.
+        self.cons4, self.load4 = load_and_cons(enum[1], len(self.nodes2),
+                                               self.numD[0])
+        self.cons4[0][0] = 0.0
+        self.load4[2][1] = 2.0e6
+        self.ida4, self.ncons4 = getIDArray(self.cons4)
+        
     # Another important test that we can run handles the merging process
     # between the partial deformation vector and the complete version.
     def test_deformationVectorMerge(self):
@@ -81,6 +88,16 @@ class SolverTest1D(unittest.TestCase):
     def test_solver1D2ElemDisp(self):
         result, steps = solver(self.numD[0], self.load3, self.nodes2, self.ien2,
                                self.ida3, self.ncons3, self.cons3)
+        
+        correct = [0.0, 5.0e-6, 1.0e-5]
+        
+        for i in range(len(result)):  # for every component...
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
+
+    # Finally, we test the pressure load case in a 1D problem
+    def test_solver1D2ElemPressure(self):
+        result, steps = solver(self.numD[0], self.load4, self.nodes2, self.ien2,
+                               self.ida4, self.ncons4, self.cons4)
         
         correct = [0.0, 5.0e-6, 1.0e-5]
         
@@ -248,6 +265,6 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
+SingleSuite.addTest(SolverTest1D('test_solver1D2ElemPressure'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

@@ -116,10 +116,12 @@ def constrain(nodes, selSet, ien, dof, d0, cons0='n'):
 
 def plotResults(deform, nodes, selSet, plotDir, dof):
     dims = int(len(deform)/len(nodes))  # the numer of problem dimensions
-    plotName = {0:'Deformation', 1:'Stress', 2:'Strain'}  # contains plot titles
+    # contains plot titles
+    plotName = {0:'Deformation', 1:'Stress', 2:'Strain'}
+    plotAxes = {0:'Displacement in ', 1:'Stress in ', 2:'Strain in '}
     dofN = {'x':0, 'y':1, 'z':2}  # maps degree of freedom to number
     uvn = np.array(plotDir)/np.linalg.norm(plotDir)  # normalize view vec
-
+    
     x = []  # distances of the nods from the origin along 'viewDir'
     y = []  # stores the values that will be plotted
     
@@ -129,6 +131,9 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
         y.append(deform[dims*selSet[i] + dofN[dof]])
 
     plt.plot(x, y)
+    plt.title(plotName[0])
+    plt.xlabel('Location along view vector')
+    plt.ylabel(plotAxes[0] + dof)
     plt.show()
     
     return 0
