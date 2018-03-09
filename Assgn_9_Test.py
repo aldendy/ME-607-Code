@@ -3,6 +3,7 @@
 
 import unittest
 import numpy as np
+from math import pi, cos, sin
 from Assignment_1 import nodeList, get_ien
 from Assignment_8 import solver
 from Assignment_9 import nsel, constrain, plotResults
@@ -65,6 +66,14 @@ class nselTests(unittest.TestCase):
             self.assertAlmostEqual(correct[0][i], s1[i])
         for i in range(len(s2)):  # for each component...
             self.assertAlmostEqual(correct[1][i], s2[i])
+
+    # We add an additional test for making a spherical selection about the origin
+    def test_SphericalSelection(self):
+        s0 = nsel(self.nodes, self.nnums, 'r', 'n', 1.5, 0.01)
+        correct = [2, 6, 18]
+
+        for i in range(len(s0)):  # for each component...
+            self.assertEqual(correct[i], s0[i])
         
 #################################################################
 
@@ -147,15 +156,107 @@ class plotDataTest(unittest.TestCase):
 
         self.assertEqual(0, 0)
 
-#####################################################################
+###########################################################################
+
+# Another test that must be performed involves solving problems with unaligned
+# elements and distorted elements such as is the case for the pressurized
+# cylinder problem. In this section, we implement this problem.
+
+class PressurizedCylinderTest(unittest.TestCase):
+    # first we define important necessary variables
+    def setUp(self):
+        # Here, we generate the mesh
+        thetaDomain = pi/2.0  # quarter circle of the pipe
+        ri = 1.2  # the inner radius of the pipe
+        ro = 1.8  # the outer radius of the pipe
+        self.nr = 2  # the number of elements in the radial direction
+        self.nt = 4  # the number of elements in the circumfrential direction
+        self.nodes = []  # stores the nodes in the cylindrical mesh
+        self.p = 2.0e6  # the pressure (Pa)
+
+        for i in range(self.nr+1):  # for every node in the r-direction...
+            for j in range(self.nt+1):  # for every node in the theta-direction...
+                radius = i*(ro - ri)/self.nr + ri
+                theta = j*thetaDomain/self.nt
+                self.nodes.append([radius*cos(theta), radius*sin(theta), 0])
+
+        self.ien = get_ien(self.nt, self.nr)
+        self.nnums = np.linspace(0, len(self.nodes)-1, len(self.nodes))
+
+        # now the fun begins. We solve this problem using roller constraints on
+        # the straight faces and pressure loads on the inner face.
+        s0 = nsel(self.nodes, self.nnums, 'y', 'n', 0, 0.01)
+        s1 = nsel(self.nodes, self.nnums, 'x', 'n', 0, 0.01)
+
+        ida, ncons, cons0, loads = constrain(self.nodes, s0, self.ien, 'y', 0)
+        ida, ncons, cons, loads = constrain(self.nodes, s1, self.ien, 'x', 0,
+                                            cons0)
+        for i in range(self.nt):  # for every inner element...
+            loads[3][i] = self.p
+
+        self.deform, i = solver(2, loads, self.nodes, self.ien, ida, ncons, cons)
+        ps0 = nsel(self.nodes, self.nnums, 'y', 'n', 0, 0.01)
+        #c = plotResults(deform, self.nodes, ps0, [1, 0, 0], 'x')
+
+    # in this test, we verify that all the displacements are only along radial
+    # lines of the pipe. 
+    def test_pressurizedCylinder(self):
+        for i in range(len(self.nodes)):  # for every node...
+            s = 2*i  # starting position of the node displacement
+            e = 2*i + 2  # ending position of the node displacement
+            v1 = np.array(self.nodes[i])
+            v2 = np.array(self.deform[s:e])
+            u1 = v1/np.linalg.norm(v1)
+            u2 = v2/np.linalg.norm(v2)
+            delta = np.dot(u1[0:2], u2)
+            self.assertAlmostEqual(delta, 1.0)
+
+    # We next test to make sure that the deformations are all equal at equal
+    # radial distances
+    def test_pressCylinderSymmetry(self):
+        vals = []  # stores the constant values at each radius
+        n = 0  # counts the current node
+        for i in range(self.nr+1):  # for every node at constant theta...
+            vals.append([])
+            for j in range(self.nt+1):  # for each node at constant radius...
+                s = 2*n  # starting position of the node displacement
+                e = 2*n + 2  # ending position of the node displacement
+                # the magnitude of the nodal displacement
+                disp = np.linalg.norm(np.array(self.deform[s:e]))
+                
+                if j == 0:  # for the first...
+                    vals[i] = disp
+                else:
+                    self.assertAlmostEqual(vals[i], disp)
+
+                n += 1
+
+    # Now, we compare to the exact solution implemented in this function
+    def exactSol(ri, ro, r, nu, E, p):
+        a = p*ri**2/(E*(ro**2 - ri**2))
+        b = ((1 - nu)*r + ro**2*(1 + nu)/r)
+        return a*b
+
+    def test_accuracyPressCylinSol(self):
+        ps = nsel(self.nodes, self.nnums, 'y', 'n', 0, 0.01)
+
+        for i in range(len(ps)):  # for every node...
+            s = 2*ps[i]  # starting position of the node displacement
+            e = 2*ps[i] + 2  # ending position of the node displacement
+            # the magnitude of the nodal displacement
+            disp = np.linalg.norm(np.array(self.deform[s:e]))
+            
+
+############################################################################
 
 # testing
 
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(nselTests)
 Suite2 = unittest.TestLoader().loadTestsFromTestCase(constrainTest)
 Suite3 = unittest.TestLoader().loadTestsFromTestCase(plotDataTest)
+Suite4 = unittest.TestLoader().loadTestsFromTestCase(PressurizedCylinderTest)
 
-FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
+FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 
 SingleSuite = unittest.TestSuite()
 SingleSuite.addTest(plotDataTest('test_1Elem1DPlot'))

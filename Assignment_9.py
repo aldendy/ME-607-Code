@@ -12,6 +12,29 @@ from Assignment_8 import solver
 
 #######################################################################
 
+# In order to properly select points, we must be able to compute the correct
+# 'distance' in order to see if the node meets the selection criteria.
+
+# The inputs are:
+# 'node' - an individual, 3D coordinate for a node
+# 'axis' - the axis on which the node position is measured ('x', 'y', 'z', 'r')
+# 'origin' - the origin from which the criteria will be measured
+
+# The returns are:
+# 'dist' - the scalar distance needed for comparison
+
+def position(node, axis, origin):
+    axisL = {'x':0, 'y':1, 'z':2}  # associates each direction with a number
+    
+    if axis in ['x', 'y', 'z']:  # if the selection is planar...
+        dist = (np.array(node) - np.array(origin))[axisL[axis]]
+    if axis == 'r':  # if the selection is spherical...
+        dist = np.linalg.norm((np.array(node) - np.array(origin)))
+
+    return dist
+
+##########################################################################
+
 # Once we have a mesh, we will have the 'ien' array and the 'nodes' array.
 # This will give use the number of elements, the nodes for each element and the
 # nodal locations. We then need to constrain them and get the 'id' array, number
@@ -23,7 +46,7 @@ from Assignment_8 import solver
 # The inputs are:
 # 'nodes' - the 3D coordinates of all nodes in the mesh
 # 'nodeNums' - a 'list' of the numbers (0, 1, 2...) of currently selected nodes
-# 'direction' - 'x', 'y' or 'z' for the different directions
+# 'direction' - 'x', 'y', 'z' or 'r' for the different directions
 # 'selType' - the selection type ('n' - new set, 'a' - additional set,
 #               's' - subset)
 # 'loc' - the selection location in distance
@@ -35,13 +58,12 @@ from Assignment_8 import solver
 #               nodes in the mesh (a subset)
 
 def nsel(nodes, nodeNums, direction, selType, loc, tol):
-    axis = {'x':0, 'y':1, 'z':2}  # associates each direction with a number
     nodeSet = []  # contains all the locations of all selected nodes.
 
     if selType == 'n':  # if we are making a new selection...
         for i in range(len(nodes)):  # for every node in the mesh...
             # particular node coordinate in 'direction'
-            p = nodes[i][axis[direction]]  
+            p = position(nodes[i], direction, [0, 0, 0])
             if (p > (loc - tol)) and (p < (loc + tol)):  # if in bounds...
                 nodeSet.append(i)  # add the node number
     
@@ -49,7 +71,7 @@ def nsel(nodes, nodeNums, direction, selType, loc, tol):
         nodeSet += nodeNums  # add the already selected nodes
         for i in range(len(nodes)):  # for every node in the mesh...
             # particular node coordinate in 'direction'
-            p = nodes[i][axis[direction]]  
+            p = position(nodes[i], direction, [0, 0, 0])
             if (p > (loc - tol)) and (p < (loc + tol)):  # if in bounds...
                 if i not in nodeNums:  # if the node is not currently selected...
                     nodeSet.append(i)
@@ -58,7 +80,7 @@ def nsel(nodes, nodeNums, direction, selType, loc, tol):
     elif selType == 's':  # selecting a subset of the current set...
         for i in range(len(nodeNums)):  # for every selected node in the mesh...
             # particular node coordinate in 'direction'
-            p = nodes[nodeNums[i]][axis[direction]]
+            p = position(nodes[nodeNums[i]], direction, [0, 0, 0])
             if (p > (loc - tol)) and (p < (loc + tol)):  # if in bounds...
                 nodeSet.append(nodeNums[i])  # add the node number
 
@@ -110,7 +132,7 @@ def constrain(nodes, selSet, ien, dof, d0, cons0='n'):
 # 'nodes' - an array of the 3D locations of all nodes in the mesh
 # 'selSet' - a subset of selected nodes (positions in 'nodes') to plot
 # 'plotDir' - a 3D vector following the direction of the selected nodes
-# 'dof' - the particular degree of freedom of results desired ('x', 'y' or 'z')
+# 'dof' - the degree of freedom of results desired ('x', 'y', 'z' or 'r')
 
 # The outputs are:
 
