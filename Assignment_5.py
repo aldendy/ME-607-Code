@@ -102,6 +102,12 @@ def scaling(s, jac):
 
 def boundNormal(s, jac):
 	norm = [0, 0, 0]  # initialize the vector normal
+
+	if len(jac[0]) == 1:  # if he integral is 1D...
+                if s == 1:  # left wall
+                        norm = numpy.array([-1, 0, 0])
+                if s == 2:  # right wall
+                        norm = numpy.array([1, 0, 0])
 	
 	if len(jac[0]) == 2:  # if the integral is 2D...
 		v1 = [jac[0][0], jac[1][0], jac[2][0]]  # dx/dxi

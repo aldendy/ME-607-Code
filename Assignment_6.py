@@ -95,7 +95,7 @@ def getBandScale(numD, basis, intpt, xa):
         Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2], [n3, 0, n1],
                  [n2, n1, 0]])
       Bmats.append(Bmat)
-
+    
     return Bmats, scale
 
 ######################################################################

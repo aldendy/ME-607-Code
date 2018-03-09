@@ -139,7 +139,7 @@ def get_ien(m, n=0, p=0):
 # 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
 
 # The output is:
-# 'id' - an array implementing the map (Global Eqn. #) = ID[(# dims)(Node #) + (DOF #)]
+# 'id' - an array coding map (Global Eqn. #) = ID[(# dims)(Node #) + (DOF #)]
 # 'ncons' - the number of constraints applied
 
 def getIDArray(cons):
