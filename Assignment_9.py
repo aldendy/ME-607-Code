@@ -4,6 +4,7 @@
 
 
 import matplotlib.pyplot as plt
+import matplotlib.tri as tri
 import numpy as np
 from Assignment_1 import getIDArray
 from Assignment_2 import load_and_cons
@@ -162,6 +163,42 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
 
 ################################################################################
 
+# Here, we experiment with plotting contour plots of result fields
+
+# The inputs are:
+# 'data' - a list of result data for each dof of each node indexed by
+#           [d1x, d1y, d2x, d2y...] for the 2D case
+# 'nodes' - a list of all the 3D locations of each node
+# 'view' - ('x', 'y' or 'z') indicating the viewing direction
+
+# The outputs are:
+# '0' - indicating it ran successfully
+
+def contourPlot(data, nodes, view):
+    viewMap = {'x':0, 'y':1, 'z':2}
+    x = []  # stores the x-values
+    y = []  # stores the y-values
+    z = np.array(len(nodes)*[1])
+
+    for i in range(len(nodes)):  # for each node...
+        x.append(nodes[i][0])
+        y.append(nodes[i][1])
+        z[i] += np.linalg.norm(np.array(nodes[i]))
+    
+    mesh = tri.Triangulation(x, y)
+
+    # pcolor plot.
+    plt.figure()
+    plt.gca().set_aspect('equal')
+    plt.tricontourf(mesh, z)
+    plt.colorbar()  
+    #plt.tricontour(mesh, z, colors='k')
+    plt.title('Contour plot of Delaunay triangulation')
+    plt.show()
+    
+    return 0
+
+################################################################################
 
 
 

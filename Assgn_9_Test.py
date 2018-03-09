@@ -6,7 +6,7 @@ import numpy as np
 from math import pi, cos, sin
 from Assignment_1 import nodeList, get_ien
 from Assignment_8 import solver
-from Assignment_9 import nsel, constrain, plotResults
+from Assignment_9 import nsel, constrain, plotResults, contourPlot
 
 
 ################################################################
@@ -252,7 +252,11 @@ class PressurizedCylinderTest(unittest.TestCase):
             # Here, the comparison
             error = 100*(disp - disp0)/disp0
             self.assertLess(abs(error), 0.5)  # less than 0.5% error
-            
+
+    # Here, we test a contourplotting routine.
+    def test_contourPlot(self):
+        nodes = nodeList(1, 1, 1, 60, 60, 60)
+        c = contourPlot(0, nodes, 'z')
 
 ############################################################################
 
@@ -266,6 +270,6 @@ Suite4 = unittest.TestLoader().loadTestsFromTestCase(PressurizedCylinderTest)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(plotDataTest('test_1Elem1DPlot'))
+SingleSuite.addTest(PressurizedCylinderTest('test_contourPlot'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)
