@@ -167,16 +167,16 @@ class PressurizedCylinderTest(unittest.TestCase):
     def setUp(self):
         # Here, we generate the mesh
         thetaDomain = pi/2.0  # quarter circle of the pipe
-        ri = 1.2  # the inner radius of the pipe
-        ro = 1.8  # the outer radius of the pipe
-        self.nr = 2  # the number of elements in the radial direction
-        self.nt = 4  # the number of elements in the circumfrential direction
+        self.ri = 1.2  # the inner radius of the pipe
+        self.ro = 1.8  # the outer radius of the pipe
+        self.nr = 4  # the number of elements in the radial direction
+        self.nt = 8  # the number of elements in the circumfrential direction
         self.nodes = []  # stores the nodes in the cylindrical mesh
         self.p = 2.0e6  # the pressure (Pa)
 
         for i in range(self.nr+1):  # for every node in the r-direction...
             for j in range(self.nt+1):  # for every node in the theta-direction...
-                radius = i*(ro - ri)/self.nr + ri
+                radius = i*(self.ro - self.ri)/self.nr + self.ri
                 theta = j*thetaDomain/self.nt
                 self.nodes.append([radius*cos(theta), radius*sin(theta), 0])
 
@@ -231,12 +231,6 @@ class PressurizedCylinderTest(unittest.TestCase):
 
                 n += 1
 
-    # Now, we compare to the exact solution implemented in this function
-    def exactSol(ri, ro, r, nu, E, p):
-        a = p*ri**2/(E*(ro**2 - ri**2))
-        b = ((1 - nu)*r + ro**2*(1 + nu)/r)
-        return a*b
-
     def test_accuracyPressCylinSol(self):
         ps = nsel(self.nodes, self.nnums, 'y', 'n', 0, 0.01)
 
@@ -245,6 +239,19 @@ class PressurizedCylinderTest(unittest.TestCase):
             e = 2*ps[i] + 2  # ending position of the node displacement
             # the magnitude of the nodal displacement
             disp = np.linalg.norm(np.array(self.deform[s:e]))
+
+            # Here, we calculate the exact solution
+            v = self.nodes[ps[i]]  # a vector position of the node
+            r = v[0]  # the radius of the point
+            E = 2.0e11
+            nu = 0.3
+            a = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))
+            b = ((1 - nu)*r + self.ro**2*(1 + nu)/r)
+            disp0 = a*b
+
+            # Here, the comparison
+            error = 100*(disp - disp0)/disp0
+            self.assertLess(abs(error), 0.5)  # less than 0.5% error
             
 
 ############################################################################
