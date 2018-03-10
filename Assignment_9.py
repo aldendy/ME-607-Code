@@ -8,6 +8,8 @@ import matplotlib.tri as tri
 import numpy as np
 from Assignment_1 import getIDArray
 from Assignment_2 import load_and_cons
+from Assignment_4 import getBasis
+from Assignment_6 import getXaArray, getBandScale, strainVec, stressVec
 from Assignment_8 import solver
 
 
@@ -123,6 +125,67 @@ def constrain(nodes, selSet, ien, dof, d0, cons0='n'):
 
 ###########################################################################
 
+# We need a function that can compute the von Mises stress
+
+# The inputs are:
+# 's' - a stress vector in Voigt notation
+
+# The outputs are:
+# 'vM' - von Mises stress
+
+def getMises(s):
+    if len(s) == 6:  # in 3D...
+        a = (s[0][0] - s[1][0])**2 + (s[1][0] - s[2][0])**2 + (s[2][0] - s[0][0])**2
+        b = 6.0*(s[5][0]**2 + s[3][0]**2 + s[4][0]**2)
+        vM = (a + b)**0.5/2**0.5
+    elif len(s) == 3:  # in 2D...
+        vM = (s[0][0]**2 - s[0][0]*s[1][0] + s[1][0]**2 + 3*s[2][0]**2)**0.5
+    else:  # in 1D...
+        vM = s[0][0]
+
+    return vM
+
+#############################################################################
+
+# An important function that will be needed for plotting is a method for finding
+# the stress at the nodes.
+
+# The inputs are:
+# 'deform' - the deformations for each degree of freedom of each node indexed by
+#           [d1x, d1y, d2x, d2y...] for each node (1, 2...) and dof(x, y..)
+# 'ien' - an array mapping (Global node #) = ien[element #][element node #]
+# 'nodes' - an array of the 3D locations of all nodes in the mesh
+# 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
+#           'tau_yz', 'tau_zx', 'von Mises')
+
+# The outputs are:
+# 'stress' - an array of stress vectors for every node in the mesh
+
+def get_stress_sol(deform, ien, nodes, stype):
+    stypeMap = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
+                'tau_zx':4, 'von Mises':10}  # maps types to numbers
+    stress = len(nodes)*[0]  # initializes the stress
+    flags = len(nodes)*[0]  # records whether assignment has been made
+    dims = int(len(deform)/len(nodes))  # number of problem dimensions
+
+    for i in range(len(ien)):  # for every element...
+        for j in range(len(ien[0])):  # for every node in the element...
+            if flags[int(ien[i][j])] == 0:  # if assignment hasn't occurred...
+                basis = getBasis(dims, 1.0)  # get basis evals at corners
+                xa = getXaArray(i, nodes, ien)  # get the element nodes
+                Bmats, scale = getBandScale(dims, basis, j, xa)
+                strain = strainVec(dims, i, deform, ien, Bmats)
+                s = stressVec(dims, strain)
+                if stype == 'von Mises':
+                    stress[int(ien[i][j])] = getMises(s)
+                else:
+                    stress[int(ien[i][j])] = s[stypeMap[stype]]
+
+            flags[int(ien[i][j])] = 1  # mark as having been assigned
+    return stress
+
+###########################################################################
+
 # Another essential component to more advanced analyses is the capability to
 # plot results from simulations. This function is written to pring 2D fields
 # of data extracted from simulation results
@@ -188,7 +251,7 @@ def contourPlot(data, nodes, view):
         e = dims*i + dims  # ending position of the node displacement
         num = np.linalg.norm(np.array(data[s:e]))
         num2 = np.linalg.norm(np.array(nodes[i]))
-        z.append(num)
+        z.append(data[i])
     
     mesh = tri.Triangulation(x, y)
     mask = tri.TriAnalyzer(mesh).get_flat_tri_mask(min_circle_ratio=0.2)
