@@ -45,20 +45,20 @@ def position(node, axis, origin):
 # using specific location criteria
 
 # The inputs are:
-# 'nodes' - the 3D coordinates of all nodes in the mesh
-# 'nodeNums' - a 'list' of the numbers (0, 1, 2...) of currently selected nodes
 # 'direction' - 'x', 'y', 'z' or 'r' for the different directions
 # 'selType' - the selection type ('n' - new set, 'a' - additional set,
 #               's' - subset)
 # 'loc' - the selection location in distance
 # 'tol' - the selection tolerance in units of distance
+# 'nodes' - the 3D coordinates of all nodes in the mesh
+# 'nodeNums' - a 'list' of the numbers (0, 1, 2...) of currently selected nodes
 
 # The return is:
 # 'nodeSet' - the node numbers (0, 1, 2...) locating each member of 'nodeSet' in
 #               'nodes', the global nodal array. The members are the selected
 #               nodes in the mesh (a subset)
 
-def nsel(nodes, nodeNums, direction, selType, loc, tol):
+def nsel(direction, selType, loc, tol, nodes, nodeNums=0):
     nodeSet = []  # contains all the locations of all selected nodes.
 
     if selType == 'n':  # if we are making a new selection...
@@ -176,23 +176,28 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
 
 def contourPlot(data, nodes, view):
     viewMap = {'x':0, 'y':1, 'z':2}
+    dims = int(len(data)/len(nodes))  # number of problem dimensions
     x = []  # stores the x-values
     y = []  # stores the y-values
-    z = np.array(len(nodes)*[1])
+    z = []  # stores the desired simulation value
 
     for i in range(len(nodes)):  # for each node...
         x.append(nodes[i][0])
         y.append(nodes[i][1])
-        z[i] += np.linalg.norm(np.array(nodes[i]))
+        s = dims*i  # starting position of the node displacement
+        e = dims*i + dims  # ending position of the node displacement
+        num = np.linalg.norm(np.array(data[s:e]))
+        num2 = np.linalg.norm(np.array(nodes[i]))
+        z.append(num)
     
     mesh = tri.Triangulation(x, y)
-
+    mask = tri.TriAnalyzer(mesh).get_flat_tri_mask(min_circle_ratio=0.2)
+    mesh.set_mask(mask)
     # pcolor plot.
     plt.figure()
     plt.gca().set_aspect('equal')
-    plt.tricontourf(mesh, z)
+    plt.tricontourf(mesh, z, extend='both')
     plt.colorbar()  
-    #plt.tricontour(mesh, z, colors='k')
     plt.title('Contour plot of Delaunay triangulation')
     plt.show()
     
