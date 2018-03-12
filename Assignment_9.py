@@ -137,7 +137,7 @@ def getMises(s):
     if len(s) == 6:  # in 3D...
         a = (s[0][0] - s[1][0])**2 + (s[1][0] - s[2][0])**2 + (s[2][0] - s[0][0])**2
         b = 6.0*(s[5][0]**2 + s[3][0]**2 + s[4][0]**2)
-        vM = (a + b)**0.5/2**0.5
+        vM = (0.5*(a + b))**0.5
     elif len(s) == 3:  # in 2D...
         vM = (s[0][0]**2 - s[0][0]*s[1][0] + s[1][0]**2 + 3*s[2][0]**2)**0.5
     else:  # in 1D...
@@ -176,10 +176,11 @@ def get_stress_sol(deform, ien, nodes, stype):
                 Bmats, scale = getBandScale(dims, basis, j, xa)
                 strain = strainVec(dims, i, deform, ien, Bmats)
                 s = stressVec(dims, strain)
+                
                 if stype == 'von Mises':
                     stress[int(ien[i][j])] = getMises(s)
                 else:
-                    stress[int(ien[i][j])] = s[stypeMap[stype]]
+                    stress[int(ien[i][j])] = s[stypeMap[stype]][0]
 
             flags[int(ien[i][j])] = 1  # mark as having been assigned
     return stress
@@ -251,7 +252,7 @@ def contourPlot(data, nodes, view):
         e = dims*i + dims  # ending position of the node displacement
         num = np.linalg.norm(np.array(data[s:e]))
         num2 = np.linalg.norm(np.array(nodes[i]))
-        z.append(data[i])
+        z.append(num)
     
     mesh = tri.Triangulation(x, y)
     mask = tri.TriAnalyzer(mesh).get_flat_tri_mask(min_circle_ratio=0.2)

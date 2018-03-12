@@ -254,14 +254,6 @@ class PressurizedCylinderTest(unittest.TestCase):
             error = 100*(disp - disp0)/disp0
             self.assertLess(abs(error), 0.5)  # less than 0.5% error
 
-    def test_stressPressCylinSol(self):
-        stress = get_stress_sol(self.deform, self.ien, self.nodes, 'von Mises')
-        c = contourPlot(stress, self.nodes, 'z')
-
-        a = self.p*self.ri**2/(self.ro**2 - self.ri**2)
-        b = self.p*self.ri**2*self.ro**2/(1.2**2*(self.ro**2 - self.ri**2))
-        print(a - b)
-
     # Here, we test a contourplotting routine.
     def test_contourPlot(self):
         nodes = nodeList(1, 1, 1, 60, 60, 60)
@@ -278,7 +270,7 @@ Suite4 = unittest.TestLoader().loadTestsFromTestCase(PressurizedCylinderTest)
 
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 
-SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(PressurizedCylinderTest('test_stressPressCylinSol'))
+#SingleSuite = unittest.TestSuite()
+#SingleSuite.addTest(PressurizedCylinderTest('test_stressPressCylinSol'))
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(FullSuite)
