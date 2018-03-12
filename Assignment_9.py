@@ -230,17 +230,22 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
 # Here, we experiment with plotting contour plots of result fields
 
 # The inputs are:
-# 'data' - a list of result data for each dof of each node indexed by
+# 'deform' - a list of deformation data for each dof of each node indexed by
 #           [d1x, d1y, d2x, d2y...] for the 2D case
+# 'ien' - array mapping (global node #) = ien[element #][element node #]
 # 'nodes' - a list of all the 3D locations of each node
-# 'view' - ('x', 'y' or 'z') indicating the viewing direction
+# 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
+#           'tau_yz', 'tau_zx', 'von Mises')
 
 # The outputs are:
 # '0' - indicating it ran successfully
 
-def contourPlot(data, nodes, view):
+def contourPlot(deform, ien, nodes, stype):
     viewMap = {'x':0, 'y':1, 'z':2}
-    dims = int(len(data)/len(nodes))  # number of problem dimensions
+    dimMap = {2:1, 4:2, 8:3}  # number of problem dimensions
+    dims = dimMap[len(ien[0])]
+    stress = get_stress_sol(deform, ien, nodes, stype)
+    
     x = []  # stores the x-values
     y = []  # stores the y-values
     z = []  # stores the desired simulation value
@@ -248,11 +253,7 @@ def contourPlot(data, nodes, view):
     for i in range(len(nodes)):  # for each node...
         x.append(nodes[i][0])
         y.append(nodes[i][1])
-        s = dims*i  # starting position of the node displacement
-        e = dims*i + dims  # ending position of the node displacement
-        num = np.linalg.norm(np.array(data[s:e]))
-        num2 = np.linalg.norm(np.array(nodes[i]))
-        z.append(num)
+        z.append(stress[i])
     
     mesh = tri.Triangulation(x, y)
     mask = tri.TriAnalyzer(mesh).get_flat_tri_mask(min_circle_ratio=0.2)
@@ -262,12 +263,15 @@ def contourPlot(data, nodes, view):
     plt.gca().set_aspect('equal')
     plt.tricontourf(mesh, z, extend='both')
     plt.colorbar()  
-    plt.title('Contour plot of Delaunay triangulation')
+    plt.title('Nodal results for ' + stype)
     plt.show()
     
     return 0
 
 ################################################################################
+
+
+
 
 
 

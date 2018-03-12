@@ -3,10 +3,12 @@
 
 import unittest
 import copy
+import numpy as np
+from math import pi, cos, sin
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
 from Assignment_8 import solver
-from Assignment_9 import get_stress_sol
+from Assignment_9 import nsel, constrain, get_stress_sol, contourPlot
 
 
 ##########################################################################
@@ -179,24 +181,30 @@ class contourPlotTest(unittest.TestCase):
     
     # Here, we test the plotting process.
     def test_stressPressCylinSol(self):
-        stress = get_stress_sol(self.deform, self.ien, self.nodes, 'von Mises')
-        
-        c = contourPlot(stress, self.nodes, 'z')
-
+        #c = contourPlot(self.deform, self.ien, self.nodes, 'von Mises')
+        r = 1.2
         a = self.p*self.ri**2/(self.ro**2 - self.ri**2)
-        b = self.p*self.ri**2*self.ro**2/(1.2**2*(self.ro**2 - self.ri**2))
-        print(a - b)
+        b = self.p*self.ri**2*self.ro**2/(r**2*(self.ro**2 - self.ri**2))
+        rstress = a - b
+
+        d = self.p*self.ri**2/(self.ro**2 - self.ri**2)
+        e = self.p*self.ri**2*self.ro**2/(r**2*(self.ro**2 - self.ri**2))
+        tstress = d + e
+        self.assertEqual(0, 0)
+        print('Radial Stress:', rstress)
+        print('Tangential Stress:', tstress)
 
 #############################################################################
 
 # Now the testing
 
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(StressSolutionTest)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(contourPlotTest)
 
-FullSuite = unittest.TestSuite([Suite1])
+FullSuite = unittest.TestSuite([Suite1, Suite2])
 
-#SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(contourPlotTest('get_stress_sol'))
+SingleSuite = unittest.TestSuite()
+SingleSuite.addTest(contourPlotTest('test_stressPressCylinSol'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
 
