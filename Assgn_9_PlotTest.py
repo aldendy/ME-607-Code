@@ -152,7 +152,7 @@ class contourPlotTest(unittest.TestCase):
         self.ri = 1.2  # the inner radius of the pipe
         self.ro = 1.8  # the outer radius of the pipe
         self.nr = 4  # the number of elements in the radial direction
-        self.nt = 8  # the number of elements in the circumfrential direction
+        self.nt = 4  # the number of elements in the circumfrential direction
         self.nodes = []  # stores the nodes in the cylindrical mesh
         self.p = 2.0e6  # the pressure (Pa)
 
@@ -181,7 +181,8 @@ class contourPlotTest(unittest.TestCase):
     
     # Here, we test the plotting process.
     def test_stressPressCylinSol(self):
-        #c = contourPlot(self.deform, self.ien, self.nodes, 'von Mises')
+        #print(self.deform)
+        #c = contourPlot(self.deform, self.ien, self.nodes, 'von Mises', 'x')
         r = 1.2
         a = self.p*self.ri**2/(self.ro**2 - self.ri**2)
         b = self.p*self.ri**2*self.ro**2/(r**2*(self.ro**2 - self.ri**2))

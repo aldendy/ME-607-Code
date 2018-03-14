@@ -236,11 +236,12 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
 # 'nodes' - a list of all the 3D locations of each node
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
 #           'tau_yz', 'tau_zx', 'von Mises')
+# 'view' - picks on of the cardinal directions ('x', 'y', 'z') as the viewpoint
 
 # The outputs are:
 # '0' - indicating it ran successfully
 
-def contourPlot(deform, ien, nodes, stype):
+def contourPlot(deform, ien, nodes, stype, view):
     viewMap = {'x':0, 'y':1, 'z':2}
     dimMap = {2:1, 4:2, 8:3}  # number of problem dimensions
     dims = dimMap[len(ien[0])]
@@ -249,15 +250,21 @@ def contourPlot(deform, ien, nodes, stype):
     x = []  # stores the x-values
     y = []  # stores the y-values
     z = []  # stores the desired simulation value
+    triang = []  # stores the particular trianglulation used to plot results
 
     for i in range(len(nodes)):  # for each node...
         x.append(nodes[i][0])
         y.append(nodes[i][1])
         z.append(stress[i])
+
+    for i in range(len(ien)):  # for each element...
+        a = [ien[i][0], ien[i][1], ien[i][3]]
+        b = [ien[i][0], ien[i][3], ien[i][2]]
+        triang.append(a)
+        triang.append(b)
     
-    mesh = tri.Triangulation(x, y)
-    mask = tri.TriAnalyzer(mesh).get_flat_tri_mask(min_circle_ratio=0.2)
-    mesh.set_mask(mask)
+    mesh = tri.Triangulation(x, y, triang)
+
     # pcolor plot.
     plt.figure()
     plt.gca().set_aspect('equal')
