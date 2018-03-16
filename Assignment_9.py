@@ -198,8 +198,9 @@ def getSigmaR(pt, s, p, axis):
 # 'data' - an array of results for every node in the mesh
 
 def get_stress_sol(deform, ien, nodes, stype):
-    stypeMap = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
+    stypeMap3 = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
                 'tau_zx':4}  # maps types to numbers
+    stypeMap2 = {'sigma_x':0, 'sigma_y':1, 'tau_xy':2}
     data = len(nodes)*[0]  # initializes the stress
     flags = len(nodes)*[0]  # records whether assignment has been made
     dims = int(len(deform)/len(nodes))  # number of problem dimensions
@@ -212,7 +213,7 @@ def get_stress_sol(deform, ien, nodes, stype):
                 Bmats, scale = getBandScale(dims, basis, j, xa)
                 strain = strainVec(dims, i, deform, ien, Bmats)
                 s = stressVec(dims, strain)
-                print(i, j, getMises(s))
+                
                 if stype == 'von Mises':
                     data[int(ien[i][j])] = getMises(s)
                 elif stype == 'sigma_r':  # if we want the radial stress...
@@ -226,8 +227,10 @@ def get_stress_sol(deform, ien, nodes, stype):
                     first = dims*n
                     second = first + dims
                     data[int(ien[i][j])] = np.linalg.norm(deform[first:second])
-                else:
-                    data[int(ien[i][j])] = s[stypeMap[stype]][0]
+                elif dims == 3:  # for three dimensions...
+                    data[int(ien[i][j])] = s[stypeMap3[stype]][0]
+                elif dims == 2:  # for two dimensions...
+                    data[int(ien[i][j])] = s[stypeMap2[stype]][0]
 
                 flags[int(ien[i][j])] = 1  # mark as having been assigned
     return data
@@ -305,9 +308,9 @@ def contourPlot(deform, ien, nodes, stype, view):
         z.append(data[i])
 
     for i in range(len(ien)):  # for each element...
-        a = [ien[i][0], ien[i][1], ien[i][3]]
-        b = [ien[i][0], ien[i][3], ien[i][2]]
-        triang.append(a)
+        a = [ien[i][0], ien[i][1], ien[i][3]]  # first triangle
+        b = [ien[i][0], ien[i][3], ien[i][2]]  # second triangle
+        triang.append(a)  # assemble triangulation for ith element
         triang.append(b)
     
     mesh = tri.Triangulation(x, y, triang)
