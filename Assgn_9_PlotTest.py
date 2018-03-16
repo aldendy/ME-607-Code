@@ -149,12 +149,12 @@ class contourPlotTest(unittest.TestCase):
     def setUp(self):
         # Here, we generate the mesh
         thetaDomain = pi/2.0  # quarter circle of the pipe
-        self.ri = 1.2  # the inner radius of the pipe
+        self.ri = 1.5  # the inner radius of the pipe
         self.ro = 1.8  # the outer radius of the pipe
-        self.nr = 4  # the number of elements in the radial direction
+        self.nr = 2  # the number of elements in the radial direction
         self.nt = 8  # the number of elements in the circumfrential direction
         self.nodes = []  # stores the nodes in the cylindrical mesh
-        self.p = 2.0e6  # the pressure (Pa)
+        self.p = -2.0e6  # the pressure (Pa) (against the surface normal)
 
         for i in range(self.nr+1):  # for every node in the r-direction...
             for j in range(self.nt+1):  # for every node in the theta-direction...
@@ -163,7 +163,6 @@ class contourPlotTest(unittest.TestCase):
                 self.nodes.append([radius*sin(theta), radius*cos(theta), 0])
 
         self.ien = get_ien(self.nt, self.nr)
-        self.nnums = np.linspace(0, len(self.nodes)-1, len(self.nodes))
 
         # now the fun begins. We solve this problem using roller constraints on
         # the straight faces and pressure loads on the inner face.
@@ -181,18 +180,26 @@ class contourPlotTest(unittest.TestCase):
     
     # Here, we test the plotting process.
     def test_stressPressCylinSol(self):
-        c = contourPlot(self.deform, self.ien, self.nodes, 'd_abs', 'x')
-        r = 1.2
+        E = 2.0e11
+        nu = 0.3
+        c = contourPlot(self.deform, self.ien, self.nodes, 'sigma_r', 'x')
+        r = self.ri
         a = self.p*self.ri**2/(self.ro**2 - self.ri**2)
         b = self.p*self.ri**2*self.ro**2/(r**2*(self.ro**2 - self.ri**2))
-        rstress = a - b
+        rstress = -(a - b)  # radial stress
 
         d = self.p*self.ri**2/(self.ro**2 - self.ri**2)
         e = self.p*self.ri**2*self.ro**2/(r**2*(self.ro**2 - self.ri**2))
-        tstress = d + e
+        tstress = -(d + e)  # tangential stress
+
+        # radial deformation
+        f = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))  # first part
+        g = ((1 - nu)*r + self.ro**2*(1 + nu)/r)  # second part
+        ur = -f*g
         self.assertEqual(0, 0)
         print('Radial Stress:', rstress)
         print('Tangential Stress:', tstress)
+        print('Radial def:', ur)
 
 ############################################################################
 
@@ -205,7 +212,7 @@ class getSigmaRTest(unittest.TestCase):
         ang2 = -25.7*pi/180.0
         pt1 = [cos(ang1), sin(ang1), 0]  # a node point
         pt2 = [cos(ang2), sin(ang2), 0]  # a node point
-        s = [80.0, 0, -50.0]  # stress at the point
+        s = [[80.0], [0], [-50.0]]  # stress at the point
         num1 = getSigmaR(pt1, s, 'r', [0, 0, 1])
         num2 = getSigmaR(pt2, s, 'r', [0, 0, -1])
         self.assertAlmostEqual(num1, -24.0312074893, 4)
@@ -215,7 +222,7 @@ class getSigmaRTest(unittest.TestCase):
     def test_getSigmaR3D(self):
         # Here, we implement Example 1.7, pg. 24 from ME 604 book (continuum)
         pt = [1, 1, -1]
-        s = [4000, -2000, 3000, -1000, 400, 1500]
+        s = [[4000], [-2000], [3000], [-1000], [400], [1500]]
         num = getSigmaR(pt, s, 'r', [1, 1, 2])
         self.assertAlmostEqual(num, 3066.66666667, 4)
 
@@ -232,7 +239,7 @@ FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 SingleSuite = unittest.TestSuite()
 SingleSuite.addTest(contourPlotTest('test_stressPressCylinSol'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)
 
 
 

@@ -254,9 +254,9 @@ class PressurizedCylinderTest(unittest.TestCase):
             es = rsol[i+1] - rsol[i]  # element size
             r0 = rsol[i] + (1 - d)*es/2.0  # first gauss quadrature point
             r1 = rsol[i] + (1 + d)*es/2.0  # second gauss quadrature point
-            a = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))
+            a = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))  # first part
             
-            b0 = ((1 - nu)*r0 + self.ro**2*(1 + nu)/r0)
+            b0 = ((1 - nu)*r0 + self.ro**2*(1 + nu)/r0)  # second part
             b1 = ((1 - nu)*r1 + self.ro**2*(1 + nu)/r1)
             u0 = a*b0  # the exact solution at the first gauss quadrature point
             u1 = a*b1  # the exact solution at the second gauss quadrature point

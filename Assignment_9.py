@@ -168,17 +168,18 @@ def getSigmaR(pt, s, p, axis):
     t = np.cross(z, ru)  # tangential direction
     
     if len(s) == 3:  # for the 2D case...
-        cauchy = np.array([[s[0],   s[2],   0.0],
-                           [s[2],   s[1],   0.0],
-                           [0.0,    0.0,    0.0]])
+        cauchy = np.array([[s[0][0],    s[2][0],    0.0],
+                           [s[2][0],    s[1][0],    0.0],
+                           [0.0,        0.0,        0.0]])
     elif len(s) == 6:  # for the 3D case...
-        cauchy = np.array([[s[0], s[5], s[4]],
-                           [s[5], s[1], s[3]],
-                           [s[4], s[3], s[2]]])
+        cauchy = np.array([[s[0][0], s[5][0], s[4][0]],
+                           [s[5][0], s[1][0], s[3][0]],
+                           [s[4][0], s[3][0], s[2][0]]])
     if p == 't':  # for tangential stress
-        return np.dot(np.dot(cauchy, t), t)
+        return (np.dot(np.dot(cauchy, t), t))
     elif p == 'r':  # for the radial stress...
-        return np.dot(np.dot(cauchy, ru), ru)
+        sr = np.dot(np.dot(cauchy, ru), ru)
+        return sr
 
 #############################################################################
 
@@ -202,7 +203,7 @@ def get_stress_sol(deform, ien, nodes, stype):
     data = len(nodes)*[0]  # initializes the stress
     flags = len(nodes)*[0]  # records whether assignment has been made
     dims = int(len(deform)/len(nodes))  # number of problem dimensions
-
+    
     for i in range(len(ien)):  # for every element...
         for j in range(len(ien[0])):  # for every node in the element...
             if flags[int(ien[i][j])] == 0:  # if assignment hasn't occurred...
@@ -211,7 +212,7 @@ def get_stress_sol(deform, ien, nodes, stype):
                 Bmats, scale = getBandScale(dims, basis, j, xa)
                 strain = strainVec(dims, i, deform, ien, Bmats)
                 s = stressVec(dims, strain)
-                
+                print(i, j, getMises(s))
                 if stype == 'von Mises':
                     data[int(ien[i][j])] = getMises(s)
                 elif stype == 'sigma_r':  # if we want the radial stress...
@@ -299,7 +300,6 @@ def contourPlot(deform, ien, nodes, stype, view):
     triang = []  # stores the particular trianglulation used to plot results
 
     for i in range(len(nodes)):  # for each node...
-        #print(np.linalg.norm(deform[i]))
         x.append(nodes[i][0])
         y.append(nodes[i][1])
         z.append(data[i])
