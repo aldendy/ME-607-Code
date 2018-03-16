@@ -147,6 +147,41 @@ def getMises(s):
 
 #############################################################################
 
+# This function returns the cylindrical stress at a given point given the node
+# location and the stress vector (Voigt notation) at the point. It assumes that
+# the problem has dimension of at least 2.
+
+# The inputs are:
+# 'pt' - the 3D coordinate of the point
+# 's' - the stress vector in the appropriate number of problem dimensions (1-3)
+# 'p' - the direction of the stress ('t' - tangential, 'r' - radial)
+# 'axis' - the z-axis of the cylindrical coordinate system as a 3D vector
+
+# The returns are:
+# 'sigma_rt' - the radial or tangential stress at point 'pt'
+
+def getSigmaR(pt, s, p, axis):
+    cauchy = np.array(s[0])  # initialize cauchy stress matrix for the 1D case
+    z = np.array(axis)/np.linalg.norm(np.array(axis))  #  unit vector on axis
+    r = np.array(pt) - np.dot(np.array(pt), z)*z  # point radial position from z
+    ru = r/np.linalg.norm(r)  # normalized radial position
+    t = np.cross(z, ru)  # tangential direction
+    
+    if len(s) == 3:  # for the 2D case...
+        cauchy = np.array([[s[0],   s[2],   0.0],
+                           [s[2],   s[1],   0.0],
+                           [0.0,    0.0,    0.0]])
+    elif len(s) == 6:  # for the 3D case...
+        cauchy = np.array([[s[0], s[5], s[4]],
+                           [s[5], s[1], s[3]],
+                           [s[4], s[3], s[2]]])
+    if p == 't':  # for tangential stress
+        return np.dot(np.dot(cauchy, t), t)
+    elif p == 'r':  # for the radial stress...
+        return np.dot(np.dot(cauchy, ru), ru)
+
+#############################################################################
+
 # An important function that will be needed for plotting is a method for finding
 # the stress at the nodes.
 
@@ -156,15 +191,15 @@ def getMises(s):
 # 'ien' - an array mapping (Global node #) = ien[element #][element node #]
 # 'nodes' - an array of the 3D locations of all nodes in the mesh
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
-#           'tau_yz', 'tau_zx', 'von Mises')
+#           'tau_yz', 'tau_zx', 'von Mises', 'sigma_r', 'sigma_t', 'd_abs')
 
 # The outputs are:
-# 'stress' - an array of stress vectors for every node in the mesh
+# 'data' - an array of results for every node in the mesh
 
 def get_stress_sol(deform, ien, nodes, stype):
     stypeMap = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
-                'tau_zx':4, 'von Mises':10}  # maps types to numbers
-    stress = len(nodes)*[0]  # initializes the stress
+                'tau_zx':4}  # maps types to numbers
+    data = len(nodes)*[0]  # initializes the stress
     flags = len(nodes)*[0]  # records whether assignment has been made
     dims = int(len(deform)/len(nodes))  # number of problem dimensions
 
@@ -178,12 +213,23 @@ def get_stress_sol(deform, ien, nodes, stype):
                 s = stressVec(dims, strain)
                 
                 if stype == 'von Mises':
-                    stress[int(ien[i][j])] = getMises(s)
+                    data[int(ien[i][j])] = getMises(s)
+                elif stype == 'sigma_r':  # if we want the radial stress...
+                    data[int(ien[i][j])] = getSigmaR(nodes[int(ien[i][j])], s,
+                                                     'r', [0, 0, 1])
+                elif stype == 'sigma_t':  # if we want the tangential stress...
+                    data[int(ien[i][j])] = getSigmaR(nodes[int(ien[i][j])], s,
+                                                     't', [0, 0, 1])
+                elif stype == 'd_abs':  # the magnitude of the deformation
+                    n = int(ien[i][j])
+                    first = dims*n
+                    second = first + dims
+                    data[int(ien[i][j])] = np.linalg.norm(deform[first:second])
                 else:
-                    stress[int(ien[i][j])] = s[stypeMap[stype]][0]
+                    data[int(ien[i][j])] = s[stypeMap[stype]][0]
 
-            flags[int(ien[i][j])] = 1  # mark as having been assigned
-    return stress
+                flags[int(ien[i][j])] = 1  # mark as having been assigned
+    return data
 
 ###########################################################################
 
@@ -245,7 +291,7 @@ def contourPlot(deform, ien, nodes, stype, view):
     viewMap = {'x':0, 'y':1, 'z':2}
     dimMap = {2:1, 4:2, 8:3}  # number of problem dimensions
     dims = dimMap[len(ien[0])]
-    stress = get_stress_sol(deform, ien, nodes, stype)
+    data = get_stress_sol(deform, ien, nodes, stype)
     
     x = []  # stores the x-values
     y = []  # stores the y-values
@@ -253,9 +299,10 @@ def contourPlot(deform, ien, nodes, stype, view):
     triang = []  # stores the particular trianglulation used to plot results
 
     for i in range(len(nodes)):  # for each node...
+        #print(np.linalg.norm(deform[i]))
         x.append(nodes[i][0])
         y.append(nodes[i][1])
-        z.append(stress[i])
+        z.append(data[i])
 
     for i in range(len(ien)):  # for each element...
         a = [ien[i][0], ien[i][1], ien[i][3]]

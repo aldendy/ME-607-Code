@@ -170,7 +170,7 @@ class PressurizedCylinderTest(unittest.TestCase):
         thetaDomain = pi/2.0  # quarter circle of the pipe
         self.ri = 1.2  # the inner radius of the pipe
         self.ro = 1.8  # the outer radius of the pipe
-        self.nr = 4  # the number of elements in the radial direction
+        self.nr = 4 # the number of elements in the radial direction
         self.nt = 8  # the number of elements in the circumfrential direction
         self.nodes = []  # stores the nodes in the cylindrical mesh
         self.p = 2.0e6  # the pressure (Pa)
@@ -179,7 +179,7 @@ class PressurizedCylinderTest(unittest.TestCase):
             for j in range(self.nt+1):  # for every node in the theta-direction...
                 radius = i*(self.ro - self.ri)/self.nr + self.ri
                 theta = j*thetaDomain/self.nt
-                self.nodes.append([radius*cos(theta), radius*sin(theta), 0])
+                self.nodes.append([radius*sin(theta), radius*cos(theta), 0])
 
         self.ien = get_ien(self.nt, self.nr)
         self.nnums = np.linspace(0, len(self.nodes)-1, len(self.nodes))
@@ -210,7 +210,7 @@ class PressurizedCylinderTest(unittest.TestCase):
             u1 = v1/np.linalg.norm(v1)
             u2 = v2/np.linalg.norm(v2)
             delta = np.dot(u1[0:2], u2)
-            self.assertAlmostEqual(delta, 1.0)
+            self.assertAlmostEqual(delta, -1.0)
 
     # We next test to make sure that the deformations are all equal at equal
     # radial distances
@@ -234,26 +234,39 @@ class PressurizedCylinderTest(unittest.TestCase):
 
     def test_accuracyPressCylinSol(self):
         ps = nsel('y', 'n', 0, 0.01, self.nodes)
-
+        dsol = []  # stores the nodal values
+        rsol = []  # stores the node radial location
+        error = 0  # stores the total solution error
+        E = 2.0e11
+        nu = 0.3
+        
         for i in range(len(ps)):  # for every node...
             s = 2*ps[i]  # starting position of the node displacement
             e = 2*ps[i] + 2  # ending position of the node displacement
             # the magnitude of the nodal displacement
-            disp = np.linalg.norm(np.array(self.deform[s:e]))
-
-            # Here, we calculate the exact solution
+            dsol.append(np.linalg.norm(np.array(self.deform[s:e])))
             v = self.nodes[ps[i]]  # a vector position of the node
-            r = v[0]  # the radius of the point
-            E = 2.0e11
-            nu = 0.3
+            rsol.append(v[0])  # the radius of the point
+
+        for i in range(self.nr):  # for every radial element...
+            # Here, we calculate the exact solution
+            d = 1.0/3**0.5  # the absolute distance of 2-point gauss quadrature
+            es = rsol[i+1] - rsol[i]  # element size
+            r0 = rsol[i] + (1 - d)*es/2.0  # first gauss quadrature point
+            r1 = rsol[i] + (1 + d)*es/2.0  # second gauss quadrature point
             a = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))
-            b = ((1 - nu)*r + self.ro**2*(1 + nu)/r)
-            disp0 = a*b
+            
+            b0 = ((1 - nu)*r0 + self.ro**2*(1 + nu)/r0)
+            b1 = ((1 - nu)*r1 + self.ro**2*(1 + nu)/r1)
+            u0 = a*b0  # the exact solution at the first gauss quadrature point
+            u1 = a*b1  # the exact solution at the second gauss quadrature point
+            us0 = 0.5*(1 + d)*dsol[i] + 0.5*(1 - d)*dsol[i+1]  # solution deform
+            us1 = 0.5*(1 - d)*dsol[i] + 0.5*(1 + d)*dsol[i+1]  # solution deform
+            error += ((us0 - u0)**2 + (us1 - u1)**2)*es/2.0
 
-            # Here, the comparison
-            error = 100*(disp - disp0)/disp0
-            self.assertLess(abs(error), 0.5)  # less than 0.5% error
-
+        #print('The error is:', (error**0.5)*100)
+        self.assertLess(error, 8.0e-6)
+        
     # Here, we test a contourplotting routine.
     def test_contourPlot(self):
         nodes = nodeList(1, 1, 1, 60, 60, 60)
@@ -270,7 +283,7 @@ Suite4 = unittest.TestLoader().loadTestsFromTestCase(PressurizedCylinderTest)
 
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 
-#SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(PressurizedCylinderTest('test_stressPressCylinSol'))
+SingleSuite = unittest.TestSuite()
+SingleSuite.addTest(PressurizedCylinderTest('test_pressurizedCylinder'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
