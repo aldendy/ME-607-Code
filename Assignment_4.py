@@ -14,8 +14,7 @@
 # 'intpts' - an array indexed by [element location (0 - interior, 1, 2.. bounds)]
 #            [integration point #] storing (coordinate (of dim. 1, 2, 3)),(weight)
 
-def getIntPts(numD):
-        d = 1.0/3**0.5  # the distance of a point from the origin
+def getIntPts(numD, d=1.0/3.0**0.5):
         sets = [-d, d]
         side = [-1, 1]
         
@@ -82,8 +81,8 @@ def b(xi, a):
 # This function returns evaluations of the basis functions and their derivatives in the 1D case
 # over domain xi (-1, 1).
 
-def oneDBasis():
-	intpts = getIntPts(1)
+def oneDBasis(d):
+	intpts = getIntPts(1, d)
 	
 	# Next, we intialize and fill and array with basis function evaluations at quadrature poins where the
 	# array is indexed by [element location (0 - interior, 1,2,... walls)][int. point #][basis function #]
@@ -123,11 +122,11 @@ def bb4(xi, eta):
 # over domain (-1, 1) x (-1, 1) and variables 'xi' and 'eta'. The input variables are:
 # 'xi' - the first independent variable
 # 'eta' - the second independent variable
-def twoDBasis():
+def twoDBasis(d):
 	# A table of integration points and weights where the indexes are
 	# [interior (0) or one of four surfaces, integration point #] and 
 	# the data stores is a [point coordinate in 'xi' and 'eta', weight]
-	intpts = getIntPts(2)
+	intpts = getIntPts(2, d)
 	
 	# Next, we intialize and fill and array with basis function evaluations at quadrature poins where the
 	# array is indexed by [element location (0 - interior, 1,2,... walls)][int. point #][basis function #]
@@ -172,11 +171,11 @@ def threeDBasisFunc(xi, eta, zeta, a):
 # 'xi' - the first independent variable
 # 'eta' - the second independent variable
 # 'zeta' - the third independent variable
-def threeDBasis():
+def threeDBasis(d):
 	# A table of integration points and weights where the indexes are
 	# [interior (0) or one of four surfaces, integration point #] and 
 	# the data stores is a [point coordinate in 'xi' and 'eta', weight]
-	intpts = getIntPts(3)
+	intpts = getIntPts(3, d)
 	
 	# Next, we intialize and fill and array with basis function evaluations at quadrature poins where the
 	# array is indexed by [element location (0 - interior, 1,2,... walls)][int. point #][basis function #]
@@ -257,15 +256,16 @@ def threeDBasisTest():
 # The returned array is 'basis' and is indexed as [element location (0 - interior, 1,2,... walls)][int. point #]
 # [basis function #][0 - function, 1 - df/dxi, 2 - df/deta ...]
 
-def getBasis(numD):
-		basis = []  # initializes 'basis'
-		if numD == 1:
-				basis = oneDBasis()
-		if numD == 2:
-				basis = twoDBasis()
-		if numD == 3:
-				basis = threeDBasis()
-		return basis
+def getBasis(numD, d=1.0/3**0.5):
+        # the distance of a point from the origin
+	basis = []  # initializes 'basis'
+	if numD == 1:
+                basis = oneDBasis(d)
+	if numD == 2:
+		basis = twoDBasis(d)
+	if numD == 3:
+        	basis = threeDBasis(d)
+	return basis
 
 #########################################################################
 
