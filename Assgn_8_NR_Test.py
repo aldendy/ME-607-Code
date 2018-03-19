@@ -267,4 +267,4 @@ FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 SingleSuite = unittest.TestSuite()
 SingleSuite.addTest(SolverTest2D('test_2DTrac1Elem'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)

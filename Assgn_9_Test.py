@@ -263,8 +263,8 @@ class PressurizedCylinderTest(unittest.TestCase):
             us0 = 0.5*(1 + d)*dsol[i] + 0.5*(1 - d)*dsol[i+1]  # solution deform
             us1 = 0.5*(1 - d)*dsol[i] + 0.5*(1 + d)*dsol[i+1]  # solution deform
             error += ((us0 - u0)**2 + (us1 - u1)**2)*es/2.0
+            print('Error at the first Gauss point:', abs(us0 - u0))
 
-        #print('The error is:', (error**0.5)*100)
         self.assertLess(error, 8.0e-6)
         
     # Here, we test a contourplotting routine.
@@ -284,6 +284,6 @@ Suite4 = unittest.TestLoader().loadTestsFromTestCase(PressurizedCylinderTest)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(PressurizedCylinderTest('test_pressurizedCylinder'))
+SingleSuite.addTest(PressurizedCylinderTest('test_accuracyPressCylinSol'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)
