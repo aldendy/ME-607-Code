@@ -326,11 +326,20 @@ def contourPlot(deform, ien, nodes, stype, view, cCons=0):
         triang.append(b)
     
     mesh = tri.Triangulation(x, y, triang)
+    lvs = 0
+    if min(z, key=abs)/max(z, key=abs) > 0.99:  # if difference is small...
+        lvs = list(min(z, key=abs)*np.linspace(0, 1.0, 11))
+        lvs.sort()
+    if min(z, key=abs) < 10**-12:  # if the results are too small, neglect
+        lvs = list(np.linspace(-1, min(z), 11))
     
     # pcolor plot.
     plt.figure()
     plt.gca().set_aspect('equal')
-    plt.tricontourf(mesh, z, extend='both')
+    if lvs != 0:
+        plt.tricontourf(mesh, z, extend='both', levels=lvs)
+    else:
+        plt.tricontourf(mesh, z, extend='both')
     plt.colorbar()  
     plt.title('Nodal results for ' + stype)
     plt.show()

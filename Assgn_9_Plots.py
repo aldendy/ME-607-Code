@@ -33,11 +33,11 @@ class Problem1Test(unittest.TestCase):
         
         deform, i = solver(numD, loads, nodes, ien, ida, ncons,
                                 cons2, cc)
-
+        
         correct = [0, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 0, 1, 0]
         for i in range(len(deform)):  # for every item in the solution...
             self.assertAlmostEqual((correct[i] + 1)/(correct[i] + 1), 1)
-        #c = contourPlot(deform, ien, nodes, 'd_abs', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'tau_xy', 'z', cc)
         
 #############################################################################
 
