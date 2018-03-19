@@ -326,7 +326,7 @@ def contourPlot(deform, ien, nodes, stype, view, cCons=0):
         triang.append(b)
     
     mesh = tri.Triangulation(x, y, triang)
-
+    
     # pcolor plot.
     plt.figure()
     plt.gca().set_aspect('equal')

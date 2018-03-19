@@ -173,18 +173,22 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
         i = 0  # starting iteration
         
         while i < imax:
-                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien),
-                                    deform0)
+                if cCons != 0:
+                        stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
+                        intFV = intForceVec(nodes, ien, ida, ncons, numD,
+                                    len(ien), deform0, cCons)
+                else:
+                        stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                        intFV = intForceVec(nodes, ien, ida, ncons, numD,
+                                    len(ien), deform0)
+                
                 residual = np.array(extFV) - np.array(intFV)
                 
                 # if the error is small...
                 if abs(np.linalg.norm(residual)) < 10.0**(-7):
                         deform0 = getFullDVec(ida, deform, cons)
                         return deform0, i
-                if cCons != 0:
-                        stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
-                else:
-                        stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                
                 Kinv = np.linalg.inv(np.array(stiff))
                 b = np.transpose(np.array(residual))
                 du = np.dot(Kinv, b)

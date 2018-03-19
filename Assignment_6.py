@@ -1,5 +1,5 @@
-# In this file, we develop a routine for calculating the internal force vector for the Galerkin approximation of
-# the weak form. 
+# In this file, we develop a routine for calculating the internal
+# force vector for the Galerkin approximation of the weak form. 
 
 import numpy as np
 from Assignment_1 import nodeList, get_ien, getIDArray
@@ -112,10 +112,11 @@ def getBandScale(numD, basis, intpt, xa):
 def getStiff(n, cCons=0):
     E = 200.0*10**9    # modulus of elasticity (Pa)
     v = 0.3         # Poisson's ratio
+    
     if cCons != 0:
         E = cCons[0]
         v = cCons[1]
-
+    
     ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
     mu = E/(2*(1 + v))
 
@@ -130,7 +131,7 @@ def getStiff(n, cCons=0):
              [cc, aa, 0],
              [0,   0, bb]]
     if n == 3:
-        D =     [[ld + 2*mu,    ld,             ld,             0,      0,      0],
+        D = [[ld + 2*mu,    ld,             ld,             0,      0,      0],
             [ ld,           ld + 2*mu,      ld,             0,      0,      0],
             [ ld,           ld,             ld + 2*mu,      0,      0,      0],
             [ 0,            0,              0,              mu,     0,      0],
@@ -196,15 +197,20 @@ def stressVec(numD, strain, cCons=0):
 # 'e' - the element number
 # 'i' - the particular integration point number (0, 1, 2...)
 # 'xa' - a vector of the vector positions of the element nodes
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output is the nodal evaluation of the force vector element at an integration point 
 
-def func(deform, basis, ien, e, i, xa):
+def func(deform, basis, ien, e, i, xa, cCons=0):
     numD = len(basis[0][0][0]) - 1  # the number of dimensions
     Bmats, scale = getBandScale(numD, basis, i, xa)
     
     strain = strainVec(numD, e, deform, ien, Bmats)
-    stress = stressVec(numD, strain)
+    if cCons != 0:
+        stress = stressVec(numD, strain, cCons)
+    else:
+        stress = stressVec(numD, strain)
     
     # the force vector for all nodes 'a' over element 'e'
     f = np.array(numD*len(basis[0][0])*[[0.0]])  
@@ -228,17 +234,22 @@ def func(deform, basis, ien, e, i, xa):
 # 'e' - the element number
 # 'ien' - the mesh ien array (global node # = ien(element #, element basis func #))
 # 'xa' - a vector of the vector positions of the element nodes
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output is the integral of 'func' over the domain given in 'basis'
 
-def GaussInt(func, deform, basis, e, ien, xa):
+def GaussInt(func, deform, basis, e, ien, xa, cCons=0):
     numD = len(basis[0][0][0]) - 1  # the number of dimensions
     # initialize the integral value to an array of size [(# basis funcs) x (# dimensions)] x [1]
     area = np.array(numD*len(basis[0][0])*[[0.0]])   
     weights = len(basis[0])*[1]  # the weights for the integration process
     
     for i in range(len(basis[0])):  # for every integration point...
-      area += func(deform, basis, ien, e, i, xa)*weights[i]
+        if cCons != 0:
+            area += func(deform, basis, ien, e, i, xa, cCons)*weights[i]
+        else:
+            area += func(deform, basis, ien, e, i, xa)*weights[i]
   
     return area
 
@@ -253,18 +264,24 @@ def GaussInt(func, deform, basis, e, ien, xa):
 # 'numD' - the number of degrees of freedom in 'sigma' domain
 # 'numE' - the number of elements in the mesh
 # 'deform' - a vector of the displacements (not positions) of all nodes with size [# nodes x 3]x[1]
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output of this function is the internal force vector (global) of size = '[# nodes x 3]x[1]
 
-def intForceVec(nodes, ien, ida, ncons, numD, numE, deform):
+def intForceVec(nodes, ien, ida, ncons, numD, numE, deform, cCons=0):
     basis = getBasis(numD)  # get the integration point and function data
     Fint = np.array((numD*len(nodes) - ncons)*[0.0])  # initialize the internal force vector 
     
     for i in range(numE):  # for every element...
         xa = getXaArray(i, nodes, ien)  # get the global coordinates of the element nodes
+
+        # the internal force for a basis function 'a' over element 'i'
+        if cCons != 0:
+            fai = GaussInt(func, deform, basis, i, ien, xa, cCons)
+        else:
+            fai = GaussInt(func, deform, basis, i, ien, xa)
         
-        fai = GaussInt(func, deform, basis, i, ien, xa)  # the internal force for a basis function 'a' over
-                                 # element 'i'
         # for this particular element vector, we then assemble it into the global vector 
         for j in range(len(basis[0][0])):  # for each basis function...
             for k in range(numD):  # for each dimension...

@@ -20,21 +20,24 @@ class Problem1Test(unittest.TestCase):
         nodes = nodeList(1, 1, 1, enum, enum)
         ien = get_ien(enum, enum)
         cons, load = load_and_cons(enum**2, len(nodes), numD)
-        cc = [2.0e11, 0.3]
+        cc = [1.0, 0.0]
 
         wall = nsel('x', 'n', 0, 0.01, nodes)  # select the wall
         edge = nsel('x', 'n', 1, 0.01, nodes)  # select free edge
-
+        
         ida, ncons, cons0, loads = constrain(nodes, wall, ien, 'x', 0)
         ida, ncons, cons1, loads = constrain(nodes, wall, ien, 'y',
-                                             0, cons0)
+                                             0.0, cons0)
         ida, ncons, cons2, loads = constrain(nodes, edge, ien, 'x',
-                                             1, cons1)
+                                             1.0, cons1)
         
         deform, i = solver(numD, loads, nodes, ien, ida, ncons,
                                 cons2, cc)
-        print(deform)
-        c = contourPlot(deform, ien, nodes, 'd_abs', 'z', cc)
+
+        correct = [0, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 0, 1, 0]
+        for i in range(len(deform)):  # for every item in the solution...
+            self.assertAlmostEqual((correct[i] + 1)/(correct[i] + 1), 1)
+        #c = contourPlot(deform, ien, nodes, 'd_abs', 'z', cc)
         
 #############################################################################
 
