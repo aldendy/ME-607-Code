@@ -64,9 +64,9 @@ class RotatedElementTest(unittest.TestCase):
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(MisesTest)
 Suite2 = unittest.TestLoader().loadTestsFromTestCase(RotatedElementTest)
 
-FullSuite = unittest.TestSuite([Suite1])
+FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
 SingleSuite.addTest(MisesTest('test_2DMises'))
 
-unittest.TextTestRunner(verbosity=2).run(Suite2)
+unittest.TextTestRunner(verbosity=2).run(FullSuite)

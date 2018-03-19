@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
+from Assignment_6 import getStiff
 from Assignment_8 import getFullDVec, solver
 
 

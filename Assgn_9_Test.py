@@ -286,4 +286,4 @@ FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 SingleSuite = unittest.TestSuite()
 SingleSuite.addTest(PressurizedCylinderTest('test_accuracyPressCylinSol'))
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(FullSuite)

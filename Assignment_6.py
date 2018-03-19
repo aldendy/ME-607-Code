@@ -104,12 +104,18 @@ def getBandScale(numD, basis, intpt, xa):
 
 # The inputs are:
 # 'n' - the number of problem dimensions
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output is the 'D' matrix in 1D, 3D or 6D.
 
-def getStiff(n):
+def getStiff(n, cCons=0):
     E = 200.0*10**9    # modulus of elasticity (Pa)
     v = 0.3         # Poisson's ratio
+    if cCons != 0:
+        E = cCons[0]
+        v = cCons[1]
+
     ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
     mu = E/(2*(1 + v))
 
@@ -120,7 +126,7 @@ def getStiff(n):
     if n == 1:
         D = E
     if n == 2:
-        D =     [[aa, cc, 0],
+        D = [[aa, cc, 0],
              [cc, aa, 0],
              [0,   0, bb]]
     if n == 3:
@@ -167,11 +173,16 @@ def strainVec(numD, e, deform, ien, Bmats):
 # The inputs are:
 # 'numD' - the number of problem dimensions
 # 'strain' - the strain vector in Voigt notation
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output is the stress vector in Voigt notation 
 
-def stressVec(numD, strain):
-  return np.dot(np.array(getStiff(numD)), strain)
+def stressVec(numD, strain, cCons=0):
+    if cCons != 0:
+        return np.dot(np.array(getStiff(numD, cCons)), strain)
+    else:
+        return np.dot(np.array(getStiff(numD)), strain)
 
 ################################################################################
 

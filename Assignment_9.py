@@ -193,11 +193,13 @@ def getSigmaR(pt, s, p, axis):
 # 'nodes' - an array of the 3D locations of all nodes in the mesh
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
 #           'tau_yz', 'tau_zx', 'von Mises', 'sigma_r', 'sigma_t', 'd_abs')
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'data' - an array of results for every node in the mesh
 
-def get_stress_sol(deform, ien, nodes, stype):
+def get_stress_sol(deform, ien, nodes, stype, cCons=0):
     stypeMap3 = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
                 'tau_zx':4}  # maps types to numbers
     stypeMap2 = {'sigma_x':0, 'sigma_y':1, 'tau_xy':2}
@@ -212,7 +214,10 @@ def get_stress_sol(deform, ien, nodes, stype):
                 xa = getXaArray(i, nodes, ien)  # get the element nodes
                 Bmats, scale = getBandScale(dims, basis, j, xa)
                 strain = strainVec(dims, i, deform, ien, Bmats)
-                s = stressVec(dims, strain)
+                if cCons != 0:
+                    s = stressVec(dims, strain, cCons)
+                else:
+                    s = stressVec(dims, strain)
                 
                 if stype == 'von Mises':
                     data[int(ien[i][j])] = getMises(s)
@@ -231,6 +236,8 @@ def get_stress_sol(deform, ien, nodes, stype):
                     data[int(ien[i][j])] = s[stypeMap3[stype]][0]
                 elif dims == 2:  # for two dimensions...
                     data[int(ien[i][j])] = s[stypeMap2[stype]][0]
+                elif dims == 1:  # for one dimension...
+                    data[int(ien[i][j])] = s[0][0]
 
                 flags[int(ien[i][j])] = 1  # mark as having been assigned
     return data
@@ -287,15 +294,20 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
 #           'tau_yz', 'tau_zx', 'von Mises')
 # 'view' - picks on of the cardinal directions ('x', 'y', 'z') as the viewpoint
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # '0' - indicating it ran successfully
 
-def contourPlot(deform, ien, nodes, stype, view):
+def contourPlot(deform, ien, nodes, stype, view, cCons=0):
     viewMap = {'x':0, 'y':1, 'z':2}
     dimMap = {2:1, 4:2, 8:3}  # number of problem dimensions
     dims = dimMap[len(ien[0])]
-    data = get_stress_sol(deform, ien, nodes, stype)
+    if cCons != 0:
+        data = get_stress_sol(deform, ien, nodes, stype, cCons)
+    else:
+        data = get_stress_sol(deform, ien, nodes, stype)
     
     x = []  # stores the x-values
     y = []  # stores the y-values

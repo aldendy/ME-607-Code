@@ -67,10 +67,10 @@ class StressSolutionTest(unittest.TestCase):
     def test_stressSolution1D1Elem(self):
         result, steps = solver(self.numD[0], self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
-
+        
         stress = get_stress_sol(result, self.ien1, self.nodes1, 'sigma_x')
         correct = [2.0e6, 2.0e6]
-
+        
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i])
 
@@ -239,9 +239,9 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(getSigmaRTest)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(contourPlotTest('test_stressPressCylinSol'))
+SingleSuite.addTest(StressSolutionTest('test_stressSolution1D1Elem'))
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(FullSuite)
 
 
 
