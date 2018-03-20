@@ -328,10 +328,10 @@ def contourPlot(deform, ien, nodes, stype, view, cCons=0):
     mesh = tri.Triangulation(x, y, triang)
     lvs = 0
     if min(z, key=abs)/max(z, key=abs) > 0.99:  # if difference is small...
-        lvs = list(min(z, key=abs)*np.linspace(0, 1.0, 11))
-        lvs.sort()
-    if min(z, key=abs) < 10**-12:  # if the results are too small, neglect
-        lvs = list(np.linspace(-1, min(z), 11))
+        if min(z, key=abs) < 10**-12:  # if results are too small, neglect
+            lvs = list(np.linspace(-1, min(z), 11))
+        else:
+            lvs = list(min(z, key=abs)*np.linspace(0, 1.0, 11))
     
     # pcolor plot.
     plt.figure()
