@@ -36,7 +36,12 @@ class Problem1Test(unittest.TestCase):
         correct = [0, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 0, 1, 0, 0, 0, 0.5, 0, 1, 0]
         for i in range(len(deform)):  # for every item in the solution...
             self.assertAlmostEqual((correct[i] + 1)/(correct[i] + 1), 1)
-        #c = contourPlot(deform, ien, nodes, 'tau_xy', 'z', cc)
+        
+        c = contourPlot(deform, ien, nodes, 'sigma_x', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'sigma_y', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'tau_xy', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'd_x', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'd_y', 'z', cc)
 
     # Here, we solve a similar problem but with a traction load
     def test_OnePart2(self):
@@ -58,6 +63,13 @@ class Problem1Test(unittest.TestCase):
                                 cons1, cc)
         
         c = contourPlot(deform, ien, nodes, 'd_abs', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'd_x', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'd_y', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'sigma_x', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'sigma_y', 'z', cc)
+        c = contourPlot(deform, ien, nodes, 'tau_xy', 'z', cc, 'y', (2, 2))
+
+        self.assertEqual(c, 0)
         
 #############################################################################
 
@@ -67,7 +79,7 @@ Suite1 = unittest.TestLoader().loadTestsFromTestCase(Problem1Test)
 
 FullSuite = unittest.TestSuite([Suite1])
 
-#SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(StressSolutionTest('test_stressSolution1D1Elem'))
+SingleSuite = unittest.TestSuite()
+SingleSuite.addTest(Problem1Test('test_OnePart1'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
