@@ -370,8 +370,8 @@ def contourPlot(deform, ien, nodes, stype, view, cCons=0, s='no', size=None):
     if s != 'no':  # if it should be plotted...
         plt.xlabel(axesTitles[0])
         plt.ylabel(axesTitles[1])
+        plt.colorbar(img, ax=plt.gca(), pad=0.1)
         plt.tight_layout()
-        plt.colorbar(img, use_gridspec=True)
         plt.show()
 
     plt.close()
