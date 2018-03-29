@@ -254,17 +254,17 @@ class PressurizedCylinderTest(unittest.TestCase):
             es = rsol[i+1] - rsol[i]  # element size
             r0 = rsol[i] + (1 - d)*es/2.0  # first gauss quadrature point
             r1 = rsol[i] + (1 + d)*es/2.0  # second gauss quadrature point
-            a = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))
+            a = self.p*self.ri**2/(E*(self.ro**2 - self.ri**2))  # first part
             
-            b0 = ((1 - nu)*r0 + self.ro**2*(1 + nu)/r0)
+            b0 = ((1 - nu)*r0 + self.ro**2*(1 + nu)/r0)  # second part
             b1 = ((1 - nu)*r1 + self.ro**2*(1 + nu)/r1)
             u0 = a*b0  # the exact solution at the first gauss quadrature point
             u1 = a*b1  # the exact solution at the second gauss quadrature point
             us0 = 0.5*(1 + d)*dsol[i] + 0.5*(1 - d)*dsol[i+1]  # solution deform
             us1 = 0.5*(1 - d)*dsol[i] + 0.5*(1 + d)*dsol[i+1]  # solution deform
             error += ((us0 - u0)**2 + (us1 - u1)**2)*es/2.0
+            print('Error at the first Gauss point:', abs(us0 - u0))
 
-        #print('The error is:', (error**0.5)*100)
         self.assertLess(error, 8.0e-6)
         
     # Here, we test a contourplotting routine.
@@ -284,6 +284,6 @@ Suite4 = unittest.TestLoader().loadTestsFromTestCase(PressurizedCylinderTest)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(PressurizedCylinderTest('test_pressurizedCylinder'))
+SingleSuite.addTest(PressurizedCylinderTest('test_accuracyPressCylinSol'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

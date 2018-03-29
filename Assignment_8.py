@@ -42,22 +42,27 @@ def getEnergyDensity(D, Ba, Bb):
 # The inputs are:
 # 'dims' - the number of problem dimensions
 # 'xa' - the 3D real coordinates of the element nodes arranged in a list
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'ke' - the element stiffness matrix of dimensions
 #		[(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
 
-def gaussIntKMat(dims, xa):
+def gaussIntKMat(dims, xa, cCons=0):
 	basis = getBasis(dims)
 	numA = 2**dims
-	D = getStiff(dims)  # the 'D' matrix
+	if cCons != 0:
+        	D = getStiff(dims, cCons)  # the 'D' matrix
+        else:
+                D = getStiff(dims)
 	w = 1  # the gauss point integral weight (2 pts)
 	ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
 	
 	for i in range(len(basis[0])):	# for every integration point...
 		# now, get the 'Bmat' for the integration point
 		Bmats, scale = getBandScale(dims, basis, i, xa)
-
+                
 		for j in range(numA):  # for the 'a'-th basis function...
 			for k in range(numA):  # for the 'b'-th basis function...
 				kab = getEnergyDensity(D, Bmats[j], Bmats[k])
@@ -78,15 +83,16 @@ def gaussIntKMat(dims, xa):
 # 'nodes' - a list of the 3D locations of all the problem nodes
 # 'ien' - the ien array for the problem implementing the map
 #		  [global eqn. #] = ien[elem. #][local basis func. #]
-# 'cons' - the constraint array indexed by [dim #][node #] used as 'id' array
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
 # 'ncons' - the number of dof constraints
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'kmat' - the global stiffness matrix of size
 #		[(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
-def getStiffMatrix(nodes, ien, ida, ncons):
+def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
 	dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
 	numA = 2**dims	# the number of element basis functions
 	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
@@ -95,7 +101,10 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 	
 	for i in range(len(ien)):  # for every element...
 		xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
-		ke = gaussIntKMat(dims, xa)
+                if cCons != 0:  # if we get a parameter definition...
+                        ke = gaussIntKMat(dims, xa, cCons)
+                else:
+                        ke = gaussIntKMat(dims, xa)
                 
 		for j in range(len(ke)):  # for every row in 'ke'...
 			for k in range(len(ke[0])):	 # for every column in 'ke'...
@@ -106,7 +115,6 @@ def getStiffMatrix(nodes, ien, ida, ncons):
 				
 				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
 					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
-     
 	return kmat
 
 #############################################################################################
@@ -150,11 +158,13 @@ def getFullDVec(ida, deform, cons):
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
 # 'ncons' - the number of dof constraints
 # 'cons' - the constraint vector indexed by [dimension #][node #]
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'dFinal' - the final deformation vector giving the nodal deformations in all dof
 
-def solver(numD, loads, nodes, ien, ida, ncons, cons):
+def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
         basis = getBasis(numD)
         imax = 10  # the maximum number of iterations tolerable
         extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
@@ -163,16 +173,22 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
         i = 0  # starting iteration
         
         while i < imax:
-                intFV = intForceVec(nodes, ien, ida, ncons, numD, len(ien),
-                                    deform0)
+                if cCons != 0:
+                        stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
+                        intFV = intForceVec(nodes, ien, ida, ncons, numD,
+                                    len(ien), deform0, cCons)
+                else:
+                        stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                        intFV = intForceVec(nodes, ien, ida, ncons, numD,
+                                    len(ien), deform0)
+                
                 residual = np.array(extFV) - np.array(intFV)
                 
                 # if the error is small...
                 if abs(np.linalg.norm(residual)) < 10.0**(-7):
                         deform0 = getFullDVec(ida, deform, cons)
                         return deform0, i
-
-                stiff = getStiffMatrix(nodes, ien, ida, ncons)
+                
                 Kinv = np.linalg.inv(np.array(stiff))
                 b = np.transpose(np.array(residual))
                 du = np.dot(Kinv, b)
@@ -180,7 +196,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons):
                 deform += du
                 deform0 = getFullDVec(ida, deform, cons)
                 i += 1
-        
+                
         return deform0, i
 
 

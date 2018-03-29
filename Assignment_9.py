@@ -168,17 +168,18 @@ def getSigmaR(pt, s, p, axis):
     t = np.cross(z, ru)  # tangential direction
     
     if len(s) == 3:  # for the 2D case...
-        cauchy = np.array([[s[0],   s[2],   0.0],
-                           [s[2],   s[1],   0.0],
-                           [0.0,    0.0,    0.0]])
+        cauchy = np.array([[s[0][0],    s[2][0],    0.0],
+                           [s[2][0],    s[1][0],    0.0],
+                           [0.0,        0.0,        0.0]])
     elif len(s) == 6:  # for the 3D case...
-        cauchy = np.array([[s[0], s[5], s[4]],
-                           [s[5], s[1], s[3]],
-                           [s[4], s[3], s[2]]])
+        cauchy = np.array([[s[0][0], s[5][0], s[4][0]],
+                           [s[5][0], s[1][0], s[3][0]],
+                           [s[4][0], s[3][0], s[2][0]]])
     if p == 't':  # for tangential stress
-        return np.dot(np.dot(cauchy, t), t)
+        return (np.dot(np.dot(cauchy, t), t))
     elif p == 'r':  # for the radial stress...
-        return np.dot(np.dot(cauchy, ru), ru)
+        sr = np.dot(np.dot(cauchy, ru), ru)
+        return sr
 
 #############################################################################
 
@@ -192,17 +193,21 @@ def getSigmaR(pt, s, p, axis):
 # 'nodes' - an array of the 3D locations of all nodes in the mesh
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
 #           'tau_yz', 'tau_zx', 'von Mises', 'sigma_r', 'sigma_t', 'd_abs')
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'data' - an array of results for every node in the mesh
 
-def get_stress_sol(deform, ien, nodes, stype):
-    stypeMap = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
+def get_stress_sol(deform, ien, nodes, stype, cCons=0):
+    stypeMap3 = {'sigma_x':0, 'sigma_y':1, 'sigma_z':2, 'tau_xy':5, 'tau_yz':3,
                 'tau_zx':4}  # maps types to numbers
+    stypeMap2 = {'sigma_x':0, 'sigma_y':1, 'tau_xy':2}
+    dMap = {'d_x':0, 'd_y':1, 'd_z':2}  # maps deformation dof's to numbers
     data = len(nodes)*[0]  # initializes the stress
     flags = len(nodes)*[0]  # records whether assignment has been made
     dims = int(len(deform)/len(nodes))  # number of problem dimensions
-
+    
     for i in range(len(ien)):  # for every element...
         for j in range(len(ien[0])):  # for every node in the element...
             if flags[int(ien[i][j])] == 0:  # if assignment hasn't occurred...
@@ -210,7 +215,10 @@ def get_stress_sol(deform, ien, nodes, stype):
                 xa = getXaArray(i, nodes, ien)  # get the element nodes
                 Bmats, scale = getBandScale(dims, basis, j, xa)
                 strain = strainVec(dims, i, deform, ien, Bmats)
-                s = stressVec(dims, strain)
+                if cCons != 0:
+                    s = stressVec(dims, strain, cCons)
+                else:
+                    s = stressVec(dims, strain)
                 
                 if stype == 'von Mises':
                     data[int(ien[i][j])] = getMises(s)
@@ -225,8 +233,15 @@ def get_stress_sol(deform, ien, nodes, stype):
                     first = dims*n
                     second = first + dims
                     data[int(ien[i][j])] = np.linalg.norm(deform[first:second])
-                else:
-                    data[int(ien[i][j])] = s[stypeMap[stype]][0]
+                elif stype in dMap:  # for a component of deformation...
+                    n = dims*int(ien[i][j]) + dMap[stype]
+                    data[int(ien[i][j])] = deform[n]
+                elif dims == 3:  # for three dimensions...
+                    data[int(ien[i][j])] = s[stypeMap3[stype]][0]
+                elif dims == 2:  # for two dimensions...
+                    data[int(ien[i][j])] = s[stypeMap2[stype]][0]
+                elif dims == 1:  # for one dimension...
+                    data[int(ien[i][j])] = s[0][0]
 
                 flags[int(ien[i][j])] = 1  # mark as having been assigned
     return data
@@ -244,10 +259,11 @@ def get_stress_sol(deform, ien, nodes, stype):
 # 'selSet' - a subset of selected nodes (positions in 'nodes') to plot
 # 'plotDir' - a 3D vector following the direction of the selected nodes
 # 'dof' - the degree of freedom of results desired ('x', 'y', 'z' or 'r')
+# 's' - if not 'no', show the plot
 
 # The outputs are:
 
-def plotResults(deform, nodes, selSet, plotDir, dof):
+def plotResults(deform, nodes, selSet, plotDir, dof, s='no'):
     dims = int(len(deform)/len(nodes))  # the numer of problem dimensions
     # contains plot titles
     plotName = {0:'Deformation', 1:'Stress', 2:'Strain'}
@@ -267,7 +283,10 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
     plt.title(plotName[0])
     plt.xlabel('Location along view vector')
     plt.ylabel(plotAxes[0] + dof)
-    plt.show()
+
+    if s != 'no':
+        plt.show()
+    plt.close()
     
     return 0
 
@@ -283,15 +302,25 @@ def plotResults(deform, nodes, selSet, plotDir, dof):
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
 #           'tau_yz', 'tau_zx', 'von Mises')
 # 'view' - picks on of the cardinal directions ('x', 'y', 'z') as the viewpoint
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
+# 's' - if not 'no', show the plot
+# 'size' - figure size in inches
 
 # The outputs are:
 # '0' - indicating it ran successfully
 
-def contourPlot(deform, ien, nodes, stype, view):
+def contourPlot(deform, ien, nodes, stype, view, cCons=0, s='no', size=None):
     viewMap = {'x':0, 'y':1, 'z':2}
+    titleMap = {'tau_xy':'tau_{xy}', 'tau_yz':'tau_{yz}', 'tau_zx':'tau_{zx}',
+                'd_abs':'delta_{abs}', 'd_x':'delta_x', 'd_y':'delta_y',
+                'd_z':'delta_z'}
     dimMap = {2:1, 4:2, 8:3}  # number of problem dimensions
     dims = dimMap[len(ien[0])]
-    data = get_stress_sol(deform, ien, nodes, stype)
+    if cCons != 0:
+        data = get_stress_sol(deform, ien, nodes, stype, cCons)
+    else:
+        data = get_stress_sol(deform, ien, nodes, stype)
     
     x = []  # stores the x-values
     y = []  # stores the y-values
@@ -299,26 +328,53 @@ def contourPlot(deform, ien, nodes, stype, view):
     triang = []  # stores the particular trianglulation used to plot results
 
     for i in range(len(nodes)):  # for each node...
-        #print(np.linalg.norm(deform[i]))
         x.append(nodes[i][0])
         y.append(nodes[i][1])
         z.append(data[i])
 
     for i in range(len(ien)):  # for each element...
-        a = [ien[i][0], ien[i][1], ien[i][3]]
-        b = [ien[i][0], ien[i][3], ien[i][2]]
-        triang.append(a)
+        a = [ien[i][0], ien[i][1], ien[i][3]]  # first triangle
+        b = [ien[i][0], ien[i][3], ien[i][2]]  # second triangle
+        triang.append(a)  # assemble triangulation for ith element
         triang.append(b)
     
     mesh = tri.Triangulation(x, y, triang)
-
+    lvs = 0
+    span = abs(max(z, key=abs) - min(z, key=abs))  # range of plot
+    
+    if min(z, key=abs)/max(z, key=abs) > 0.99:  # if difference is small...
+        lvs = list(min(z)*np.linspace(0, 1.0, 11))
+        lvs.sort()
+    
+    # if difference is small...
+    if span < 10**-12 and max(z, key=abs) < 2*span:  # for plots of small nums...
+        lvs = list(np.linspace(-1, min(z), 11))
+    
     # pcolor plot.
-    plt.figure()
+    fig = plt.figure(figsize=size)
     plt.gca().set_aspect('equal')
-    plt.tricontourf(mesh, z, extend='both')
-    plt.colorbar()  
-    plt.title('Nodal results for ' + stype)
-    plt.show()
+    
+    if lvs != 0:  # set contour plot levels
+        img = plt.tricontourf(mesh, z, extend='both', levels=lvs)
+    else:
+        img = plt.tricontourf(mesh, z, extend='both')
+    
+    if stype in titleMap:
+        plt.title('$\\' + titleMap[stype] + '$')  # set the title
+    else:
+        plt.title('$\\' + stype + '$')  # set the title
+    
+    axesTitles = ['x', 'y', 'z']  # organize the other axis labels
+    axesTitles.remove(view)
+
+    if s != 'no':  # if it should be plotted...
+        plt.xlabel(axesTitles[0])
+        plt.ylabel(axesTitles[1])
+        plt.colorbar(img, ax=plt.gca(), pad=0.1)
+        plt.tight_layout()
+        plt.show()
+
+    plt.close()
     
     return 0
 
