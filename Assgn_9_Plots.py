@@ -113,7 +113,7 @@ class PresurizedCylinderPlot(unittest.TestCase):
         self.deform, i = solver(2, loads, self.nodes, self.ien, ida, ncons, cons)
         ps0 = nsel('y', 'n', 0, 0.01, self.nodes)
         #c = plotResults(deform, self.nodes, ps0, [1, 0, 0], 'x')
-        c = contourPlot(self.deform, self.ien, self.nodes, 'sigma_t', 'z', cc, 'y')
+        c = contourPlot(self.deform, self.ien, self.nodes, 'sigma_t', 'z', cc)
 
 #############################################################################
 
