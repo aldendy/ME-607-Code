@@ -190,8 +190,9 @@ def stressVec(numD, strain, cCons=0):
 # This function calculates the internal force for a particular 'k' and 'm' 
 
 # The inputs are:
-# 'deform' - the array of all deformation cooeficients for the entire mesh [c11, c12, c21, c22...] for 2D where c is 
-# indexed by [global node #][degree of freedom]
+# 'deform' - the array of all deformation cooeficients for the entire mesh
+#            [c11, c12, c21, c22...] for 2D where c is indexed by
+#            [global node #][degree of freedom]
 # 'basis' - the basis function evaluations at the integration points
 # 'ien' - the ien array for the global mesh
 # 'e' - the element number

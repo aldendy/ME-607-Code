@@ -154,16 +154,20 @@ def boundNormal(s, jac):
 
 #########################################################
 
-# Finally, we implement a function that performs a change of coordinates on the derivatives of N, transferring
-# it from the parent domain to the physical domain. 
+# Finally, we implement a function that performs a change of coordinates on the
+# derivatives of N, transferring it from the parent domain to the physical
+# domain. 
 
 # The inputs are:
-# 'pts' - the integration point array containing the function and derivative evaluations at a point indexed by 
-# [basis function #][0 - function, 1 - df/dxi, 2 - df/deta ...] - a component of the 'basis' for the element
+# 'pts' - the integration point array containing the function and derivative
+#         evaluations at a point indexed by [basis function #]
+#         [0 - function, 1 - df/dxi, 2 - df/deta ...] - a component of the
+#         'basis' for the element
 # 'a' - the basis function number (0, 1, 2 ...)
 # 'jac' - the jacobian dx_i/dxi_j
 
-# The function returns a vector, 'dNa/dxi', of all the 'xi' derivatives of a-th 'N' (real-dimensional derivatives)
+# The function returns a vector, 'dNa/dxi', of all the 'xi' derivatives of a-th
+# 'N' (real-dimensional derivatives)
 
 def realN(pts, a, jac):
 	dNdxi = pts[a][1:len(pts[a])]  # a vector of derivatives of N_a
