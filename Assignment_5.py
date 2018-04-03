@@ -39,8 +39,8 @@ def posAndJac(pts, xa):
 
 ###################################################################
 
-# The second function we write takes the element region, 's', and the Jacobian and produces the appropriate
-# integral scaling. 
+# The second function we write takes the element region, 's', and the Jacobian
+# and produces the appropriate integral scaling. 
 
 # The inputs are:
 # 's' - the element region (0 - interior, 1, 2 ... - faces or walls)
@@ -92,7 +92,7 @@ def scaling(s, jac):
 
 	return scale
 
-#######################################################
+######################################################################
 
 # Next, we write a function that can find the face normals (3D vector). 
 
