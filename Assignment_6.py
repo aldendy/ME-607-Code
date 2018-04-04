@@ -41,6 +41,30 @@ def numDims(m, n=0, p=0):
             numD += 1
     return numD
 
+############################################################################
+
+# Here, we define a function that gets the nodal deformations for a specific
+# element.
+
+# The inputs are:
+# 'enum' - the element number (0, 1, ...)
+# 'deform' - the global deformation array (not missing dof's)
+# 'ien' - the ien array
+
+# The outputs are:
+# 'defE' - the deformations of the element nodes
+
+def getElemDefs(enum, deform, ien):
+    dimMap = {2:1, 4:2, 8:3}  # maps number of element nodes to dimensions
+    numD = dimMap[int(len(ien[0]))]  # number of problem dimensions
+    defE = []  # stores all the element deformations in the same format
+    
+    for i in ien[enum]:  # for every node in the element...
+        for j in range(numD):  # for every dof at the node...
+            defE.append(deform[int(numD*i + j)])
+    return defE
+
+
 #########################################################################
 
 # This function gets the nodal positions for all the nodes in a particular element 'e'
@@ -92,8 +116,8 @@ def getBandScale(numD, basis, intpt, xa):
         n1 = dNdxi[0]
         n2 = dNdxi[1]
         n3 = dNdxi[2]
-        Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2], [n3, 0, n1],
-                 [n2, n1, 0]])
+        Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2],
+                         [n3, 0, n1], [n2, n1, 0]])
       Bmats.append(Bmat)
     
     return Bmats, scale
@@ -256,6 +280,31 @@ def GaussInt(func, deform, basis, e, ien, xa, cCons=0):
 
 ################################################################################
 
+# This function combines the current element node locations with the deformation
+# array to obtain the current locations of the element nodes.
+
+# The inputs are:
+# 'i' - the element number
+# 'nodes' - the global 3D coordinates of all nodes in the mesh
+# 'deform' - a vector of the displacements of all nodes with size
+#           [# nodes x 3]x[1]
+# 'ien' - the mesh ien array (global node # = ien(element #,
+#           element basis func #))
+
+# The outputs are:
+# 'ya' - a list of current, 3D positions of the element nodes (with deformation)
+
+def getYa(i, nodes, deform, ien):
+    dims = int(len(deform)/len(nodes))  # gets the number of problem dimensions
+    ya = getXaArray(i, nodes, ien)  # adds the initial coordinates
+    
+    for i in range(len(ien[0])):  # for every element node...
+        for j in range(dims):  # for every result dof...
+            ya[i][j] += deform[dims*i + j]
+    return ya
+
+################################################################################
+
 # This function iterates over every integration point in the problem and calculates the internal energy integrals
 # over the 2 or 3D domain describing the interior of all the elements (sigma).
 
@@ -275,13 +324,13 @@ def intForceVec(nodes, ien, ida, ncons, numD, numE, deform, cCons=0):
     Fint = np.array((numD*len(nodes) - ncons)*[0.0])  # initialize the internal force vector 
     
     for i in range(numE):  # for every element...
-        xa = getXaArray(i, nodes, ien)  # get the global coordinates of the element nodes
-
+        ya = getYa(i, nodes, deform, ien)
+        
         # the internal force for a basis function 'a' over element 'i'
         if cCons != 0:
-            fai = GaussInt(func, deform, basis, i, ien, xa, cCons)
+            fai = GaussInt(func, deform, basis, i, ien, ya, cCons)
         else:
-            fai = GaussInt(func, deform, basis, i, ien, xa)
+            fai = GaussInt(func, deform, basis, i, ien, ya)
         
         # for this particular element vector, we then assemble it into the global vector 
         for j in range(len(basis[0][0])):  # for each basis function...

@@ -332,7 +332,7 @@ AssembSuite = unittest.TestLoader().loadTestsFromTestCase(IntForceVecAssemblyTes
 FullSuite = unittest.TestSuite([MechanicsSuite, FuncSuite, AssembSuite])
 
 #singleTestSuite = unittest.TestSuite()
-#singleTestSuite.addTest(MechanicsTest('test_1DstrainCalcs'))
+#singleTestSuite.addTest(MechanicsTest('IntForceVecAssemblyTest'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(AssembSuite)
 

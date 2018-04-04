@@ -203,6 +203,68 @@ class TestCauchyStressTensor(unittest.TestCase):
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual(correct[i][0], S[i][0], 3)
 
+    # For 2D small deformation...
+    def test_sigma_2D_1Elem(self):
+        deform = [0, 0, 2.0e-5, 0, 0, -0.6e-5, 2.0e-5, -0.6e-5]
+        ien = get_ien(1, 1)
+        basis = getBasis(2)
+        xa = nodeList(2, 2, 2, 1, 1)
+        x, jac = posAndJac(basis[0][0], xa)
+        defE = getElemDefs(0, deform, ien)
+        S = getCauchy(defE, basis[0][0], jac)
+        correct = [[2000037.2859566973], [4.2856711267160321], [0.0]]
+
+        for i in range(len(S)):  # for every component...
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+
+    # For 2D large deformation...
+    def test_sigma_2D_1Elem_Large(self):
+        deform = [0, 0, 0.2, 0, 0, -0.06, 0.2, -0.06]
+        ien = get_ien(1, 1)
+        basis = getBasis(2)
+        xa = nodeList(2, 2, 2, 1, 1)
+        x, jac = posAndJac(basis[0][0], xa)
+        defE = getElemDefs(0, deform, ien)
+        S = getCauchy(defE, basis[0][0], jac)
+        correct = [[23960235640.648041], [377922077.92207932], [0.0]]
+
+        for i in range(len(S)):  # for every component...
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+
+    # For 3D small deformation...
+    def test_sigma_3D_1Elem(self):
+        deform = [0, 0, 0, 2.0e-5, 0, 0, 0, -0.6e-5, 0, 2.0e-5, -0.6e-5, 0,
+                  0, 0, -0.6e-5, 2.0e-5, 0, -0.6e-5,
+                  0, -0.6e-5, -0.6e-5, 2.0e-5, -0.6e-5, -0.6e-5]
+        ien = get_ien(1, 1, 1)
+        basis = getBasis(3)
+        xa = nodeList(2, 2, 2, 1, 1, 1)
+        x, jac = posAndJac(basis[0][0], xa)
+        defE = getElemDefs(0, deform, ien)
+        S = getCauchy(defE, basis[0][0], jac)
+        correct = [[2000046.5004331144], [7.4999469716521787],
+                   [7.4999469717103864], [0], [0], [0]]
+        
+        for i in range(len(S)):  # for every component...
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+
+    # For 3D large deformation...
+    def test_sigma_3D_1Elem_Large(self):
+        deform = [0, 0, 0, 2.0e-1, 0, 0, 0, -0.6e-1, 0, 2.0e-1, -0.6e-1, 0,
+                  0, 0, -0.6e-1, 2.0e-1, 0, -0.6e-1,
+                  0, -0.6e-1, -0.6e-1, 2.0e-1, -0.6e-1, -0.6e-1]
+        ien = get_ien(1, 1, 1)
+        basis = getBasis(3)
+        xa = nodeList(2, 2, 2, 1, 1, 1)
+        x, jac = posAndJac(basis[0][0], xa)
+        defE = getElemDefs(0, deform, ien)
+        S = getCauchy(defE, basis[0][0], jac)
+        correct = [[25077053884.578617], [681818181.81818426],
+                   [681818181.81818426], [0.0], [0], [0]]
+
+        for i in range(len(S)):  # for every component...
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+
 ############################################################################
 
 # Now the testing

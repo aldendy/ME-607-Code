@@ -7,31 +7,8 @@
 
 import numpy as np
 from Assignment_5 import realN
-from Assignment_6 import getStiff
+from Assignment_6 import getStiff, getElemDefs
 
-
-############################################################################
-
-# Here, we define a function that gets the nodal deformations for a specific
-# element.
-
-# The inputs are:
-# 'enum' - the element number (0, 1, ...)
-# 'deform' - the global deformation array (not missing dof's)
-# 'ien' - the ien array
-
-# The outputs are:
-# 'defE' - the deformations of the element nodes
-
-def getElemDefs(enum, deform, ien):
-    dimMap = {2:1, 4:2, 8:3}  # maps number of element nodes to dimensions
-    numD = dimMap[int(len(ien[0]))]  # number of problem dimensions
-    defE = []  # stores all the element deformations in the same format
-    
-    for i in ien[enum]:  # for every node in the element...
-        for j in range(numD):  # for every dof at the node...
-            defE.append(deform[int(numD*i + j)])
-    return defE
 
 ############################################################################
 
@@ -98,9 +75,9 @@ def getVoigt(tensor):
 def getSquareFromVoigt(tensor):
     if len(tensor) == 1:
         sSq = [[tensor[0][0]]]
-    if len(tensor) == 2:
-        sSq = [[tensor[0][0], tensor[0][1]], [tensor[0][1], tensor[1][1]]]
     if len(tensor) == 3:
+        sSq = [[tensor[0][0], tensor[2][0]], [tensor[2][0], tensor[1][0]]]
+    if len(tensor) == 6:
         sSq = [[tensor[0][0], tensor[5][0], tensor[4][0]],
               [tensor[5][0], tensor[1][0], tensor[3][0]],
               [tensor[4][0], tensor[3][0], tensor[2][0]]]
@@ -163,6 +140,10 @@ def getCauchy(defE, pts, jac, cCons=0):
     SSq = getSquareFromVoigt(S)
     F = np.array(getF(defE, pts, jac))
     sigmaSq = np.dot(F, np.dot(SSq, np.transpose(F)))/np.linalg.det(F)
-    return sigmaSq
+    sigmaV = getVoigt(sigmaSq)
+    return sigmaV
 
 ###########################################################################
+
+
+

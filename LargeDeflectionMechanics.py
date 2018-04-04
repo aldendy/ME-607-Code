@@ -4,6 +4,7 @@
 from sympy import symbols, Matrix, pprint, eye, simplify, latex, solveset, Eq
 
 a, v, x, y, z, ym = symbols('a v x y z, ym')
+e11, e22, e33, e23, e13, e12, L, M = symbols('e11 e22 e33 e23 e13 e12 L M')
 
 # For a simple tension test in 3D, the deformation field is given by
 u = Matrix([a*x, -v*a*y, -v*a*z])
@@ -33,10 +34,10 @@ Sn = S.subs(v, 0.3)
 Ssq = Matrix([[Sn[0,0], Sn[5,0], Sn[4,0]], [Sn[5,0], Sn[1,0], Sn[3,0]],
               [Sn[4,0], Sn[3,0], Sn[2,0]]])
 
+EE = Matrix([[e11, e12, e13], [e13, e22, e23], [e13, e23, e33]])
 sigma = F*Ssq*F.T/J
-pprint(J)
-pprint(sigma.subs(a, 0.1).subs(v, 0.3))
-
+SeX = simplify(ld*EE.trace()*eye(3) + 2*mu*EE)
+pprint(SeX)
 
 
 
