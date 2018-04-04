@@ -104,21 +104,21 @@ def getBandScale(numD, basis, intpt, xa):
     
     Bmats = []  # initialize the array
     for i in range(len(basis[0][intpt])):  # for every basis function...
-      dNdxi = realN(basis[0][intpt], i, jac)
-      if numD == 1:
-        Bmat = dNdxi[0]  # derivative in 'x'
-      if numD == 2:
-        n1 = dNdxi[0]
-        n2 = dNdxi[1]
-        # as in notes
-        Bmat = np.array([[n1, 0], [0, n2], [n2, n1]])  
-      if numD == 3:
-        n1 = dNdxi[0]
-        n2 = dNdxi[1]
-        n3 = dNdxi[2]
-        Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2],
+        dNdxi = realN(basis[0][intpt], i, jac)
+        if numD == 1:
+            Bmat = dNdxi[0]  # derivative in 'x'
+        if numD == 2:
+            n1 = dNdxi[0]
+            n2 = dNdxi[1]
+            # as in notes
+            Bmat = np.array([[n1, 0], [0, n2], [n2, n1]])  
+        if numD == 3:
+            n1 = dNdxi[0]
+            n2 = dNdxi[1]
+            n3 = dNdxi[2]
+            Bmat = np.array([[n1, 0, 0], [0, n2, 0], [0, 0, n3], [0, n3, n2],
                          [n3, 0, n1], [n2, n1, 0]])
-      Bmats.append(Bmat)
+        Bmats.append(Bmat)
     
     return Bmats, scale
 
@@ -179,17 +179,17 @@ def getStiff(n, cCons=0):
 #           [1 - 1D, 3 - 2D, 6 - 3D]x[1]
 
 def strainVec(numD, e, deform, ien, Bmats):
-  sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
-  strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
+    sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
+    strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
   
-  for k in range(len(Bmats)):  # for every element basis function...
-    first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
-    second = first + numD  # location of c_ky (2D) in global 'deform'
-    cmat = np.transpose(np.array([deform[first:second]]))
+    for k in range(len(Bmats)):  # for every element basis function...
+        first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
+        second = first + numD  # location of c_ky (2D) in global 'deform'
+        cmat = np.transpose(np.array([deform[first:second]]))
     
-    strain += np.dot(np.array(Bmats[k]), cmat)
+        strain += np.dot(np.array(Bmats[k]), cmat)
   
-  return strain 
+    return strain 
 
 ########################################################################
 
@@ -241,9 +241,9 @@ def func(deform, basis, ien, e, i, xa, cCons=0):
     f = np.array(numD*len(basis[0][0])*[[0.0]])  
     
     for k in range(len(basis[0][0])):  # for every element basis function...
-      ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scale
-      for j in range(numD):  # for every dimension
-        f[numD*k + j] = ff[j]
+        ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scale
+        for j in range(numD):  # for every dimension
+            f[numD*k + j] = ff[j]
     
     return f
 
