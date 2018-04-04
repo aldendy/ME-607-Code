@@ -6,32 +6,9 @@ import numpy as np
 from Assignment_1 import nodeList, get_ien
 from Assignment_4 import getBasis
 from Assignment_5 import posAndJac
-from Assignment_10 import getElemDefs, getF, getPK2, getCauchy
+from Assignment_6 import getElemDefs
+from Assignment_10 import getF, getPK2, getCauchy
 
-
-############################################################################
-
-# Here, we test important auxilliary functions needed for smooth operation
-class TestProcessUtils(unittest.TestCase):
-    # First, we test the basics of the getElemDefs function
-    def test_getElemDefs_1D(self):
-        enum = 1
-        deform = np.linspace(1, 1.9, 4)
-        ien = get_ien(3)
-        result = getElemDefs(enum, deform, ien)
-        self.assertEqual(result[0], 1.3)
-        self.assertEqual(result[1], 1.6)
-
-    # Next, in 2D
-    def test_getElemDefs_2D(self):
-        enum = 1
-        deform = np.linspace(1, 3.3, 24)
-        ien = get_ien(3, 2)
-        result = getElemDefs(enum, deform, ien)
-        correct = [1.2, 1.3, 1.4, 1.5, 2, 2.1, 2.2, 2.3]
-        
-        for i in range(len(correct)):
-            self.assertAlmostEqual(result[i], correct[i])
 
 ############################################################################
 
@@ -269,12 +246,11 @@ class TestCauchyStressTensor(unittest.TestCase):
 
 # Now the testing
 
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(TestProcessUtils)
-Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestFGeneration)
-Suite3 = unittest.TestLoader().loadTestsFromTestCase(TestPK2Stress)
-Suite4 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
+Suite1 = unittest.TestLoader().loadTestsFromTestCase(TestFGeneration)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestPK2Stress)
+Suite3 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 
-FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3, Suite4])
+FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 #SingleSuite = unittest.TestSuite()
 #SingleSuite.addTest(PressurizedCylinderTest('test_accuracyPressCylinSol'))
