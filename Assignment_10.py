@@ -7,7 +7,7 @@
 
 import numpy as np
 from Assignment_5 import realN
-from Assignment_6 import getStiff, getElemDefs
+from Assignment_6_Utils import getStiff, getElemDefs
 
 
 ############################################################################
