@@ -326,13 +326,16 @@ class IntForceVecAssemblyTest(unittest.TestCase):
                 for i in range(len(Fint)):  # for every element component...
                         self.assertAlmostEqual((Fint[i]+1)/(correct[i]+1), 1, 4)
 
-MechanicsSuite = unittest.TestLoader().loadTestsFromTestCase(MechanicsTest)
-FuncSuite = unittest.TestLoader().loadTestsFromTestCase(IntForceVectorFuncTest)
-AssembSuite = unittest.TestLoader().loadTestsFromTestCase(IntForceVecAssemblyTest)
-FullSuite = unittest.TestSuite([MechanicsSuite, FuncSuite, AssembSuite])
+################################################################################
+
+Suite1 = unittest.TestLoader().loadTestsFromTestCase(MechanicsTest)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(IntForceVectorFuncTest)
+Suite3 = unittest.TestLoader().loadTestsFromTestCase(IntForceVecAssemblyTest)
+
+FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 #singleTestSuite = unittest.TestSuite()
 #singleTestSuite.addTest(MechanicsTest('IntForceVecAssemblyTest'))
 
-unittest.TextTestRunner(verbosity=2).run(AssembSuite)
+unittest.TextTestRunner(verbosity=2).run(Suite3)
 
