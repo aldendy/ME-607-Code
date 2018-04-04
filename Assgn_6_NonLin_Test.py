@@ -5,7 +5,8 @@
 import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien
-from Assignment_6 import getElemDefs, getYa
+from Assignment_6_Utils import getElemDefs, get_uE
+from Assignment_6 import getYa
 
 
 ############################################################################
@@ -18,8 +19,11 @@ class TestProcessUtils(unittest.TestCase):
         deform = np.linspace(1, 1.9, 4)
         ien = get_ien(3)
         result = getElemDefs(enum, deform, ien)
-        self.assertEqual(result[0], 1.3)
-        self.assertEqual(result[1], 1.6)
+        correct = [[1.3, 0, 0], [1.6, 0, 0]]
+        
+        for i in range(len(result)):  # for every node...
+            for j in range(len(result[0])):  # for every dof...
+                self.assertEqual(result[i][j], correct[i][j])
 
     # Next, in 2D
     def test_getElemDefs_2D(self):
@@ -27,10 +31,11 @@ class TestProcessUtils(unittest.TestCase):
         deform = np.linspace(1, 3.3, 24)
         ien = get_ien(3, 2)
         result = getElemDefs(enum, deform, ien)
-        correct = [1.2, 1.3, 1.4, 1.5, 2, 2.1, 2.2, 2.3]
+        correct = [[1.2, 1.3, 0], [1.4, 1.5, 0], [2, 2.1, 0], [2.2, 2.3, 0]]
         
-        for i in range(len(correct)):
-            self.assertAlmostEqual(result[i], correct[i])
+        for i in range(len(correct)):  # for every node...
+            for j in range(len(correct[0])):  # for every dof...
+                self.assertAlmostEqual(result[i][j], correct[i][j])
 
 ############################################################################
 

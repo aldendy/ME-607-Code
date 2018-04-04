@@ -57,12 +57,39 @@ def numDims(m, n=0, p=0):
 def getElemDefs(enum, deform, ien):
     dimMap = {2:1, 4:2, 8:3}  # maps number of element nodes to dimensions
     numD = dimMap[int(len(ien[0]))]  # number of problem dimensions
-    defE = []  # stores all the element deformations in the same format
+
+    # Here, we store all the deformations in the elemental node array format
+    defE = [[0.0, 0.0, 0.0] for i in range(len(ien[0]))]
     
-    for i in ien[enum]:  # for every node in the element...
-        for j in range(numD):  # for every dof at the node...
-            defE.append(deform[int(numD*i + j)])
+    for i in range(len(ien[enum])):  # for every node in the element...
+        for j in range(3):  # for every dimension at the node...
+            if j < numD:  # if a deformation was found...
+                defE[i][j] = deform[int(numD*ien[enum][i]) + j]
+    
     return defE
+
+#########################################################################
+
+# This function finds the element deformations of all of an element's nodes
+# and casts these deformations into 3D vectors using 'deform', the global
+# deformation vector.
+
+# The inputs are:
+# 'deform' - the complete, global deformation vector storing all d_Ai
+# 'e' - the element number (0, 1, 2...)
+# 'ien' - maps (global eqn. #) = ien[element #][element node #]
+# 'dims' - the umber of problem dimensions
+
+# The outputs are:
+# 'uE' - the 3D deflections at every elemental node
+
+def get_uE(deform, e, ien, dims):
+    uE = [[0.0, 0.0, 0.0] for i in range(len(ien[0]))]  # initialize the array
+
+    for i in range(len(ien[0])):  # for every elemental node...
+        for j in range(dims):  # for every problem dof...
+            uE[i][j] += deform[int(dims*ien[e][i]) + j]
+    return uE
 
 #########################################################################
 
@@ -96,7 +123,7 @@ def getXaArray(e, nodes, ien):
 # 'a' - the basis function index (0, 1, 2...) at the element level (not
 #       global A)
 # 'xa' - a vector of the 3D coordinates of the element nodes of size
-#       [# element nodes]x[3]
+#       [# element nodes]x[3]. Can be the deformed coordinates 'ya'.
 
 # The outputs are:
 # 'Bmats' - An array of all the B-matrices for every element basis function
@@ -104,7 +131,7 @@ def getXaArray(e, nodes, ien):
 #       domain.
 
 def getBandScale(numD, basis, intpt, xa):
-    x, jac = posAndJac(basis[0][intpt], xa)  # get the element global position and jacobian
+    x, jac = posAndJac(basis[0][intpt], xa)  # get element global position and jacobian
     scale = scaling(0, jac)  # get the element interior integration scaling
     
     Bmats = []  # initialize the array

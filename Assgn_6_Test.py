@@ -261,7 +261,9 @@ class IntForceVecAssemblyTest(unittest.TestCase):
         self.ien1 = get_ien(1)
         self.ndim1 = 1
         self.numE1 = 1
-        self.deform1 = [0, 0.1]
+        d1 = 1.0e-5  # deformation in the primary direction
+        d2 = 0.3*d1  # deformation in the perpendicular direction
+        self.deform1 = [0, d1]
 
         cons, loads = load_and_cons(self.numE1, len(self.nodes1), 1)
         cons[0][0] = 0  # set arbitrary constraints
@@ -271,7 +273,7 @@ class IntForceVecAssemblyTest(unittest.TestCase):
         self.ien2 = get_ien(1, 1)
         self.ndim2 = 2
         self.numE2 = 1
-        self.deform2 = [0, 0, 0.1, 0, 0, -0.03, 0.1, -0.03]
+        self.deform2 = [0, 0, d1, 0, 0, -d2, d1, -d2]
 
         cons, loads = load_and_cons(self.numE2, len(self.nodes2), 2)  # 2 dimensions
         cons[0][0] = 0
@@ -284,9 +286,8 @@ class IntForceVecAssemblyTest(unittest.TestCase):
         self.ien3 = get_ien(1, 1, 1)
         self.ndim3 = 3
         self.numE3 = 1
-        self.deform3 = [0, 0, 0, 0.1, 0, 0, 0, -0.03, 0, 0.1, -0.03, 0,
-                0, 0, -0.03, 0.1, 0, -0.03, 0, -0.03, -0.03, 0.1,
-                -0.03, -0.03]
+        self.deform3 = [0, 0, 0, d1, 0, 0, 0, -d2, 0, d1, -d2, 0,
+                0, 0, -d2, d1, 0, -d2, 0, -d2, -d2, d1, -d2, -d2]
 
         cons, loads = load_and_cons(self.numE3, len(self.nodes3), 3)  # 2 dimensions
         cons[0][0] = 0
@@ -302,7 +303,7 @@ class IntForceVecAssemblyTest(unittest.TestCase):
     def test_intForceVecOutput1D(self):
         Fint = intForceVec(self.nodes1, self.ien1, self.ida1, self.ncons1,self.ndim1,
                    self.numE1, self.deform1)
-        correct = [2e10]
+        correct = [2000030.00011393]
         
         for i in range(len(Fint)):  # for every element component...
             self.assertAlmostEqual(Fint[i]/correct[i], 1, 4)
@@ -311,7 +312,7 @@ class IntForceVecAssemblyTest(unittest.TestCase):
     def test_intForceVecOutput2D(self):
         Fint = intForceVec(self.nodes2, self.ien2, self.ida2, self.ncons2, self.ndim2,
                    self.numE2, self.deform2)
-        correct = [1e10, 0, -1e10, 0]
+        correct = [1.00001564e+06, -2.14285699, -1.00001564e+06, 2.14285699]
         
         for i in range(len(Fint)):  # for every element component...
             self.assertAlmostEqual((Fint[i]+1)/(correct[i]+1), 1, 4)
@@ -320,8 +321,11 @@ class IntForceVecAssemblyTest(unittest.TestCase):
     def test_intForceVecOutput3D(self):
         Fint = intForceVec(self.nodes3, self.ien3, self.ida3, self.ncons3, self.ndim3,
                    self.numE3, self.deform3)
-        correct = [5e9, 0, 0, -5e9, 0, 0, -5e9, 0, 0,
-               5e9, 0, 0, 0, 0, 5e9, 0, 0]
+        correct = [5.00008625e+05, -1.87499987, -1.87499987, -5.00008625e+05,
+                   1.87499987, -1.87499987, -5.00008625e+05, -1.87499987,
+                   1.87499987, 5.00008625e+05, -1.87499987, 1.87499987,
+                   1.87499987, 1.87499987e+00, 5.00008625e+05, 1.87499987,
+                   1.87499987]
         
         for i in range(len(Fint)):  # for every element component...
             self.assertAlmostEqual((Fint[i]+1)/(correct[i]+1), 1, 4)

@@ -68,32 +68,35 @@ def stressVec(numD, strain, cCons=0):
 # 'ien' - the ien array for the global mesh
 # 'e' - the element number
 # 'i' - the particular integration point number (0, 1, 2...)
-# 'xa' - a vector of the vector positions of the element nodes
+# 'ya' - a vector of the current vector positions of the element nodes
 # 'cCons' - an array of the parameters needed to define the constituitive
 #           law that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output is the nodal evaluation of the force vector element at an
 # integration point 
 
-def func(deform, basis, ien, e, i, xa, cCons=0):
+def func(deform, basis, ien, e, i, ya, cCons=0):
     numD = len(basis[0][0][0]) - 1  # the number of dimensions
-    Bmats, scale = getBandScale(numD, basis, i, xa)
+    Bmats, scaleYxi = getBandScale(numD, basis, i, ya)
     defE = getElemDefs(e, deform, ien)
-    x, jac = posAndJac(basis[0][i], xa)
+    xa = np.array(ya) - np.array(defE)
+    
+    y, jacYxi = posAndJac(basis[0][i], ya)
+    x, jacXxi = posAndJac(basis[0][i], xa)
     
     # strain = strainVec(numD, e, deform, ien, Bmats)
     if cCons != 0:
-        stress = getCauchy(defE, basis[0][i], jac, cCons)
+        stress = getCauchy(defE, basis[0][i], jacXxi, cCons)
         #stress = stressVec(numD, strain, cCons)
     else:
-        stress = getCauchy(defE, basis[0][i], jac)
+        stress = getCauchy(defE, basis[0][i], jacXxi)
         #stress = stressVec(numD, strain)
     
     # the force vector for all nodes 'a' over element 'e'
     f = np.array(numD*len(basis[0][0])*[[0.0]])  
     
     for k in range(len(basis[0][0])):  # for every element basis function...
-        ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scale
+        ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scaleYxi
         for j in range(numD):  # for every dimension
             f[numD*k + j] = ff[j]
     
@@ -113,13 +116,13 @@ def func(deform, basis, ien, e, i, xa, cCons=0):
 # 'e' - the element number
 # 'ien' - the mesh ien array (global node # = ien(element #, element basis
 #           func #))
-# 'xa' - a vector of the vector positions of the element nodes
+# 'ya' - a vector of the current vector positions of the element nodes
 # 'cCons' - an array of the parameters needed to define the constituitive
 #           law that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The output is the integral of 'func' over the domain given in 'basis'
 
-def GaussInt(func, deform, basis, e, ien, xa, cCons=0):
+def GaussInt(func, deform, basis, e, ien, ya, cCons=0):
     numD = len(basis[0][0][0]) - 1  # the number of dimensions
     # initialize the integral value to an array of size [(# basis funcs) x
     # (# dimensions)] x [1]
@@ -128,9 +131,9 @@ def GaussInt(func, deform, basis, e, ien, xa, cCons=0):
     
     for i in range(len(basis[0])):  # for every integration point...
         if cCons != 0:
-            area += func(deform, basis, ien, e, i, xa, cCons)*weights[i]
+            area += func(deform, basis, ien, e, i, ya, cCons)*weights[i]
         else:
-            area += func(deform, basis, ien, e, i, xa)*weights[i]
+            area += func(deform, basis, ien, e, i, ya)*weights[i]
   
     return area
 

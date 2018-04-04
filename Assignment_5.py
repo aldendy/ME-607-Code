@@ -14,13 +14,14 @@ import math, numpy
 #       [0 - function, 1 - df/dxi, 2 - df/deta ...] - a component of the
 #       'basis' for the element
 # 'xa' - an array of the real coordinates of each node (ordered like the
-#       corresponding basis funcs) with size [# nodes]x[3 dimensions]
+#       corresponding basis funcs) with size [# nodes]x[3 dimensions].
+#       They can be the deformed coordinates, 'ya'.
 
 # The returns are:
 # 'x' - a vector position of the physical coordinate (3x1) that corresponds
-#       to the parent domain int. pt.
+#       to the parent domain int. pt. This is 'y' if 'ya' is supplied.
 # 'jac' - an array of all d(x_i)/d(xi_j) for all 'i (0, 1, 2)' and 'j
-#       (0 or 0,1 or 0,1,2)'. In the non-linear case, dy/dxi.
+#       (0 or 0,1 or 0,1,2)'. Given 'ya', we get Jac(dy/dxi).
 
 def posAndJac(pts, xa):
     # because 'pts' could have differing numbers of basis funcs, go
