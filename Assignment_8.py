@@ -125,8 +125,8 @@ def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
 
 #############################################################################################
 
-# This function updates the 'd' vector using the partial 'd' vector found in the Newton-
-# Raphson method.
+# This function updates the 'd' vector using the partial 'd' vector found
+# in the Newton-Raphson method.
 
 # The inputs are:
 # 'ida' - the id array mapping (unconstrained eqn. #) = ID[Global Eqn. #]
@@ -197,7 +197,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 		    len(ien), deform0)
 	
 	residual = np.array(extFV) - np.array(intFV)
-	
+	#print(np.linalg.norm(residual))
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
 	    deform0 = getFullDVec(ida, deform, cons)
