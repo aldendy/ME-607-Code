@@ -60,7 +60,7 @@ def getVoigt(tensor):
     if len(tensor) == 3:
         vt = [[tensor[0][0]], [tensor[1][1]], [tensor[2][2]],
               [tensor[1][2]], [tensor[0][2]], [tensor[0][1]]]
-    return vt
+    return np.array(vt)
 
 ###########################################################################
 
@@ -81,7 +81,7 @@ def getSquareFromVoigt(tensor):
         sSq = [[tensor[0][0], tensor[5][0], tensor[4][0]],
               [tensor[5][0], tensor[1][0], tensor[3][0]],
               [tensor[4][0], tensor[3][0], tensor[2][0]]]
-    return sSq
+    return np.array(sSq)
 
 ###########################################################################
 
@@ -125,7 +125,7 @@ def getPK2(defE, pts, jac, cCons=0):
 # 'pts' - array containing the function and derivative evaluations at a specific
 #         integration point indexed by [basis function #]
 #         [0 - function, 1 - df/dxi, 2 - df/deta ...]
-# 'jac' - the jacobian dx_i/dxi_j
+# 'jac' - the jacobian dx_i/dxi_j (NOT dy/dxi - the current frame jacobian)
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 

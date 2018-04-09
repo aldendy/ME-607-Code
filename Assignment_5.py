@@ -181,7 +181,7 @@ def boundNormal(s, jac):
 # 'jac' - the jacobian dx_i/dxi_j
 
 # The function returns a vector, 'dNa/dxi', of all the 'xi' derivatives of a-th
-# 'N' (real-dimensional derivatives)
+# 'N' (real-dimensional derivatives) (only as many as problem dimensions)
 
 def realN(pts, a, jac):
     dNdxi = pts[a][1:len(pts[a])]  # a vector of derivatives of N_a

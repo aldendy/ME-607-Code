@@ -5,8 +5,10 @@
 
 import numpy as np
 from Assignment_4 import getBasis
-from Assignment_6 import getStiff, getBandScale, getXaArray, intForceVec
+from Assignment_5 import posAndJac, realN
+from Assignment_6 import getStiff, getBandScale, getYa, intForceVec, getElemDefs
 from Assignment_7 import getExtForceVec
+from Assignment_10 import getSquareFromVoigt, getCauchy
 
 
 ####################################################################
@@ -15,22 +17,37 @@ from Assignment_7 import getExtForceVec
 # returns the energy density at a particular integration point (Bt D B)
 
 # The inputs are:
-# 'dims' - number of problem dimensions (1, 2, 3)
-# 'intpt' - the specific integration point number (0, 1, ...)
-# 'xa' - a vector of the 3D coordinates of the element nodes of size
-#       [# element nodes]x[3]
-# 'a' - the first elemental matrix subcoordinate (A in the notes)
-#       (0, 1, ...)
-# 'b' - the second elemental matrix subcoordinate (B in the notes)
-#       (0, 1, ...)
+# 'pts' - the integration point array containing the function and
+#       derivative evaluations at a point indexed by [basis function #]
+#       [0 - function, 1 - df/dxi, 2 - df/deta ...] - a component of the
+#       'basis' for the element
+# 'ya' - a vector of the 3D coordinates of the element nodes of size
+#       [# element nodes]x[3]\
+# 'D' - the elasticity tensor for a specific number of problem dims.
+# 'sigmaSq' - the square Cauchy stress tensor
+# 'a' - the first elemental eq. num. (A in the notes)(0, 1, ...)
+# 'b' - the second elemental eq. num. (B in the notes)(0, 1, ...)
+# 'Ba' - the B-matrix associated with the eq. num. 'a'
+# 'Bb' - the B-matrix associated with the eq. num. 'b'
 
 # The outputs are:
+# 'k_ab' - elemental stiffness matrix [# prob. dims]x[# prob. dims]
 
-def getEnergyDensity(D, Ba, Bb):
-# Now, get the matrix product
-    k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
+def getEnergyDensity(pts, ya, D, sigmaSq, a, b, Ba, Bb):
+    dims = int(len(pts[0]) - 1)  # number of problem dimensions
+    
+    # Now, get the material stiffness
+    k_abM = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
+    
+    y, jacYxi = posAndJac(pts, ya)
+    gradNa = realN(pts, a, jacYxi)  # gradient of 'Na' in 'y'
+    gradNb = realN(pts, b, jacYxi)  # gradient of 'Nb' in 'y'
 
-    if type(k_ab).__name__ != 'ndarray':
+    # Here, get the geometric stiffness
+    k_abG = np.dot(gradNa, np.dot(sigmaSq, np.transpose(gradNb)))
+    k_ab = (k_abM + k_abG*np.eye(dims))  # combine both
+    
+    if type(k_ab).__name__ != 'ndarray':  # if it is a scalar...
         k_ab = [[k_ab]]
 
     return k_ab
@@ -44,7 +61,8 @@ def getEnergyDensity(D, Ba, Bb):
 
 # The inputs are:
 # 'dims' - the number of problem dimensions
-# 'xa' - the 3D real coordinates of the element nodes arranged in a list
+# 'ya' - current 3D coordinates of the element nodes arranged in a list
+# 'defE' - deformation at all element nodes in format of global 'u' array
 # 'cCons' - an array of the parameters needed to define the constituitive
 #           law that contains ['Young's Modulus', 'Poisson's Ratio']
 
@@ -53,23 +71,32 @@ def getEnergyDensity(D, Ba, Bb):
 #       [(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis
 #       funcs.)]
 
-def gaussIntKMat(dims, xa, cCons=0):
+def gaussIntKMat(dims, ya, defE, cCons=0):
     basis = getBasis(dims)
-    numA = 2**dims
-    if cCons != 0:
-	D = getStiff(dims, cCons)  # the 'D' matrix
-    else:
-	D = getStiff(dims)
+    numA = 2**dims  # number of element basis functions
+    xa = np.array(ya) - np.array(defE)  # reference 3D elemental node positions
     w = 1  # the gauss point integral weight (2 pts)
     ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
     
     for i in range(len(basis[0])):  # for every integration point...
+        x, jacXxi = posAndJac(basis[0][i], xa)
+        
+        if cCons != 0:
+            D = getStiff(dims, cCons)  # the 'D' matrix
+            sigma = getCauchy(defE, basis[0][i], jacXxi, cCons)
+        else:
+            D = getStiff(dims)
+            sigma = getCauchy(defE, basis[0][i], jacXxi)
+
+        sigmaSq = getSquareFromVoigt(sigma)  # get square Cauchy
+	
 	# now, get the 'Bmat' for the integration point
-	Bmats, scale = getBandScale(dims, basis, i, xa)
+	Bmats, scale = getBandScale(dims, basis, i, ya)
 	
 	for j in range(numA):  # for the 'a'-th basis function...
 	    for k in range(numA):  # for the 'b'-th basis function...
-		kab = getEnergyDensity(D, Bmats[j], Bmats[k])
+		kab = getEnergyDensity(basis[0][i], ya, D, sigmaSq, j, k,
+                                       Bmats[j], Bmats[k])
 		
 		# then, we assemble 'kab' into the appropriate slot in 'ke'
 		for m in range(len(kab)):  # for every row...
@@ -87,6 +114,8 @@ def gaussIntKMat(dims, xa, cCons=0):
 # 'nodes' - a list of the 3D locations of all the problem nodes
 # 'ien' - the ien array for the problem implementing the map
 #         [global eqn. #] = ien[elem. #][local basis func. #]
+# 'deform' - a vector of the displacements (not positions) of all nodes
+#           with size [# nodes x 3]x[1]
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
 # 'ncons' - the number of dof constraints
 # 'cCons' - an array of the parameters needed to define the constituitive
@@ -97,20 +126,22 @@ def gaussIntKMat(dims, xa, cCons=0):
 #       [(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis
 #       funcs.)]
 
-def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
+def getStiffMatrix(nodes, ien, deform, ida, ncons, cCons=0):
     dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
     numA = 2**dims  # the number of element basis functions
     totA = len(nodes)*dims - ncons  # number of stiffness matrix equations
     # the return global stiffness matrix
     kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
-    
+
     for i in range(len(ien)):  # for every element...
         # get the element nodal locations (global)
-	xa = getXaArray(i, nodes, ien)  
+	ya = getYa(i, nodes, deform, ien)
+        defE = getElemDefs(i, deform, ien)
+        
 	if cCons != 0:  # if we get a parameter definition...
-	    ke = gaussIntKMat(dims, xa, cCons)
+	    ke = gaussIntKMat(dims, ya, defE, cCons)
 	else:
-	    ke = gaussIntKMat(dims, xa)
+	    ke = gaussIntKMat(dims, ya, defE)
 	
 	for j in range(len(ke)):  # for every row in 'ke'...
 	    for k in range(len(ke[0])):  # for every column in 'ke'...
@@ -188,11 +219,11 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
     
     while i < imax:
 	if cCons != 0:
-            stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
+            stiff = getStiffMatrix(nodes, ien, deform0, ida, ncons, cCons)
 	    intFV = intForceVec(nodes, ien, ida, ncons, numD,
 		    len(ien), deform0, cCons)
 	else:
-	    stiff = getStiffMatrix(nodes, ien, ida, ncons)
+	    stiff = getStiffMatrix(nodes, ien, deform0, ida, ncons)
 	    intFV = intForceVec(nodes, ien, ida, ncons, numD,
 		    len(ien), deform0)
 	
@@ -210,7 +241,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 	deform += du
 	deform0 = getFullDVec(ida, deform, cons)
 	i += 1
-	
+
     return deform0, i
 
 

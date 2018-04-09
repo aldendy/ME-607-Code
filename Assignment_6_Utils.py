@@ -43,8 +43,8 @@ def numDims(m, n=0, p=0):
 
 ############################################################################
 
-# Here, we define a function that gets the nodal deformations for a specific
-# element.
+# Here, we define a function that gets the 3D nodal deformations for a
+# specific element and returns a list for all elemental nodes.
 
 # The inputs are:
 # 'enum' - the element number (0, 1, ...)
@@ -52,7 +52,7 @@ def numDims(m, n=0, p=0):
 # 'ien' - the ien array
 
 # The outputs are:
-# 'defE' - the deformations of the element nodes
+# 'defE' - a list of 3D deformations for all nodes in an element 'enum'
 
 def getElemDefs(enum, deform, ien):
     dimMap = {2:1, 4:2, 8:3}  # maps number of element nodes to dimensions
@@ -67,29 +67,6 @@ def getElemDefs(enum, deform, ien):
                 defE[i][j] = deform[int(numD*ien[enum][i]) + j]
     
     return defE
-
-#########################################################################
-
-# This function finds the element deformations of all of an element's nodes
-# and casts these deformations into 3D vectors using 'deform', the global
-# deformation vector.
-
-# The inputs are:
-# 'deform' - the complete, global deformation vector storing all d_Ai
-# 'e' - the element number (0, 1, 2...)
-# 'ien' - maps (global eqn. #) = ien[element #][element node #]
-# 'dims' - the umber of problem dimensions
-
-# The outputs are:
-# 'uE' - the 3D deflections at every elemental node
-
-def get_uE(deform, e, ien, dims):
-    uE = [[0.0, 0.0, 0.0] for i in range(len(ien[0]))]  # initialize the array
-
-    for i in range(len(ien[0])):  # for every elemental node...
-        for j in range(dims):  # for every problem dof...
-            uE[i][j] += deform[int(dims*ien[e][i]) + j]
-    return uE
 
 #########################################################################
 
