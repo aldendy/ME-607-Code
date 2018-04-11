@@ -164,6 +164,18 @@ class SolverTest2D(unittest.TestCase):
         
         self.ida4, self.ncons4 = getIDArray(self.cons4)
 
+        # For the deformation load...
+        self.cons5, self.load5 = load_and_cons(enum[0]**2, len(self.nodes1),
+                                               self.numD)
+        self.cons5[0][0] = 0.0
+        self.cons5[1][0] = 0.0
+        self.cons5[0][1] = 1.0e-5
+        self.cons5[1][1] = 0.0
+        self.cons5[0][2] = 0.0
+        self.cons5[0][3] = 1.0e-5
+
+        self.ida5, self.ncons5 = getIDArray(self.cons5)
+
     # Now, we simulate the deformation behavior
     def test_2DTrac1Elem(self):
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
@@ -219,6 +231,16 @@ class SolverTest2D(unittest.TestCase):
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
+    # Here, we test the deformation on a 1x1 element...
+    def test_2DDef1Elem(self):
+        result, steps = solver(self.numD, self.load5, self.nodes1, self.ien1,
+                               self.ida5, self.ncons5, self.cons5)
+
+        correct = [0.0, 0.0, 1.0e-5, 0.0, 0.0, -0.3e-5, 1.0e-5, -0.3e-5]
+
+        for i in range(len(result)):  # for every component...
+            self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
+
 ##############################################################################
 
 # Here, we write a class that performs some basic testing for a 3D element
@@ -266,6 +288,6 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest2D('test_2DTrac1Elem'))
+#SingleSuite.addTest(SolverTest2D('test_1D_Def_1Elem'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

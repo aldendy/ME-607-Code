@@ -47,7 +47,7 @@ def getF(defE, pts, jac):
 # the same tensor in Voigt notation.
 
 # The inputs are:
-# 'tensor' - an arbitrary tensor of size [3x3] or [2x2]
+# 'tensor' - an arbitrary tensor of size [3x3], [2x2] or [1x1]
 
 # The outputs are:
 # 'vt' - the voigt notation version of the tensor
