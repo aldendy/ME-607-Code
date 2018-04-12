@@ -19,25 +19,8 @@ J = F.det()
 ld = ym*v/((1 + v)*(1 - 2*v))  # Lame parameters
 mu = ym/(2*(1 + v))
 
-D = Matrix([[ld + 2*mu,    ld,             ld,             0,      0,      0],
-            [ ld,           ld + 2*mu,      ld,             0,      0,      0],
-            [ ld,           ld,             ld + 2*mu,      0,      0,      0],
-            [ 0,            0,              0,              mu,     0,      0],
-            [ 0,            0,              0,              0,      mu,     0],
-            [ 0,            0,              0,              0,      0,      mu]])
+aa = simplify(ld + 2*mu - ld**2/(ld + 2*mu))
 
-# Here, we get the Voigt notation for the strain vector
-Ev = (Matrix([[E[0,0], E[1,1], E[2,2], E[1,2], E[0,2], E[0,1]]])).T
-S = simplify(D.subs(ym, 200e9)*Ev.subs(a, 0.1))
-Sn = S.subs(v, 0.3)
+cc = simplify(ld - ld**2/(ld + 2*mu))
 
-Ssq = Matrix([[Sn[0,0], Sn[5,0], Sn[4,0]], [Sn[5,0], Sn[1,0], Sn[3,0]],
-              [Sn[4,0], Sn[3,0], Sn[2,0]]])
-
-EE = Matrix([[e11, e12, e13], [e13, e22, e23], [e13, e23, e33]])
-sigma = F*Ssq*F.T/J
-SeX = simplify(ld*EE.trace()*eye(3) + 2*mu*EE)
-pprint(SeX)
-
-
-
+# Here, we find the lambda form for the 1D constant

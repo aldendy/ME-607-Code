@@ -124,7 +124,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons1[1][0] = 0.0
         self.cons1[0][2] = 0.0
         
-        self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
+        self.load1[2][0] = [2.0e10, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
         # For the pressure load...
@@ -180,7 +180,7 @@ class SolverTest2D(unittest.TestCase):
     def test_2DTrac1Elem(self):
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
-        
+        print(result)
         correct = [0.0, 0.0, 1.0e-5, 0.0, 0.0, -0.3e-5, 1.0e-5, -0.3e-5]
         
         for i in range(len(result)):  # for every component...
@@ -288,6 +288,6 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(SolverTest2D('test_1D_Def_1Elem'))
+SingleSuite.addTest(SolverTest2D('test_2DTrac1Elem'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)

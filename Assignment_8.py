@@ -6,9 +6,9 @@
 import numpy as np
 from Assignment_4 import getBasis
 from Assignment_5 import posAndJac, realN
-from Assignment_6 import getStiff, getBandScale, getYa, intForceVec, getElemDefs
+from Assignment_6 import getBandScale, getYa, intForceVec, getElemDefs, getEulerStiff
 from Assignment_7 import getExtForceVec
-from Assignment_10 import getSquareFromVoigt, getCauchy
+from Assignment_10 import getF, getSquareFromVoigt, getCauchy
 
 
 ####################################################################
@@ -80,12 +80,13 @@ def gaussIntKMat(dims, ya, defE, cCons=0):
     
     for i in range(len(basis[0])):  # for every integration point...
         x, jacXxi = posAndJac(basis[0][i], xa)
+        F = getF(defE, basis[0][i], jacXxi)
         
         if cCons != 0:
-            D = getStiff(dims, cCons)  # the 'D' matrix
+            D = getEulerStiff(F, dims, cCons)  # the 'D' matrix
             sigma = getCauchy(defE, basis[0][i], jacXxi, cCons)
         else:
-            D = getStiff(dims)
+            D = getEulerStiff(F, dims)
             sigma = getCauchy(defE, basis[0][i], jacXxi)
 
         sigmaSq = getSquareFromVoigt(sigma)  # get square Cauchy
@@ -228,7 +229,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 		    len(ien), deform0)
 	
 	residual = np.array(extFV) - np.array(intFV)
-	#print(np.linalg.norm(residual))
+	print(np.linalg.norm(residual))
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
 	    deform0 = getFullDVec(ida, deform, cons)

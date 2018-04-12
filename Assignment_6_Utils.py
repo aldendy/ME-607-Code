@@ -168,15 +168,68 @@ def getStiff(n, cCons=0):
         D = [[ld + 2*mu,    ld,             ld,             0,      0,      0],
             [ ld,           ld + 2*mu,      ld,             0,      0,      0],
             [ ld,           ld,             ld + 2*mu,      0,      0,      0],
-            [ 0,            0,              0,              mu,     0,      0],
-            [ 0,            0,              0,              0,      mu,     0],
-            [ 0,            0,              0,              0,      0,      mu]]
+            [ 0,            0,              0,              2*mu,   0,      0],
+            [ 0,            0,              0,              0,      2*mu,   0],
+            [ 0,            0,              0,              0,      0,   2*mu]]
     
     return D
 
 ################################################################################
 
+# In this function, we get the elasticity tensor in the current (Eulerian)
+# frame.
 
+# The inputs are:
+# 'F' - the derivatives of the current position 'y' wrt the undeformed 'x'
+# 'n' - the number of problem dimensions (1, 2 or 3)
+# 'cCons' - an array of the parameters needed to define the constituitive law
+#           that contains ['Young's Modulus', 'Poisson's Ratio']
+
+# The outputs are:
+# 'D_y' - the elasticity tensor in the current (Eulerian) frame
+
+def getEulerStiff(F, n, cCons=0):
+    E = 200.0*10**9    # modulus of elasticity (Pa)
+    v = 0.3         # Poisson's ratio
+    
+    if cCons != 0:
+        E = cCons[0]
+        v = cCons[1]
+    
+    ld0 = E*v/((1 + v)*(1 - 2*v))  # Lame parameters in reference
+    mu0 = E/(2*(1 + v))
+
+    J = np.linalg.det(F)
+    d1111 = (1/J)*F[0][0]**4*(ld0 + 2*mu0)  # convert first constant
+    if len(F) == 1:  # for 1D...
+        d1122 = ld0
+    else:
+        d1122 = (1/J)*F[0][0]**2*F[1][1]**2*(ld0)
+
+    ld = d1122  # get the Lame parameters in the current configuration
+    mu = 0.5*(d1111 - d1122)
+    
+    if n == 1:
+        D = E
+    if n == 2:
+        aa = ld + 2*mu - ld**2/(ld + 2*mu)  # 2D stiffness parameters
+        bb = 2*mu
+        cc = ld - ld**2/(ld + 2*mu)
+    
+        D = [[aa, cc, 0],
+             [cc, aa, 0],
+             [0,   0, bb]]
+    if n == 3:
+        D = [[ld + 2*mu,    ld,             ld,             0,      0,      0],
+            [ ld,           ld + 2*mu,      ld,             0,      0,      0],
+            [ ld,           ld,             ld + 2*mu,      0,      0,      0],
+            [ 0,            0,              0,              2*mu,   0,      0],
+            [ 0,            0,              0,              0,      2*mu,   0],
+            [ 0,            0,              0,              0,      0,   2*mu]]
+    
+    return D
+
+###########################################################################
 
 
 
