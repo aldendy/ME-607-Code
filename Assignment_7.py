@@ -5,7 +5,7 @@ import numpy as np
 from Assignment_1 import *
 from Assignment_2 import *
 from Assignment_5 import *
-from Assignment_6 import getXaArray
+from Assignment_6 import getYa
 
 ###############################################
 
@@ -81,6 +81,8 @@ def gaussInt(data, s, j, fj, ya):
 #           [element region][int. pt. #]
 #           [basis func. #][0 - value, 1, 2,... - dN/dxi_i]
 # 'nodes' - the list of problem nodes
+# 'deform' - a vector of all the displacements of all nodes with size
+#           [# nodes x 3]x[1]
 # 'ien' - ien array for the problem coding mapping (Global Eqn. #) =
 #           ien[Element #][Local Eqn. # 'a']
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
@@ -89,7 +91,7 @@ def gaussInt(data, s, j, fj, ya):
 # The outputs are:
 # 'forceVec' - a vector of the external forces for every dof of every node
 
-def getExtForceVec(loads, basis, nodes, ien, ida, ncons):
+def getExtForceVec(loads, basis, nodes, deform, ien, ida, ncons):
     numD = {3:1, 5:2, 7:3}  # array mapping (# dimensions) =
                             # numD[# element regions]
     dims = numD[len(loads)]  # the number of dimensions
@@ -97,24 +99,23 @@ def getExtForceVec(loads, basis, nodes, ien, ida, ncons):
     forceVec = np.array((dims*numA - ncons)*[0.0])  # initialize force vec.
     
     for i in range(len(loads[0])):  # for every element...
-        xai = getXaArray(i, nodes, ien)  # get coordinates of element nodes
+        yai = getYa(i, nodes, deform, ien)  # get coordinates of element nodes
         
         for j in range(len(loads)):  # for every element region...
-            
             integral = np.array(dims*len(basis[j][0])*[0.0])
             
             for k in range(dims):  # for every degree of freedom...
                 dtype = type(loads[j][i]).__name__  # the data type
                 
                 if dtype == 'list':  # if the load is a traction...
-                    integral = gaussInt(basis[j], j, k, loads[j][i][k], xai)
+                    integral = gaussInt(basis[j], j, k, loads[j][i][k], yai)
                     
                 elif dtype == 'float' or dtype == 'int':  # if the load is
                                                           # a pressure...
-                    xi, jaci = posAndJac(basis[j][0], xai)
-                    normal = boundNormal(j, jaci)
+                    yi, jacYxi = posAndJac(basis[j][0], yai)
+                    normal = boundNormal(j, jacYxi)
                     p_vec = (loads[j][i])*np.array(normal)
-                    integral = gaussInt(basis[j], j, k, p_vec[k], xai)
+                    integral = gaussInt(basis[j], j, k, p_vec[k], yai)
                     
                 # Next, we assembly the proper components
                 for m in range(len(integral)):  # for every item in the

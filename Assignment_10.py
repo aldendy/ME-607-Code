@@ -85,6 +85,27 @@ def getSquareFromVoigt(tensor):
 
 ###########################################################################
 
+# In this function, we get the Green strain at a particular location.
+
+# The inputs are:
+# 'defE' - deformation at all element nodes in format of global 'u' array
+# 'pts' - array containing the function and derivative evaluations at a specific
+#         integration point indexed by [basis function #]
+#         [0 - function, 1 - df/dxi, 2 - df/deta ...]
+# 'jac' - the jacobian dx_i/dxi_j (not dy/d xi)
+
+# The outputs are:
+# 'GSv' - the green strain for the specific location in Voigt notation
+
+def getGstrain(defE, pts, jac):
+    numD = int(len(pts[0]) - 1)  # number of problem dimensions
+    F = np.array(getF(defE, pts, jac))
+    GS = 0.5*(np.dot(np.transpose(F), F) - np.identity(numD))  # Green Strain
+    GSv = getVoigt(GS)
+    return GSv, F
+
+###########################################################################
+
 # Next, we implement the calculation of the Second Piola-Kirkhoff stress
 
 # The inputs are:
@@ -101,10 +122,8 @@ def getSquareFromVoigt(tensor):
 
 def getPK2(defE, pts, jac, cCons=0):
     numD = int(len(pts[0]) - 1)  # number of problem dimensions
-    F = np.array(getF(defE, pts, jac))
-    GS = 0.5*(np.dot(np.transpose(F), F) - np.identity(numD))  # Green Strain
-    GSv = getVoigt(GS)
-    
+    GSv, F = getGstrain(defE, pts, jac)  # gets Green strain in Voigt notation
+    print(F)
     if cCons != 0:
         D = np.array(getEulerStiff(F, numD, cCons))
     else:

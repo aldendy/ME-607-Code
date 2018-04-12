@@ -7,83 +7,26 @@ from Assignment_1 import nodeList, get_ien
 from Assignment_4 import getBasis
 from Assignment_5 import posAndJac
 from Assignment_6 import getElemDefs
-from Assignment_10 import getF, getPK2, getCauchy
-
-
-############################################################################
-
-# Here, we test the calculation process for the 'F' matrix
-class TestFGeneration(unittest.TestCase):
-    # First, we test the 'F' matrix in multiple dimensions. First 1D...
-    def test_F_1D_1Elem(self):
-        deform = [0.0, 0.1]
-        ien = get_ien(1)
-        basis = getBasis(1)
-        xa = nodeList(2, 2, 2, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        F = getF(defE, basis[0][0], jac)
-        self.assertEqual(F[0][0], 1.05)
-
-    # Next, in 2D
-    def test_F_2D_1Elem(self):
-        deform = [0.0, 0.0, 0.1, 0.0, 0.0, -0.03, 0.1, -0.03]
-        ien = get_ien(1, 1)
-        basis = getBasis(2)
-        xa = nodeList(1.0, 0.5, 0.5, 1, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        F = getF(defE, basis[0][0], jac)
-        correct = [[1.1, 0], [0, 0.94]]
-        
-        for i in range(len(F)):  # for every row...
-            for j in range(len(F[0])):  # for every column...
-                self.assertAlmostEqual(correct[i][j], F[i][j])
-
-    # Finally, we test in 3D
-    def test_F_3D_1Elem(self):
-        deform = [0, 0, 0, 0.1, 0, 0, 0, -0.03, 0, 0.1, -0.03, 0,
-                  0, 0, -0.03, 0.1, 0, -0.03, 0, -0.03, -0.03, 0.1, -0.03, -0.03]
-        ien = get_ien(1, 1, 1)
-        basis = getBasis(3)
-        xa = nodeList(2, 2, 2, 1, 1, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        F = getF(defE, basis[0][0], jac)
-        correct = [[1.05, 0, 0], [0, 0.985, 0], [0, 0, 0.985]]
-        
-        for i in range(len(F)):  # for every row...
-            for j in range(len(F[0])):  # for every column...
-                self.assertAlmostEqual(correct[i][j], F[i][j])
+from Assignment_10 import getPK2, getCauchy
 
 ############################################################################
 
 # Here, we test the second Piola-Kirchhoff stress tensor calculation
 class TestPK2Stress(unittest.TestCase):
-    # First, we test the stress in 1D...
-    def test_S_1D_1Elem(self):
-        deform = [0.0, 2.0e-5]
-        ien = get_ien(1)
-        basis = getBasis(1)
-        xa = nodeList(2, 2, 2, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        S = getPK2(defE, basis[0][0], jac)
-        correct = [[2000010.00001393]]
-        
-        for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual(correct[i], S[i])
-
     # For large deformation
     def test_S_1D_1Elem_Large(self):
-        deform = [0.0, 0.2]
+        d = 0.2  # deformation amount
+        eL = 2  # element length
+        deform = [0.0, d]
+        ym = 200e9  # Young's modulus
         ien = get_ien(1)
         basis = getBasis(1)
-        xa = nodeList(2, 2, 2, 1)
+        xa = nodeList(eL, eL, eL, 1)
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getPK2(defE, basis[0][0], jac)
-        correct = [[2.1e10]]
+        a = d/eL
+        correct = [[(a + 0.5*a**2)*ym]]
         
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual(correct[i], S[i], 3)
@@ -246,14 +189,13 @@ class TestCauchyStressTensor(unittest.TestCase):
 
 # Now the testing
 
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(TestFGeneration)
-Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestPK2Stress)
-Suite3 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
+Suite1 = unittest.TestLoader().loadTestsFromTestCase(TestPK2Stress)
+Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 
-FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
+FullSuite = unittest.TestSuite([Suite1, Suite2])
 
-#SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(PressurizedCylinderTest('test_accuracyPressCylinSol'))
+SingleSuite = unittest.TestSuite()
+SingleSuite.addTest(TestPK2Stress('test_S_1D_1Elem_Large'))
 
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)
         

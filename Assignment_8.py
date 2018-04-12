@@ -214,7 +214,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
     # deformation array missing dof's
     deform = np.array((numD*len(nodes) - ncons)*[0.0])
     deform0 =  getFullDVec(ida, deform, cons) # complete deformation array
-    extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
+    extFV = getExtForceVec(loads, basis, nodes, deform0, ien, ida, ncons)
     
     i = 0  # starting iteration
     

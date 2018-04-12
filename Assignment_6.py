@@ -9,53 +9,6 @@ from Assignment_5 import posAndJac, scaling, realN
 from Assignment_6_Utils import *
 from Assignment_10 import getCauchy
 
-
-#################################################################################
-
-# This function gets the strain at a given integration point. 
-# The inputs are:
-# 'numD' - the number of problem dimensions (1, 2, or 3)
-# 'e' - the element number (0, 1, 2...)
-# 'deform' - the global deformation array indexed by [c_ax, c_ay, c_(a+1)x, ...]
-# 'ien' - the global ien array indexed by [element #][3D coordinates]
-# 'Bmats' - a collection of 'B' matrices for all 'a'
-#           (of length = # basis funcs)
-
-# The output is:
-# 'strain' - the strain vector (Voigt notation) of size
-#           [1 - 1D, 3 - 2D, 6 - 3D]x[1]
-
-def strainVec(numD, e, deform, ien, Bmats):
-    sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
-    strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
-  
-    for k in range(len(Bmats)):  # for every element basis function...
-        first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
-        second = first + numD  # location of c_ky (2D) in global 'deform'
-        cmat = np.transpose(np.array([deform[first:second]]))
-    
-        strain += np.dot(np.array(Bmats[k]), cmat)
-  
-    return strain 
-
-########################################################################
-
-# This function returns the stress vector in Voigt notation 
-
-# The inputs are:
-# 'numD' - the number of problem dimensions
-# 'strain' - the strain vector in Voigt notation
-# 'cCons' - an array of the parameters needed to define the constituitive
-#           law that contains ['Young's Modulus', 'Poisson's Ratio']
-
-# The output is the stress vector in Voigt notation 
-
-def stressVec(numD, strain, cCons=0):
-    if cCons != 0:
-        return np.dot(np.array(getStiff(numD, cCons)), strain)
-    else:
-        return np.dot(np.array(getStiff(numD)), strain)
-
 ################################################################################
 
 # This function calculates the internal force for a particular 'k' and 'm' 
@@ -87,10 +40,8 @@ def func(deform, basis, ien, e, i, ya, cCons=0):
     # strain = strainVec(numD, e, deform, ien, Bmats)
     if cCons != 0:
         stress = getCauchy(defE, basis[0][i], jacXxi, cCons)
-        #stress = stressVec(numD, strain, cCons)
     else:
         stress = getCauchy(defE, basis[0][i], jacXxi)
-        #stress = stressVec(numD, strain)
     
     # the force vector for all nodes 'a' over element 'e'
     f = np.array(numD*len(basis[0][0])*[[0.0]])  
@@ -145,7 +96,7 @@ def GaussInt(func, deform, basis, e, ien, ya, cCons=0):
 # The inputs are:
 # 'i' - the element number
 # 'nodes' - the global 3D coordinates of all nodes in the mesh
-# 'deform' - a vector of the displacements of all nodes with size
+# 'deform' - a vector of all the displacements of all nodes with size
 #           [# nodes x 3]x[1]
 # 'ien' - the mesh ien array (global node # = ien(element #,
 #           element basis func #))
