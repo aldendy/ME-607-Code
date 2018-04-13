@@ -201,16 +201,17 @@ def getEulerStiff(F, n, cCons=0):
 
     J = np.linalg.det(F)
     d1111 = (1/J)*F[0][0]**4*(ld0 + 2*mu0)  # convert first constant
+    
     if len(F) == 1:  # for 1D...
         d1122 = ld0
     else:
         d1122 = (1/J)*F[0][0]**2*F[1][1]**2*(ld0)
 
-    ld = d1122  # get the Lame parameters in the current configuration
-    mu = 0.5*(d1111 - d1122)
+    ld = ld0  #d1122  # get the Lame parameters in the current configuration
+    mu = mu0  #0.5*(d1111 - d1122)
     
     if n == 1:
-        D = E
+        D = [[mu*(3*ld + 2*mu)/(ld + mu)]]
     if n == 2:
         aa = ld + 2*mu - ld**2/(ld + 2*mu)  # 2D stiffness parameters
         bb = 2*mu

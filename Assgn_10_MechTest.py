@@ -15,7 +15,7 @@ from Assignment_10 import getPK2, getCauchy
 class TestPK2Stress(unittest.TestCase):
     # For large deformation
     def test_S_1D_1Elem_Large(self):
-        d = 0.2  # deformation amount
+        d = 0.2e-4  # deformation amount
         eL = 2  # element length
         deform = [0.0, d]
         ym = 200e9  # Young's modulus
@@ -25,37 +25,35 @@ class TestPK2Stress(unittest.TestCase):
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getPK2(defE, basis[0][0], jac)
+        
         a = d/eL
         correct = [[(a + 0.5*a**2)*ym]]
         
         for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual(correct[i], S[i], 3)
-
-    # For 2D small deformation...
-    def test_S_2D_1Elem(self):
-        deform = [0, 0, 2.0e-5, 0, 0, -0.6e-5, 2.0e-5, -0.6e-5]
-        ien = get_ien(1, 1)
-        basis = getBasis(2)
-        xa = nodeList(2, 2, 2, 1, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        S = getPK2(defE, basis[0][0], jac)
-        correct = [[2.00001129e+06], [4.28572684e+00], [0]]
-        
-        for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual(correct[i][0], S[i][0], 1)
+            self.assertAlmostEqual((correct[i][0]+1)/(S[i][0]+1),1)
 
     # For 2D large deformation...
     def test_S_2D_1Elem_Large(self):
-        deform = [0, 0, 0.2, 0, 0, -0.06, 0.2, -0.06]
+        d = 2.0e-1
+        nu = 0.3
+        eLx = 2.0  # element length in the x-direction
+        eLy = 2.0  # element length in the y-direction
+        E = 200.0*10**9    # modulus of elasticity (Pa)
+        v = 0.3         # Poisson's ratio
+        ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters in reference
+        mu = E/(2*(1 + v))
+        deform = [0, 0, d, 0, 0, 0, d, 0]
         ien = get_ien(1, 1)
         basis = getBasis(2)
-        xa = nodeList(2, 2, 2, 1, 1)
+        xa = nodeList(eLx, eLy, 2, 1, 1)
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getPK2(defE, basis[0][0], jac)
-        correct = [[2.11285714e+10], [4.28571429e+08], [0.00000000e+00]]
-        
+        print(S)
+        a = d/eLx  # deformation ratio
+        ex = ((a + 1)**2/2 - 0.5)
+        correct = [[(ld + 2*mu)*ex], [ld*ex], [0]]
+        print(correct)
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
 
@@ -195,7 +193,7 @@ Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(TestPK2Stress('test_S_1D_1Elem_Large'))
+SingleSuite.addTest(TestPK2Stress('test_S_2D_1Elem_Large'))
 
 unittest.TextTestRunner(verbosity=2).run(SingleSuite)
         

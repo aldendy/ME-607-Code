@@ -123,7 +123,7 @@ def getGstrain(defE, pts, jac):
 def getPK2(defE, pts, jac, cCons=0):
     numD = int(len(pts[0]) - 1)  # number of problem dimensions
     GSv, F = getGstrain(defE, pts, jac)  # gets Green strain in Voigt notation
-    print(F)
+    
     if cCons != 0:
         D = np.array(getEulerStiff(F, numD, cCons))
     else:
