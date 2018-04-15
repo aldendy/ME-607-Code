@@ -35,13 +35,10 @@ class TestPK2Stress(unittest.TestCase):
     # For 2D large deformation...
     def test_S_2D_1Elem_Large(self):
         d = 2.0e-1
-        nu = 0.3
         eLx = 2.0  # element length in the x-direction
         eLy = 2.0  # element length in the y-direction
         E = 200.0*10**9    # modulus of elasticity (Pa)
         v = 0.3         # Poisson's ratio
-        ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters in reference
-        mu = E/(2*(1 + v))
         deform = [0, 0, d, 0, 0, 0, d, 0]
         ien = get_ien(1, 1)
         basis = getBasis(2)
@@ -49,45 +46,90 @@ class TestPK2Stress(unittest.TestCase):
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getPK2(defE, basis[0][0], jac)
-        print(S)
+        
         a = d/eLx  # deformation ratio
         ex = ((a + 1)**2/2 - 0.5)
-        correct = [[(ld + 2*mu)*ex], [ld*ex], [0]]
-        print(correct)
+        correct = [[(E/(1-v**2))*ex], [(E*v/(1-v**2))*ex], [0]]
+        
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
 
-    # For 3D small deformation...
-    def test_S_3D_1Elem(self):
-        deform = [0, 0, 0, 2.0e-5, 0, 0, 0, -0.6e-5, 0, 2.0e-5, -0.6e-5, 0,
-                  0, 0, -0.6e-5, 2.0e-5, 0, -0.6e-5,
-                  0, -0.6e-5, -0.6e-5, 2.0e-5, -0.6e-5, -0.6e-5]
-        ien = get_ien(1, 1, 1)
-        basis = getBasis(3)
-        xa = nodeList(2, 2, 2, 1, 1, 1)
+    # For 2D large deformation...
+    def test_S_2D_1Elem_Large_Shear(self):
+        d = 2.0e-1
+        eLx = 2.0  # element length in the x-direction
+        eLy = 2.0  # element length in the y-direction
+        E = 200.0*10**9    # modulus of elasticity (Pa)
+        v = 0.3         # Poisson's ratio
+        deform = [0, 0, 0, 0, d, 0, d, 0]
+        ien = get_ien(1, 1)
+        basis = getBasis(2)
+        xa = nodeList(eLx, eLy, 2, 1, 1)
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getPK2(defE, basis[0][0], jac)
-        correct = [[2.00001450e+06], [7.50002197], [7.50002197], [0], [0], [0]]
+        
+        a = d/eLy  # deformation ratio
+        aa = E/(1-v**2)  # 2D stiffness parameters
+        bb = aa*(1 - v)  # multiplied by 2 since it's not engineering strain
+        cc = aa*v
+        correct = [[0.5*cc*a**2], [0.5*aa*a**2], [0.5*bb*a]]
         
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
 
     # For 3D large deformation...
     def test_S_3D_1Elem_Large(self):
-        deform = [0, 0, 0, 2.0e-1, 0, 0, 0, -0.6e-1, 0, 2.0e-1, -0.6e-1, 0,
-                  0, 0, -0.6e-1, 2.0e-1, 0, -0.6e-1,
-                  0, -0.6e-1, -0.6e-1, 2.0e-1, -0.6e-1, -0.6e-1]
+        d = 2.0e-1  # deformation amount
+        eLx = 2.0  # element length in the x-direction
+        eLy = 2.0  # element length in the y-direction
+        eLz = 2.0  # element length in the z-direction
+        E = 200.0*10**9    # modulus of elasticity (Pa)
+        v = 0.3         # Poisson's ratio
+        ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
+        mu = E/(2*(1 + v))
+        deform = [0, 0, 0, d, 0, 0, 0, 0, 0, d, 0, 0, 0, 0, 0, d, 0, 0,
+                  0, 0, 0, d, 0, 0]
         ien = get_ien(1, 1, 1)
         basis = getBasis(3)
-        xa = nodeList(2, 2, 2, 1, 1, 1)
+        xa = nodeList(eLx, eLy, eLz, 1, 1, 1)
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getPK2(defE, basis[0][0], jac)
-        correct = [[2.145e+10], [7.5e+08], [7.5e+08], [0], [0], [0]]
+
+        a = d/eLx  # displacement ratio
+        ex = a + 0.5*a**2
+        correct = [[(ld + 2*mu)*ex], [ld*ex], [ld*ex], [0], [0], [0]]
         
         for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1, 5)
+
+    # For 3D large deformation...
+    def test_S_3D_1Elem_Large_ShearXZ(self):
+        d = 2.0e-1  # deformation amount
+        eLx = 2.0  # element length in the x-direction
+        eLy = 2.0  # element length in the y-direction
+        eLz = 2.0  # element length in the z-direction
+        E = 200.0*10**9    # modulus of elasticity (Pa)
+        v = 0.3         # Poisson's ratio
+        ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
+        mu = E/(2*(1 + v))
+        deform = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  d, 0, 0, d, 0, 0, d, 0, 0, d, 0, 0]
+        ien = get_ien(1, 1, 1)
+        basis = getBasis(3)
+        xa = nodeList(eLx, eLy, eLz, 1, 1, 1)
+        x, jac = posAndJac(basis[0][0], xa)
+        defE = getElemDefs(0, deform, ien)
+        S = getPK2(defE, basis[0][0], jac)
+
+        a = d/eLz  # displacement ratio
+        e3 = a**2/2  # strain in zz
+        e5 = a/2  # strain in xz
+        correct = [[ld*e3], [ld*e3], [(ld + 2*mu)*e3], [0], [2*mu*e5], [0]]
+        
+        for i in range(len(S)):  # for every component...
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1, 5)
 
 ############################################################################
 
@@ -164,7 +206,7 @@ class TestCauchyStressTensor(unittest.TestCase):
                    [7.4999469717103864], [0], [0], [0]]
         
         for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1, 5)
 
     # For 3D large deformation...
     def test_sigma_3D_1Elem_Large(self):
@@ -193,7 +235,7 @@ Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(TestPK2Stress('test_S_2D_1Elem_Large'))
+SingleSuite.addTest(TestPK2Stress('test_S_2D_1Elem_Large_Shear'))
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(Suite1)
         

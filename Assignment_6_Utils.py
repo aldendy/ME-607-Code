@@ -155,7 +155,7 @@ def getStiff(n, cCons=0):
     mu = E/(2*(1 + v))
 
     aa = E/(1-v**2)  # 2D stiffness parameters
-    bb = aa*(1 - v)/2
+    bb = aa*(1 - v)  # multiplied by 2 since its not engineering strain (green)
     cc = aa*v
     
     if n == 1:
