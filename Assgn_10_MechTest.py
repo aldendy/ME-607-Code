@@ -136,30 +136,17 @@ class TestPK2Stress(unittest.TestCase):
 # Here, we test the accuracy of the Cauchy stress tensor calculation
 
 class TestCauchyStressTensor(unittest.TestCase):
-    # First, we test 1D small deflection
-    def test_sigma_1D_1Elem(self):
-        deform = [0.0, 2.0e-5]
-        ien = get_ien(1)
-        basis = getBasis(1)
-        xa = nodeList(2, 2, 2, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        S = getCauchy(defE, basis[0][0], jac)
-        correct = [[2000030.0001139301]]
-
-        self.assertAlmostEqual(S[0][0], correct[0][0], 3)
-
     # For large deformation
     def test_sigma_1D_1Elem_Large(self):
-        deform = [0.0, 0.2]
+        deform = [0.0, 0.08803*2]
         ien = get_ien(1)
         basis = getBasis(1)
         xa = nodeList(2, 2, 2, 1)
-        x, jac = posAndJac(basis[0][0], xa)
+        x, jacXxi = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
-        S = getCauchy(defE, basis[0][0], jac)
+        S = getCauchy(defE, basis[0][0], jacXxi)
         correct = [[23100000000.000023]]
-        
+        print(S)
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual(correct[i][0], S[i][0], 3)
 
@@ -235,7 +222,7 @@ Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(TestPK2Stress('test_S_2D_1Elem_Large_Shear'))
+SingleSuite.addTest(TestCauchyStressTensor('test_sigma_1D_1Elem_Large'))
 
-unittest.TextTestRunner(verbosity=2).run(Suite1)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)
         

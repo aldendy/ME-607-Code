@@ -124,7 +124,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons1[1][0] = 0.0
         self.cons1[0][2] = 0.0
         
-        self.load1[2][0] = [2.0e10, 0, 0]  # load to right end
+        self.load1[2][0] = [2.0e9, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
         # For the pressure load...

@@ -207,8 +207,8 @@ def getEulerStiff(F, n, cCons=0):
     else:
         d1122 = (1/J)*F[0][0]**2*F[1][1]**2*(ld0)
 
-    ld = ld0  #d1122  # get the Lame parameters in the current configuration
-    mu = mu0  #0.5*(d1111 - d1122)
+    ld = d1122  # get the Lame parameters in the current configuration
+    mu = 0.5*(d1111 - d1122)
     
     if n == 1:
         D = [[mu*(3*ld + 2*mu)/(ld + mu)]]

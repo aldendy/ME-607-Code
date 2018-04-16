@@ -7,7 +7,7 @@
 
 import numpy as np
 from Assignment_5 import realN
-from Assignment_6_Utils import getEulerStiff, getElemDefs
+from Assignment_6_Utils import getStiff, getElemDefs
 
 
 ############################################################################
@@ -125,10 +125,11 @@ def getPK2(defE, pts, jac, cCons=0):
     GSv, F = getGstrain(defE, pts, jac)  # gets Green strain in Voigt notation
     
     if cCons != 0:
-        D = np.array(getEulerStiff(F, numD, cCons))
+        #D = np.array(getEulerStiff(F, numD, cCons))
+        D = np.array(getStiff(numD, cCons))
     else:
-        D = np.array(getEulerStiff(F, numD))
-    
+        #D = np.array(getEulerStiff(F, numD))
+        D = np.array(getStiff(numD, cCons))
     # Saint Venant-Kirchhoff model
     S = np.dot(D, GSv)
 
