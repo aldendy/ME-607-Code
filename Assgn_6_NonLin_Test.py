@@ -5,7 +5,7 @@
 import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien
-from Assignment_6_Utils import getElemDefs, get_uE
+from Assignment_6_Utils import getElemDefs
 from Assignment_6 import getYa
 
 

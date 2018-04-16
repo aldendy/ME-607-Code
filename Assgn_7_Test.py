@@ -112,6 +112,7 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
 
         self.nodes2 = nodeList(1, 1, 1, 1, 1)
         self.ien2 = get_ien(1, 1)
+        self.d2D = 8*[0.0]  # initial 2D deformation array (zero deformation)
 
         cons3, loads3 = load_and_cons(1, 8, 3)  # one 2D element
         cons3[0][0] = 0
@@ -132,19 +133,22 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
 
         self.nodes3 = nodeList(1, 1, 1, 1, 1, 1)
         self.ien3 = get_ien(1, 1, 1)
+        self.d3D = 24*[0.0]  # initial 3D deformation array (undeformed)
         
     # Next, we test the force vector generator ability to process loads
     def test_ExtForceVecLoadProcessing2D(self):
         correct = [0.25,  0,   -0.25,  1.5]
+        result = getExtForceVec(self.loads2, self.b2, self.nodes2, self.d2D,
+                                self.ien2, self.ida2, self.ncons2)
         for i in range(len(correct)):  # for every component of 'correct'...
-            self.assertAlmostEqual(getExtForceVec(self.loads2, self.b2, self.nodes2, self.ien2,
-                                                  self.ida2, self.ncons2)[i], correct[i])
+            self.assertAlmostEqual(result[i], correct[i])
 
     # Next, we perform this test for a 3D case
     def test_ExtForceVecLoadProcess3D(self):
         correct = [ 0.25, 0, -0.5, 0, 2, -0.5, 0.5,
                     0, -0.5, 0.75, 0, -0.5, 2, -0.5, 0.75, 2, -0.5]
-        answer = getExtForceVec(self.loads3, self.b3, self.nodes3, self.ien3, self.ida3, self.ncons3)
+        answer = getExtForceVec(self.loads3, self.b3, self.nodes3, self.d3D,
+                                self.ien3, self.ida3, self.ncons3)
         for i in range(len(correct)):  # for every component of 'correct'...
             self.assertAlmostEqual(answer[i], correct[i])
         
