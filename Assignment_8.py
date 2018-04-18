@@ -45,7 +45,7 @@ def getEnergyDensity(pts, ya, D, sigmaSq, a, b, Ba, Bb):
 
     # Here, get the geometric stiffness
     k_abG = np.dot(gradNa, np.dot(sigmaSq, np.transpose(gradNb)))
-    k_ab = (k_abM + k_abG*np.eye(dims))  # combine both
+    k_ab = (k_abM) # + k_abG*np.eye(dims))  # combine both
     
     if type(k_ab).__name__ != 'ndarray':  # if it is a scalar...
         k_ab = [[k_ab]]
@@ -92,7 +92,7 @@ def gaussIntKMat(dims, ya, defE, cCons=0):
         sigmaSq = getSquareFromVoigt(sigma)  # get square Cauchy
 	
 	# now, get the 'Bmat' for the integration point
-	Bmats, scale = getBandScale(dims, basis, i, ya)
+	Bmats, scaleYxi = getBandScale(dims, basis, i, ya)
 	
 	for j in range(numA):  # for the 'a'-th basis function...
 	    for k in range(numA):  # for the 'b'-th basis function...
@@ -102,7 +102,7 @@ def gaussIntKMat(dims, ya, defE, cCons=0):
 		# then, we assemble 'kab' into the appropriate slot in 'ke'
 		for m in range(len(kab)):  # for every row...
 		    for n in range(len(kab[0])):  # for every column...
-			ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
+			ke[j*dims + m][k*dims + n] += kab[m][n]*scaleYxi*w
     return ke
 
 ############################################################################################
@@ -231,8 +231,10 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 	
 	residual = np.array(extFV) - np.array(intFV)
 	msg = 'total {0:1.2E} intFV {1:1.2E} extFV {2:1.2E}'
-	print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
-                         np.linalg.norm(extFV)))
+	#print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
+        #                 np.linalg.norm(extFV)))
+        if i == 0:
+            print(stiff)
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
 	    deform0 = getFullDVec(ida, deform, cons)
