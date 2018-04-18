@@ -260,15 +260,15 @@ class SolverTest3D(unittest.TestCase):
         for i in [0, 2, 4, 6]:  # for every constrained node
             self.cons1[0][i] = 0.0
         
-        self.load1[2][0] = [24653148345, 0, 0]  # load to right end
+        self.load1[2][0] = [2e6, 0, 0]#[24653148345, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
     # Here, we test to ensure that 3D tractions calculate correctly
     def test_3DTrac1Elem(self):
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
-        dd = 1.0e-1
-        nn = 32012396773595*dd
+        dd = 1.0e-5
+        nn = 0.3*dd #0.32012396773595*dd
         correct = [0.0, 0.0, 0.0, dd, 0.0, 0.0,
                    0.0, -nn, 0.0, dd, -nn, 0.0,
                    0.0, 0.0, -nn, dd, 0.0, -nn,
