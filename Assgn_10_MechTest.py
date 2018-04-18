@@ -138,79 +138,82 @@ class TestPK2Stress(unittest.TestCase):
 class TestCauchyStressTensor(unittest.TestCase):
     # For large deformation
     def test_sigma_1D_1Elem_Large(self):
-        deform = [0.0, 0.08803*2]
+        d = 0.2  # deformation amount
+        eLx = 2.0  # element length in the x-direction
+        deform = [0.0, d]
         ien = get_ien(1)
         basis = getBasis(1)
-        xa = nodeList(2, 2, 2, 1)
+        xa = nodeList(eLx, 2, 2, 1)
         x, jacXxi = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getCauchy(defE, basis[0][0], jacXxi)
-        correct = [[23100000000.000023]]
-        print(S)
+
+        a = d/eLx  # deformation ratio
+        ex = a + 0.5*a**2  # strain in the x-direction
+        ym = 200*10**9  # Young's Modulus
+        correct = [[ex*ym*(1 + a)]]  # (1 + a) comes from the push-forward
+        print(correct)
         for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual(correct[i][0], S[i][0], 3)
+            self.assertAlmostEqual(correct[i][0]/S[i][0], 1)
 
     # For 2D small deformation...
-    def test_sigma_2D_1Elem(self):
-        deform = [0, 0, 2.0e-5, 0, 0, -0.6e-5, 2.0e-5, -0.6e-5]
-        ien = get_ien(1, 1)
-        basis = getBasis(2)
-        xa = nodeList(2, 2, 2, 1, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        S = getCauchy(defE, basis[0][0], jac)
-        correct = [[2000037.2859566973], [4.2856711267160321], [0.0]]
-
-        for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
-
-    # For 2D large deformation...
     def test_sigma_2D_1Elem_Large(self):
-        deform = [0, 0, 0.2, 0, 0, -0.06, 0.2, -0.06]
+        d = 0.2  # deformation amount in the x-direction
+        eLx = 2.0 # element length in the x-direction
+        eLy = 2.0 # element length in the y-direction
+        deform = [0, 0, d, 0, 0, 0, d, 0]
         ien = get_ien(1, 1)
         basis = getBasis(2)
-        xa = nodeList(2, 2, 2, 1, 1)
+        xa = nodeList(eLx, eLy, 2, 1, 1)
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getCauchy(defE, basis[0][0], jac)
-        correct = [[23960235640.648041], [377922077.92207932], [0.0]]
 
+        a = d/eLx  # deformation ratio
+        ex = a + 0.5*a**2  # strain in the x-direction
+        ym = 200*10**9  # Young's Modulus
+        nu = 0.3  # Poisson's Ratio
+        aa = ym/(1 - nu**2)  # 2D stiffness parameters
+        bb = aa*(1 - nu)  # multiplied by 2 since its not engineering strain
+        cc = aa*nu
+        correct = [[aa*ex*(a + 1)], [cc*ex/(a + 1)], [0]]
+        print(correct)
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
-
-    # For 3D small deformation...
-    def test_sigma_3D_1Elem(self):
-        deform = [0, 0, 0, 2.0e-5, 0, 0, 0, -0.6e-5, 0, 2.0e-5, -0.6e-5, 0,
-                  0, 0, -0.6e-5, 2.0e-5, 0, -0.6e-5,
-                  0, -0.6e-5, -0.6e-5, 2.0e-5, -0.6e-5, -0.6e-5]
-        ien = get_ien(1, 1, 1)
-        basis = getBasis(3)
-        xa = nodeList(2, 2, 2, 1, 1, 1)
-        x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
-        S = getCauchy(defE, basis[0][0], jac)
-        correct = [[2000046.5004331144], [7.4999469716521787],
-                   [7.4999469717103864], [0], [0], [0]]
-        
-        for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1, 5)
 
     # For 3D large deformation...
     def test_sigma_3D_1Elem_Large(self):
-        deform = [0, 0, 0, 2.0e-1, 0, 0, 0, -0.6e-1, 0, 2.0e-1, -0.6e-1, 0,
-                  0, 0, -0.6e-1, 2.0e-1, 0, -0.6e-1,
-                  0, -0.6e-1, -0.6e-1, 2.0e-1, -0.6e-1, -0.6e-1]
+        d = 0.2  # deformation amount
+        s = -d*0.32012396773595
+        eLx = 2.0 # element length in the x-direction
+        eLy = 2.0 # element length in the y-direction
+        eLz = 2.0 # element length in the z-direction
+
+        a = d/eLx  # deformation ratio
+        ex = a + 0.5*a**2  # strain in the x-direction
+        E = 200*10**9  # Young's Modulus
+        v = 0.3  # Poisson's Ratio
+        ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
+        mu = E/(2*(1 + v))
+        
+        deform = [0, 0, 0, d, 0, 0, 0, 0, 0, d, 0, 0,
+                  0, 0, 0, d, 0, 0, 0, 0, 0, d, 0, 0]
+        deform1D = [0, 0, 0, d, 0, 0, 0, s, 0, d, s, 0,
+                    0, 0, s, d, 0, s, 0, s, s, d, s, s]
+        
         ien = get_ien(1, 1, 1)
         basis = getBasis(3)
-        xa = nodeList(2, 2, 2, 1, 1, 1)
+        xa = nodeList(eLx, eLy, eLz, 1, 1, 1)
         x, jac = posAndJac(basis[0][0], xa)
         defE = getElemDefs(0, deform, ien)
         S = getCauchy(defE, basis[0][0], jac)
-        correct = [[25077053884.578617], [681818181.81818426],
-                   [681818181.81818426], [0.0], [0], [0]]
-
+        print(S)
+        correct = [[ex*(a + 1)*(ld + 2*mu)], [ex*ld/(a+1)], [ex*ld/(a+1)],
+                   [0], [0], [0]]
+        correct1D = [[ex*E*(1 + a)], [0], [0], [0], [0], [0]]
+        
         for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1)
+            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1, 5)
 
 ############################################################################
 
@@ -222,7 +225,7 @@ Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(TestCauchyStressTensor('test_sigma_1D_1Elem_Large'))
+SingleSuite.addTest(TestCauchyStressTensor('test_sigma_3D_1Elem_Large'))
 
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
+unittest.TextTestRunner(verbosity=2).run(Suite2)
         
