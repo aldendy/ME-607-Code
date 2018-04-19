@@ -237,11 +237,10 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 	
 	residual = np.array(extFV) - np.array(intFV)
 
-	#print(deform0[9:12])
 	msg = 'res {0:1.2E} intFV {1:1.2E} extFV {2:1.2E}'
 	print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
                          np.linalg.norm(extFV)))
-        print(stiff[0][0])
+        
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
 	    deform0 = getFullDVec(ida, deform, cons)
