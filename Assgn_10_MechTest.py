@@ -183,8 +183,8 @@ class TestCauchyStressTensor(unittest.TestCase):
 
     # For 3D large deformation...
     def test_sigma_3D_1Elem_Large(self):
-        d = 0.2  # deformation amount
-        s = -d*0.32012396773595
+        d = 2.0e-4  # deformation amount
+        s = -d*0.3  #0.32012396773595
         eLx = 2.0 # element length in the x-direction
         eLy = 2.0 # element length in the y-direction
         eLz = 2.0 # element length in the z-direction
@@ -205,7 +205,7 @@ class TestCauchyStressTensor(unittest.TestCase):
         basis = getBasis(3)
         xa = nodeList(eLx, eLy, eLz, 1, 1, 1)
         x, jac = posAndJac(basis[0][0], xa)
-        defE = getElemDefs(0, deform, ien)
+        defE = getElemDefs(0, deform1D, ien)
         S = getCauchy(defE, basis[0][0], jac)
         print(S)
         correct = [[ex*(a + 1)*(ld + 2*mu)], [ex*ld/(a+1)], [ex*ld/(a+1)],
@@ -213,7 +213,7 @@ class TestCauchyStressTensor(unittest.TestCase):
         correct1D = [[ex*E*(1 + a)], [0], [0], [0], [0], [0]]
         
         for i in range(len(S)):  # for every component...
-            self.assertAlmostEqual((correct[i][0] + 1)/(S[i][0] + 1), 1, 5)
+            self.assertAlmostEqual((correct1D[i][0] + 1)/(S[i][0] + 1), 1, 5)
 
 ############################################################################
 

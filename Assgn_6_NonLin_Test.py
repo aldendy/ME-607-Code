@@ -5,7 +5,7 @@
 import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien
-from Assignment_6_Utils import getElemDefs
+from Assignment_6_Utils import getElemDefs, getStiff, getEulerStiff
 from Assignment_6 import getYa
 
 
@@ -80,7 +80,7 @@ class TestGetCurrentElemNodeLoc(unittest.TestCase):
         
         for i in range(len(ya)):  # for every node...
             for j in range(len(ya[0])):  # for every dimension...
-                self.assertAlmostEqual(ya[i][j], correct[i][j])        
+                self.assertAlmostEqual(ya[i][j], correct[i][j])
 
 ###############################################################################
 

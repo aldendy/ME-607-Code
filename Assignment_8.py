@@ -7,7 +7,7 @@ import numpy as np
 from Assignment_4 import getBasis
 from Assignment_5 import posAndJac, realN
 from Assignment_6 import  getYa, intForceVec
-from Assignment_6_Utils import getBandScale, getElemDefs, getStiff
+from Assignment_6_Utils import getBandScale, getElemDefs, getEulerStiff
 from Assignment_7 import getExtForceVec
 from Assignment_10 import getF, getSquareFromVoigt, getCauchy
 
@@ -46,7 +46,7 @@ def getEnergyDensity(pts, ya, D, sigmaSq, a, b, Ba, Bb):
 
     # Here, get the geometric stiffness
     k_abG = np.dot(gradNa, np.dot(sigmaSq, np.transpose(gradNb)))
-    k_ab = (k_abM) # + k_abG*np.eye(dims))  # combine both
+    k_ab = (k_abM + k_abG*np.eye(dims))  # combine both
     
     if type(k_ab).__name__ != 'ndarray':  # if it is a scalar...
         k_ab = [[k_ab]]
@@ -84,12 +84,12 @@ def gaussIntKMat(dims, ya, defE, cCons=0):
         F = getF(defE, basis[0][i], jacXxi)
         
         if cCons != 0:
-            D = getStiff(dims, cCons) #getEulerStiff(F, dims, cCons)  # the 'D' matrix
+            D = getEulerStiff(F, dims, cCons)  # the 'D' matrix
             sigma = getCauchy(defE, basis[0][i], jacXxi, cCons)
         else:
-            D = getStiff(dims) #getEulerStiff(F, dims)
+            D = getEulerStiff(F, dims)
             sigma = getCauchy(defE, basis[0][i], jacXxi)
-
+        
         sigmaSq = getSquareFromVoigt(sigma)  # get square Cauchy
 	
 	# now, get the 'Bmat' for the integration point
@@ -231,11 +231,12 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 		    len(ien), deform0)
 	
 	residual = np.array(extFV) - np.array(intFV)
+
+	#print(deform0[9:12])
 	msg = 'total {0:1.2E} intFV {1:1.2E} extFV {2:1.2E}'
-	#print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
-        #                 np.linalg.norm(extFV)))
-        if i == 0:
-            print(stiff)
+	print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
+                         np.linalg.norm(extFV)))
+        
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
 	    deform0 = getFullDVec(ida, deform, cons)

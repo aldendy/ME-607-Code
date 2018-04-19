@@ -250,7 +250,7 @@ class SolverTest3D(unittest.TestCase):
     def setUp(self):
         self.numD = 3  # the number of problem dimensions
         enum = [1, 2]  # number of elements
-        self.nodes1 = nodeList(1, 1, 1, enum[0], enum[0], enum[0])
+        self.nodes1 = nodeList(2, 2, 2, enum[0], enum[0], enum[0])
         self.ien1 = get_ien(enum[0], enum[0], enum[0])
         self.cons1, self.load1 = load_and_cons(enum[0], len(self.nodes1),
                                                self.numD)

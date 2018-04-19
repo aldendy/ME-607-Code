@@ -125,11 +125,10 @@ def getPK2(defE, pts, jac, cCons=0):
     GSv, F = getGstrain(defE, pts, jac)  # gets Green strain in Voigt notation
     
     if cCons != 0:
-        #D = np.array(getEulerStiff(F, numD, cCons))
         D = np.array(getStiff(numD, cCons))
     else:
-        #D = np.array(getEulerStiff(F, numD))
-        D = np.array(getStiff(numD, cCons))
+        D = np.array(getStiff(numD))
+    
     # Saint Venant-Kirchhoff model
     S = np.dot(D, GSv)
 
