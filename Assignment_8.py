@@ -6,7 +6,8 @@
 import numpy as np
 from Assignment_4 import getBasis
 from Assignment_5 import posAndJac, realN
-from Assignment_6 import getBandScale, getYa, intForceVec, getElemDefs, getEulerStiff
+from Assignment_6 import  getYa, intForceVec
+from Assignment_6_Utils import getBandScale, getElemDefs, getStiff
 from Assignment_7 import getExtForceVec
 from Assignment_10 import getF, getSquareFromVoigt, getCauchy
 
@@ -83,10 +84,10 @@ def gaussIntKMat(dims, ya, defE, cCons=0):
         F = getF(defE, basis[0][i], jacXxi)
         
         if cCons != 0:
-            D = getEulerStiff(F, dims, cCons)  # the 'D' matrix
+            D = getStiff(dims, cCons) #getEulerStiff(F, dims, cCons)  # the 'D' matrix
             sigma = getCauchy(defE, basis[0][i], jacXxi, cCons)
         else:
-            D = getEulerStiff(F, dims)
+            D = getStiff(dims) #getEulerStiff(F, dims)
             sigma = getCauchy(defE, basis[0][i], jacXxi)
 
         sigmaSq = getSquareFromVoigt(sigma)  # get square Cauchy
