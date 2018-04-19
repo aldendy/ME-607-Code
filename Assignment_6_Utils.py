@@ -176,6 +176,33 @@ def getStiff(n, cCons=0):
 
 ################################################################################
 
+# Here, we find any elasticity constant pushed forward to the current frame.
+# The assumption of this method is that the material is isotropic.
+
+# The inputs are:
+# 'i, j, k, l' - indices (0, 1, 2) of the desired tensor entry (current)
+# 'F' - the deformation gradient
+# 'ld, mu' - Lame parameters
+
+# The outputs are:
+# 'c_ijkl' - the desired ijkl-th entry of the elasticity tensor
+
+def getCijkl(i, j, k, l, F, ld, mu):
+    kd = np.eye(3)  # kroenecker delta
+    Cijkl = 0  # initialize the result
+    Jac = np.linalg.det(F)  # determinant of the deformation gradient
+    
+    for I in range(3):  # for first capital index...
+        for J in range(3):  # for the second...
+            for K in range(3):  # for the third...
+                for L in range(3):  # for the fourth...
+                    C0 = ld*kd[I][J]*kd[K][L] + mu*(kd[I][K]*kd[J][L] +
+                                                    kd[I][L]*kd[J][K])
+                    Cijkl += (1.0/Jac)*F[i][I]*F[j][J]*F[k][K]*F[l][L]*C0
+    return Cijkl
+
+################################################################################
+
 # In this function, we get the elasticity tensor in the current (Eulerian)
 # frame.
 
@@ -198,14 +225,13 @@ def getEulerStiff(F, n, cCons=0):
     
     ld0 = E*v/((1 + v)*(1 - 2*v))  # Lame parameters in reference
     mu0 = E/(2*(1 + v))
-
-    J = np.linalg.det(F)
-    d1111 = (1/J)*F[0][0]**4*(ld0 + 2*mu0)  # convert first constant
+    
+    d1111 = getCijkl(0, 0, 0, 0, F, ld0, mu0)  # convert first constant
     
     if len(F) == 1:  # for 1D...
         d1122 = ld0
     else:
-        d1122 = (1/J)*F[0][0]**2*F[1][1]**2*(ld0)
+        d1122 = getCijkl(0, 0, 1, 1, F, ld0, mu0)
 
     ld = d1122  # get the Lame parameters in the current configuration
     mu = 0.5*(d1111 - d1122)

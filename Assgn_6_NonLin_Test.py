@@ -84,15 +84,77 @@ class TestGetCurrentElemNodeLoc(unittest.TestCase):
 
 ###############################################################################
 
+# Next, we perform testing on the elasticity tensor methods and pushing forward
+class Elasticity_Tensor_Test(unittest.TestCase):
+    # for the Eulerian tensor (pushed forward)...
+    def test_EulerTensor1D_linear(self):
+        E = 1.5  # Young's Modulus
+        v = 0.3  # Poisson's ratio
+        a = 0.0/2  # strain
+        F = [[a + 1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        C = getEulerStiff(F, 1, [E, v])
+        correct = [[E]]
+        
+        for i in range(len(C)):  # for every row...
+            for j in range(len(C[0])):  # for every column...
+                self.assertAlmostEqual(correct[i][j], C[i][j])
+
+    def test_EulerTensor1D_large(self):
+        E = 1.5  # Young's Modulus
+        v = 0.3  # Poisson's ratio
+        a = 0.2/2  # strain
+        F = [[a + 1, 0, 0], [0, 1 - v*a, 0], [0, 0, 1 - v*a]]
+        C = getEulerStiff(F, 1, [E, v])
+        correct = [[2.38052852609754]]
+        
+        for i in range(len(C)):  # for every row...
+            for j in range(len(C[0])):  # for every column...
+                self.assertAlmostEqual(correct[i][j], C[i][j])
+
+    def test_EulerTensor3D_linear(self):
+        E = 2.0  # Young's Modulus
+        v = 0.25  # Poisson's ratio
+        a = 0.0/2  # strain
+        F = [[a + 1, 0, 0], [0, 1 - v*a, 0], [0, 0, 1 - v*a]]
+        C = getEulerStiff(F, 3, [E, v])
+        
+        correct = getStiff(3, [E, v])
+        
+        for i in range(len(C)):  # for every row...
+            for j in range(len(C[0])):  # for every column...
+                if (i > 2) or (j > 2):  # shear terms are not the same 
+                    self.assertAlmostEqual(correct[i][j]/2, C[i][j])
+                else:
+                    self.assertAlmostEqual(correct[i][j], C[i][j])
+
+    def EulerTensor3D_large(self):
+        E = 2.0  # Young's Modulus
+        v = 0.25  # Poisson's ratio
+        a = 0.2/2  # strain
+        F = [[a + 1, 0, 0], [0, 1 - v*a, 0], [0, 0, 1 - v*a]]
+        C = getEulerStiff(F, 3, [E, v])
+        print(C)
+        correct = getStiff(3, [E, v])
+        
+        for i in range(len(C)):  # for every row...
+            for j in range(len(C[0])):  # for every column...
+                if (i > 2) or (j > 2):  # shear terms are not the same 
+                    self.assertAlmostEqual(correct[i][j]/2, C[i][j])
+                else:
+                    self.assertAlmostEqual(correct[i][j], C[i][j])
+
+###############################################################################
+
 # Here, we perform the testing
 
 Suite1 = unittest.TestLoader().loadTestsFromTestCase(TestProcessUtils)
 Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestGetCurrentElemNodeLoc)
+Suite3 = unittest.TestLoader().loadTestsFromTestCase(Elasticity_Tensor_Test)
 
-FullSuite = unittest.TestSuite([Suite1, Suite2])
+FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
-#singleTestSuite = unittest.TestSuite()
-#singleTestSuite.addTest(MechanicsTest('IntForceVecAssemblyTest'))
+singleTestSuite = unittest.TestSuite()
+singleTestSuite.addTest(Elasticity_Tensor_Test('test_EulerTensor3D_linear'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
         

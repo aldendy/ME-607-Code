@@ -267,7 +267,7 @@ class SolverTest3D(unittest.TestCase):
     def test_3DTrac1Elem(self):
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
-        dd = 1.0e-5
+        dd = 1.0e-3
         nn = 0.3*dd #0.32012396773595*dd
         correct = [0.0, 0.0, 0.0, dd, 0.0, 0.0,
                    0.0, -nn, 0.0, dd, -nn, 0.0,

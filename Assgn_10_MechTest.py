@@ -184,7 +184,7 @@ class TestCauchyStressTensor(unittest.TestCase):
     # For 3D large deformation...
     def test_sigma_3D_1Elem_Large(self):
         d = 2.0e-4  # deformation amount
-        s = -d*0.3  #0.32012396773595
+        s = -d*0.3 #0.32012396773595
         eLx = 2.0 # element length in the x-direction
         eLy = 2.0 # element length in the y-direction
         eLz = 2.0 # element length in the z-direction

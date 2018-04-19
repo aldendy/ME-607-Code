@@ -28,6 +28,7 @@ E = (F.T*F - eye(3))/2
 u = Matrix([[a*x], [-v*a*y], [-v*a*z]])
 ivar = Matrix([x, y, z])
 F = u.jacobian(ivar) + eye(3)
+pprint(F)
 E = (F.T*F - eye(3))/2
 pprint(E)
 

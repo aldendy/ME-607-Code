@@ -46,6 +46,11 @@ def getEnergyDensity(pts, ya, D, sigmaSq, a, b, Ba, Bb):
 
     # Here, get the geometric stiffness
     k_abG = np.dot(gradNa, np.dot(sigmaSq, np.transpose(gradNb)))
+
+    diff = k_abG/(4.7e10)
+    #if (a == b) and (abs(diff) > 0.0001):
+    #    print(diff)
+        
     k_ab = (k_abM + k_abG*np.eye(dims))  # combine both
     
     if type(k_ab).__name__ != 'ndarray':  # if it is a scalar...
@@ -233,10 +238,10 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 	residual = np.array(extFV) - np.array(intFV)
 
 	#print(deform0[9:12])
-	msg = 'total {0:1.2E} intFV {1:1.2E} extFV {2:1.2E}'
+	msg = 'res {0:1.2E} intFV {1:1.2E} extFV {2:1.2E}'
 	print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
                          np.linalg.norm(extFV)))
-        
+        print(stiff[0][0])
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
 	    deform0 = getFullDVec(ida, deform, cons)

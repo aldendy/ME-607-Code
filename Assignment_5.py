@@ -166,7 +166,7 @@ def boundNormal(s, jac):
     
     return norm
 
-#########################################################
+###########################################################################
 
 # Finally, we implement a function that performs a change of coordinates on the
 # derivatives of N, transferring it from the parent domain to the physical
@@ -178,13 +178,14 @@ def boundNormal(s, jac):
 #         [0 - function, 1 - df/dxi, 2 - df/deta ...] - a component of the
 #         'basis' for the element
 # 'a' - the basis function number (0, 1, 2 ...)
-# 'jac' - the jacobian dx_i/dxi_j
+# 'jac' - the jacobian dx_i/dxi_j (or dy_i/dxi_j)
 
-# The function returns a vector, 'dNa/dxi', of all the 'xi' derivatives of a-th
-# 'N' (real-dimensional derivatives) (only as many as problem dimensions)
+# The outputs are:
+# 'dNdreal' - real derivatives of the a-th basis function dN_a/dx_i (or
+#             dN_a/dy_i if given dy_i/dxi_j)
 
 def realN(pts, a, jac):
-    dNdxi = pts[a][1:len(pts[a])]  # a vector of derivatives of N_a
+    dNdxi = pts[a][1:len(pts[a])]  # a vector of dNa/d_xi
     dim = len(jac[0])  # number of problem dimensions
     
     i = 0  # current jacobian row
