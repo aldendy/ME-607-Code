@@ -37,12 +37,11 @@ def func(deform, basis, ien, e, i, ya, cCons=0):
     y, jacYxi = posAndJac(basis[0][i], ya)
     x, jacXxi = posAndJac(basis[0][i], xa)
     
-    # strain = strainVec(numD, e, deform, ien, Bmats)
     if cCons != 0:
         stress = getCauchy(defE, basis[0][i], jacXxi, cCons)
     else:
         stress = getCauchy(defE, basis[0][i], jacXxi)
-    
+        
     # the force vector for all nodes 'a' over element 'e'
     f = np.array(numD*len(basis[0][0])*[[0.0]])  
     
@@ -159,27 +158,6 @@ def intForceVec(nodes, ien, ida, ncons, numD, numE, deform, cCons=0):
     
 #################################################################################
 
-# Here, we define the problem, initial deformation and mesh and generate
-# the internal force array
 
-# The inputs to this funcion are:
-# 'M' - the scalar width in the x-direction
-# 'N' - the scalar width in the y-direction (optional)
-# 'P' - the scalar width in the z-direction (optional)
-# 'm' - the number of elements in the x-direction
-# 'n' - the number of elements in the y-direction (optional)
-# 'p' - the number of elements in the z-direction (optional)
 
-def initialize(M, N, P, m, n=0, p=0):
-    nodes = nodeList(M, N, P, m, n, p)  # get the nodes for the problem
-    ien = get_ien(m, n, p)  # get the ien array
-    numD = numDims(m, n, p)  # get the number of problem dimensions
-    numE = numElements(m, n, p)
-    deformation = numD*len(nodes)*[0]  # initialize the deformation array
-                                       # of size [# nodes]x[# dimensions]
-    
-    Fint = intForceVec(nodes, ien, numD, numE, deformation)
 
-##########################################################
-
-#initialize(1, 1, 1, 3, 2, 1)

@@ -215,6 +215,20 @@ class TestCauchyStressTensor(unittest.TestCase):
         for i in range(len(S)):  # for every component...
             self.assertAlmostEqual((correct1D[i][0] + 1)/(S[i][0] + 1), 1, 5)
 
+    def test_sigma_3D_1Elem_example(self):
+        a = 1.0
+        b = 1.0/(1 + a) - 1
+        deform = [0, 0, 0, a, 0, 0, 0, 0, 0, a, 0, 0,
+                  0, 0, b, a, 0, b, 0, 0, b, a, 0, b]
+        ien = get_ien(1, 1, 1)
+        basis = getBasis(3)
+        xa = nodeList(1, 1, 1, 1, 1, 1)
+        x, jac = posAndJac(basis[0][0], xa)
+        defE = getElemDefs(0, deform, ien)
+        S = getCauchy(defE, basis[0][0], jac, [0.7141, 0.1785])
+        print('')
+        print(S)
+
 ############################################################################
 
 # Now the testing
@@ -225,7 +239,7 @@ Suite2 = unittest.TestLoader().loadTestsFromTestCase(TestCauchyStressTensor)
 FullSuite = unittest.TestSuite([Suite1, Suite2])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(TestCauchyStressTensor('test_sigma_3D_1Elem_Large'))
+SingleSuite.addTest(TestCauchyStressTensor('test_sigma_3D_1Elem_example'))
 
-unittest.TextTestRunner(verbosity=2).run(Suite2)
+unittest.TextTestRunner(verbosity=2).run(SingleSuite)
         
