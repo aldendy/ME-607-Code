@@ -198,7 +198,8 @@ def getCijkl(i, j, k, l, F, ld, mu):
                 for L in range(3):  # for the fourth...
                     C0 = ld*kd[I][J]*kd[K][L] + mu*(kd[I][K]*kd[J][L] +
                                                     kd[I][L]*kd[J][K])
-                    Cijkl += (1.0/Jac)*F[i][I]*F[j][J]*F[k][K]*F[l][L]*C0
+                    diff = (1.0/Jac)*F[i][I]*F[j][J]*F[k][K]*F[l][L]*C0
+                    Cijkl += diff
     return Cijkl
 
 ################################################################################

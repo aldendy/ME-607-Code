@@ -238,8 +238,8 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 	residual = np.array(extFV) - np.array(intFV)
 
 	msg = 'res {0:1.2E} intFV {1:1.2E} extFV {2:1.2E}'
-	print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
-                         np.linalg.norm(extFV)))
+	#print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
+        #                 np.linalg.norm(extFV)))
         
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
@@ -249,6 +249,7 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
 	Kinv = np.linalg.inv(np.array(stiff))
 	b = np.transpose(np.array(residual))
 	du = np.dot(Kinv, b)
+	print(du)
 	
 	deform += du
 	deform0 = getFullDVec(ida, deform, cons)

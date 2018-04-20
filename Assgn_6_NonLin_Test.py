@@ -84,6 +84,10 @@ class TestGetCurrentElemNodeLoc(unittest.TestCase):
 
 ###############################################################################
 
+# Here, we test the entry-getting 
+
+###############################################################################
+
 # Next, we perform testing on the elasticity tensor methods and pushing forward
 class Elasticity_Tensor_Test(unittest.TestCase):
     # for the Eulerian tensor (pushed forward)...
@@ -133,7 +137,7 @@ class Elasticity_Tensor_Test(unittest.TestCase):
         a = 0.2/2  # strain
         F = [[a + 1, 0, 0], [0, 1 - v*a, 0], [0, 0, 1 - v*a]]
         C = getEulerStiff(F, 3, [E, v])
-        print(C)
+        
         correct = getStiff(3, [E, v])
         
         for i in range(len(C)):  # for every row...
@@ -153,8 +157,8 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(Elasticity_Tensor_Test)
 
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
-singleTestSuite = unittest.TestSuite()
-singleTestSuite.addTest(Elasticity_Tensor_Test('test_EulerTensor3D_linear'))
+singleSuite = unittest.TestSuite()
+singleSuite.addTest(Elasticity_Tensor_Test('EulerTensor3D_large'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)
         
