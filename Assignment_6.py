@@ -6,7 +6,7 @@ from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_4 import *
 from Assignment_5 import posAndJac, scaling, realN
 from Assignment_6_Utils import numElements, numDims, getXaArray, getBandScale
-from Assignment_6_Utils import getStiff
+from Assignment_6_Utils import getEulerStiff
 
 #################################################################################
 
@@ -48,10 +48,11 @@ def strainVec(numD, e, deform, ien, Bmats):
 # The output is the stress vector in Voigt notation 
 
 def stressVec(numD, strain, cCons=0):
+    im = np.identity(3)  # identity matrix
     if cCons != 0:
-        return np.dot(np.array(getStiff(numD, cCons, 'es')), strain)
+        return np.dot(np.array(getEulerStiff(im, numD, cCons, 'es')), strain)
     else:
-        return np.dot(np.array(getStiff(numD, 'n', 'es')), strain)
+        return np.dot(np.array(getEulerStiff(im, numD, 'n', 'es')), strain)
 
 ################################################################################
 

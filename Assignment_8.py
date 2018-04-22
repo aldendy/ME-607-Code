@@ -4,7 +4,7 @@
 
 import numpy as np
 from Assignment_4 import getBasis
-from Assignment_6_Utils import getStiff, getBandScale, getXaArray
+from Assignment_6_Utils import getEulerStiff, getBandScale, getXaArray
 from Assignment_6 import intForceVec
 from Assignment_7 import getExtForceVec
 
@@ -54,9 +54,9 @@ def gaussIntKMat(dims, xa, cCons=0):
     basis = getBasis(dims)
     numA = 2**dims
     if cCons != 0:
-        D = getStiff(dims, cCons, 'es')  # the 'D' matrix
+        D = getEulerStiff(np.identity(3), dims, cCons, 'es')  # the 'D' matrix
     else:
-        D = getStiff(dims, 'n', 'es')
+        D = getEulerStiff(np.identity(3), dims, 'n', 'es')
     w = 1  # the gauss point integral weight (2 pts)
     ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
     

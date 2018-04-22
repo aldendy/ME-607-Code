@@ -214,17 +214,16 @@ def getCijkl(i, j, k, l, F, C):
 # The inputs are:
 # 'F' - the derivatives of the current position 'y' wrt the undeformed 'x'
 # 'n' - the number of problem dimensions (1, 2 or 3)
-# 'cCons' - an array of the parameters needed to define the constituitive law
-#           that contains ['Young's Modulus', 'Poisson's Ratio']
+# 'cCons' - an array of the parameters needed to define the constituitive
+#           law that contains ['Young's Modulus', 'Poisson's Ratio']
+#           Not used if given 'n' or '0'
+# 'es' - if no argument, assume 'D' for Green strain (not engineering)
 
 # The outputs are:
 # 'dd' - the elasticity tensor in the current (Eulerian) frame
 
-def getEulerStiff(F, n, cCons=0):
-    if cCons != 0:
-        D = getStiff(n, cCons)
-    else:
-        D = getStiff(n)
+def getEulerStiff(F, n, cCons, es):
+    D = getStiff(n, cCons, es)
 
     if n == 1:  # make the matrix 6x6
         ym = D
