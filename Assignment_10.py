@@ -93,15 +93,19 @@ def getSquareFromVoigt(tensor):
 #         integration point indexed by [basis function #]
 #         [0 - function, 1 - df/dxi, 2 - df/deta ...]
 # 'jac' - the jacobian dx_i/dxi_j (not dy/d xi)
+# 'nl' - if 'lin', use linear strain (not engineering), if 'nl', green strain
 
 # The outputs are:
 # 'GSv' - the green strain for the specific location in Voigt notation
 
-def getGstrain(defE, pts, jac):
+def getGstrain(defE, pts, jac, nl):
     numD = int(len(pts[0]) - 1)  # number of problem dimensions
     F = np.array(getF(defE, pts, jac))
-    #GS = 0.5*(np.dot(np.transpose(F), F) - np.identity(numD))  # Green Strain
-    GS = 0.5*(F - np.identity(numD) + np.transpose(F - np.identity(numD))) # lin
+    if nl == 'lin':  # linear strain (not engineering strain)
+        GS = 0.5*(F - np.identity(numD) + np.transpose(F - np.identity(numD)))
+    if nl == 'nl':  # green strain
+        GS = 0.5*(np.dot(np.transpose(F), F) - np.identity(numD))
+    
     GSv = getVoigt(GS)
     return GSv, F
 
@@ -115,15 +119,16 @@ def getGstrain(defE, pts, jac):
 #         integration point indexed by [basis function #]
 #         [0 - function, 1 - df/dxi, 2 - df/deta ...]
 # 'jac' - the jacobian dx_i/dxi_j
+# 'nl' - if 'lin', use linear strain (not engineering), if 'nl', green strain
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'S' - the second Piola-Kirkhoff stress (Voigt Notation)
 
-def getPK2(defE, pts, jac, cCons=0):
+def getPK2(defE, pts, jac, nl, cCons=0):
     numD = int(len(pts[0]) - 1)  # number of problem dimensions
-    GSv, F = getGstrain(defE, pts, jac)  # gets Green strain in Voigt notation
+    GSv, F = getGstrain(defE, pts, jac, nl)  # gets Green strain in Voigt notation
     
     if cCons != 0:
         D = np.array(getStiff(numD, cCons))
@@ -146,17 +151,18 @@ def getPK2(defE, pts, jac, cCons=0):
 #         integration point indexed by [basis function #]
 #         [0 - function, 1 - df/dxi, 2 - df/deta ...]
 # 'jac' - the jacobian dx_i/dxi_j (NOT dy/dxi - the current frame jacobian)
+# 'nl' - if 'lin', use linear strain (not engineering), if 'nl', green strain
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
 # 'sigma' - the cauchy stress in Voigt notation
 
-def getCauchy(defE, pts, jac, cCons=0):
+def getCauchy(defE, pts, jac, nl, cCons=0):
     if cCons != 0:
-        S = getPK2(defE, pts, jac, cCons)
+        S = getPK2(defE, pts, jac, nl, cCons)
     else:
-        S = getPK2(defE, pts, jac)
+        S = getPK2(defE, pts, jac, nl)
     SSq = getSquareFromVoigt(S)
     F = np.array(getF(defE, pts, jac))
     sigmaSq = np.dot(F, np.dot(SSq, np.transpose(F)))/np.linalg.det(F)
