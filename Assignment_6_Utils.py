@@ -140,10 +140,11 @@ def getBandScale(numD, basis, intpt, xa):
 # 'n' - the number of problem dimensions
 # 'cCons' - an array of the parameters needed to define the constituitive
 #           law that contains ['Young's Modulus', 'Poisson's Ratio']
+# 'es' - if no argument, assume 'D' for engineering
 
 # The output is the 'D' matrix in 1D, 3D or 6D.
 
-def getStiff(n, cCons=0):
+def getStiff(n, cCons=0, es=0):
     E = 200.0*10**9    # modulus of elasticity (Pa)
     v = 0.3         # Poisson's ratio
     
@@ -154,8 +155,12 @@ def getStiff(n, cCons=0):
     ld = E*v/((1 + v)*(1 - 2*v))  # Lame parameters
     mu = E/(2*(1 + v))
 
+    c = 2
+    if es != 0:  # if 'D' will not be used with engineering strain...
+        c = 1
+
     aa = E/(1-v**2)  # 2D stiffness parameters
-    bb = aa*(1 - v)  # multiplied by 2 since its not engineering strain (green)
+    bb = aa*(1 - v)*c/2  # doubled since its not engineering strain (green)
     cc = aa*v
     
     if n == 1:
@@ -168,9 +173,9 @@ def getStiff(n, cCons=0):
         D = [[ld + 2*mu,    ld,             ld,             0,      0,      0],
             [ ld,           ld + 2*mu,      ld,             0,      0,      0],
             [ ld,           ld,             ld + 2*mu,      0,      0,      0],
-            [ 0,            0,              0,              2*mu,   0,      0],
-            [ 0,            0,              0,              0,      2*mu,   0],
-            [ 0,            0,              0,              0,      0,   2*mu]]
+            [ 0,            0,              0,              c*mu,   0,      0],
+            [ 0,            0,              0,              0,      c*mu,   0],
+            [ 0,            0,              0,              0,      0,   c*mu]]
     
     return D
 
@@ -187,18 +192,16 @@ def getStiff(n, cCons=0):
 # The outputs are:
 # 'c_ijkl' - the desired ijkl-th entry of the elasticity tensor
 
-def getCijkl(i, j, k, l, F, ld, mu):
+def getCijkl(i, j, k, l, F, C):
     kd = np.eye(3)  # kroenecker delta
-    Cijkl = 0  # initialize the result
+    Cijkl = 0.0  # initialize the result
     Jac = np.linalg.det(F)  # determinant of the deformation gradient
     
     for I in range(3):  # for first capital index...
         for J in range(3):  # for the second...
             for K in range(3):  # for the third...
                 for L in range(3):  # for the fourth...
-                    C0 = ld*kd[I][J]*kd[K][L] + mu*(kd[I][K]*kd[J][L] +
-                                                    kd[I][L]*kd[J][K])
-                    diff = (1.0/Jac)*F[i][I]*F[j][J]*F[k][K]*F[l][L]*C0
+                    diff = (1.0/Jac)*F[i][I]*F[j][J]*F[k][K]*F[l][L]*C
                     Cijkl += diff
     return Cijkl
 
@@ -214,48 +217,40 @@ def getCijkl(i, j, k, l, F, ld, mu):
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
-# 'D_y' - the elasticity tensor in the current (Eulerian) frame
+# 'dd' - the elasticity tensor in the current (Eulerian) frame
 
 def getEulerStiff(F, n, cCons=0):
-    E = 200.0*10**9    # modulus of elasticity (Pa)
-    v = 0.3         # Poisson's ratio
-    
     if cCons != 0:
-        E = cCons[0]
-        v = cCons[1]
-    
-    ld0 = E*v/((1 + v)*(1 - 2*v))  # Lame parameters in reference
-    mu0 = E/(2*(1 + v))
-    
-    d1111 = getCijkl(0, 0, 0, 0, F, ld0, mu0)  # convert first constant
-    
-    if len(F) == 1:  # for 1D...
-        d1122 = ld0
+        D = getStiff(n, cCons)
     else:
-        d1122 = getCijkl(0, 0, 1, 1, F, ld0, mu0)
+        D = getStiff(n)
 
-    ld = d1122  # get the Lame parameters in the current configuration
-    mu = 0.5*(d1111 - d1122)
+    if n == 1:  # make the matrix 6x6
+        ym = D
+        D = [[0.0 for i in range(6)] for j in range(6)]
+        D[0][0] = ym
+        
+    if n == 2:  # make the matrix 6x6
+        for i in range(3):
+            D[i].extend([0, 0, 0])
+            D.append([0, 0, 0, 0, 0, 0])
+    
+    p = [[0, 1, 2, 1, 0, 0],
+         [0, 1, 2, 2, 2, 1]]
+    d = [[0.0 for i in range(6)] for j in range(6)]  # 'D' pushed forward
+    
+    for i in range(6):  # for every row of 'D'...
+        for j in range(6):  # for every column of 'D'...
+            d[i][j] = getCijkl(p[0][i], p[1][i], p[0][j], p[1][j], F, D[i][j])
     
     if n == 1:
-        D = [[mu*(3*ld + 2*mu)/(ld + mu)]]
-    if n == 2:
-        aa = ld + 2*mu - ld**2/(ld + 2*mu)  # 2D stiffness parameters
-        bb = 2*mu
-        cc = ld - ld**2/(ld + 2*mu)
+        dd = d[0][0]
+    elif n == 2:
+        dd = [d[i][0:3] for i in range(3)]
+    elif n == 3:
+        dd = d
     
-        D = [[aa, cc, 0],
-             [cc, aa, 0],
-             [0,   0, bb]]
-    if n == 3:
-        D = [[ld + 2*mu,    ld,             ld,             0,      0,      0],
-            [ ld,           ld + 2*mu,      ld,             0,      0,      0],
-            [ ld,           ld,             ld + 2*mu,      0,      0,      0],
-            [ 0,            0,              0,              mu,     0,      0],
-            [ 0,            0,              0,              0,      mu,     0],
-            [ 0,            0,              0,              0,      0,     mu]]
-    
-    return D
+    return dd
 
 ###########################################################################
 
