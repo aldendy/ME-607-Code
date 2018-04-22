@@ -260,7 +260,7 @@ class SolverTest3D(unittest.TestCase):
         for i in [0, 2, 4, 6]:  # for every constrained node
             self.cons1[0][i] = 0.0
         
-        self.load1[2][0] = [2e10, 0, 0]#[24653148345, 0, 0]  # load to right end
+        self.load1[2][0] = [2e6, 0, 0]#[24653148345, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
     # Here, we test to ensure that 3D tractions calculate correctly

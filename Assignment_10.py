@@ -100,7 +100,8 @@ def getSquareFromVoigt(tensor):
 def getGstrain(defE, pts, jac):
     numD = int(len(pts[0]) - 1)  # number of problem dimensions
     F = np.array(getF(defE, pts, jac))
-    GS = 0.5*(np.dot(np.transpose(F), F) - np.identity(numD))  # Green Strain
+    #GS = 0.5*(np.dot(np.transpose(F), F) - np.identity(numD))  # Green Strain
+    GS = 0.5*(F - np.identity(numD) + np.transpose(F - np.identity(numD))) # lin
     GSv = getVoigt(GS)
     return GSv, F
 

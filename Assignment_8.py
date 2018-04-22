@@ -46,12 +46,8 @@ def getEnergyDensity(pts, ya, D, sigmaSq, a, b, Ba, Bb):
 
     # Here, get the geometric stiffness
     k_abG = np.dot(gradNa, np.dot(sigmaSq, np.transpose(gradNb)))
-
-    diff = k_abG/(4.7e10)
-    #if (a == b) and (abs(diff) > 0.0001):
-    #    print(diff)
         
-    k_ab = (k_abM + k_abG*np.eye(dims))  # combine both
+    k_ab = (k_abM)# + k_abG*np.eye(dims))  # combine both
     
     if type(k_ab).__name__ != 'ndarray':  # if it is a scalar...
         k_ab = [[k_ab]]
@@ -220,27 +216,29 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
     # deformation array missing dof's
     deform = np.array((numD*len(nodes) - ncons)*[0.0])
     deform0 =  getFullDVec(ida, deform, cons) # complete deformation array
+    deform00 = getFullDVec(ida, deform, cons)
     print('')
     i = 0  # starting iteration
 
     extFV = getExtForceVec(loads, basis, nodes, deform0, ien, ida, ncons)
     
     while i < imax:
-
 	if cCons != 0:
-            stiff = getStiffMatrix(nodes, ien, deform0, ida, ncons, cCons)
+            stiff = getStiffMatrix(nodes, ien, deform00, ida, ncons, cCons)
 	    intFV = intForceVec(nodes, ien, ida, ncons, numD,
 		    len(ien), deform0, cCons)
 	else:
-	    stiff = getStiffMatrix(nodes, ien, deform0, ida, ncons)
+	    stiff = getStiffMatrix(nodes, ien, deform00, ida, ncons)
 	    intFV = intForceVec(nodes, ien, ida, ncons, numD,
 		    len(ien), deform0)
-	
+
+	if i == 0:
+            print(stiff)
 	residual = np.array(extFV) - np.array(intFV)
 
 	msg = 'res {0:1.6E} intFV {1:1.6E} extFV {2:1.6E}'
-	print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
-                         np.linalg.norm(extFV)))
+	#print(msg.format(np.linalg.norm(residual), np.linalg.norm(intFV),
+        #                 np.linalg.norm(extFV)))
         
 	# if the error is small...
 	if abs(np.linalg.norm(residual)) < 10.0**(-7):
