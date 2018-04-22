@@ -163,6 +163,7 @@ def getCauchy(defE, pts, jac, nl, cCons=0):
         S = getPK2(defE, pts, jac, nl, cCons)
     else:
         S = getPK2(defE, pts, jac, nl)
+    
     SSq = getSquareFromVoigt(S)
     F = np.array(getF(defE, pts, jac))
     sigmaSq = np.dot(F, np.dot(SSq, np.transpose(F)))/np.linalg.det(F)
