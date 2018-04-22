@@ -4,7 +4,8 @@
 
 import numpy as np
 from Assignment_4 import getBasis
-from Assignment_6 import getStiff, getBandScale, getXaArray, intForceVec
+from Assignment_6_Utils import getStiff, getBandScale, getXaArray
+from Assignment_6 import intForceVec
 from Assignment_7 import getExtForceVec
 
 
@@ -17,20 +18,20 @@ from Assignment_7 import getExtForceVec
 # 'dims' - number of problem dimensions (1, 2, 3)
 # 'intpt' - the specific integration point number (0, 1, ...)
 # 'xa' - a vector of the 3D coordinates of the element nodes of size
-#		[# element nodes]x[3]
+#               [# element nodes]x[3]
 # 'a' - the first elemental matrix subcoordinate (A in the notes) (0, 1, ...)
 # 'b' - the second elemental matrix subcoordinate (B in the notes) (0, 1, ...)
 
 # The outputs are:
 
 def getEnergyDensity(D, Ba, Bb):
-	# Now, get the matrix product
-	k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
-	
-	if type(k_ab).__name__ != 'ndarray':
-		k_ab = [[k_ab]]
+    # Now, get the matrix product
+    k_ab = np.dot(np.transpose(Ba), np.dot(np.array(D), Bb))
+    
+    if type(k_ab).__name__ != 'ndarray':
+        k_ab = [[k_ab]]
 
-	return k_ab
+    return k_ab
 
 ##########################################################################
 
@@ -47,31 +48,31 @@ def getEnergyDensity(D, Ba, Bb):
 
 # The outputs are:
 # 'ke' - the element stiffness matrix of dimensions
-#		[(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
+#               [(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
 
 def gaussIntKMat(dims, xa, cCons=0):
-	basis = getBasis(dims)
-	numA = 2**dims
-	if cCons != 0:
-        	D = getStiff(dims, cCons)  # the 'D' matrix
-        else:
-                D = getStiff(dims)
-	w = 1  # the gauss point integral weight (2 pts)
-	ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
-	
-	for i in range(len(basis[0])):	# for every integration point...
-		# now, get the 'Bmat' for the integration point
-		Bmats, scale = getBandScale(dims, basis, i, xa)
+    basis = getBasis(dims)
+    numA = 2**dims
+    if cCons != 0:
+        D = getStiff(dims, cCons, 'es')  # the 'D' matrix
+    else:
+        D = getStiff(dims, 'n', 'es')
+    w = 1  # the gauss point integral weight (2 pts)
+    ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
+    
+    for i in range(len(basis[0])):  # for every integration point...
+        # now, get the 'Bmat' for the integration point
+        Bmats, scale = getBandScale(dims, basis, i, xa)
+        
+        for j in range(numA):  # for the 'a'-th basis function...
+            for k in range(numA):  # for the 'b'-th basis function...
+                kab = getEnergyDensity(D, Bmats[j], Bmats[k])
                 
-		for j in range(numA):  # for the 'a'-th basis function...
-			for k in range(numA):  # for the 'b'-th basis function...
-				kab = getEnergyDensity(D, Bmats[j], Bmats[k])
-				
-				# then, we assemble 'kab' into the appropriate slot in 'ke'
-				for m in range(len(kab)):  # for every row...
-					for n in range(len(kab[0])):  # for every column...
-						ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
-	return ke
+                # then, we assemble 'kab' into the appropriate slot in 'ke'
+                for m in range(len(kab)):  # for every row...
+                    for n in range(len(kab[0])):  # for every column...
+                        ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
+    return ke
 
 ############################################################################################
 
@@ -82,7 +83,7 @@ def gaussIntKMat(dims, xa, cCons=0):
 # The inputs are:
 # 'nodes' - a list of the 3D locations of all the problem nodes
 # 'ien' - the ien array for the problem implementing the map
-#		  [global eqn. #] = ien[elem. #][local basis func. #]
+#                 [global eqn. #] = ien[elem. #][local basis func. #]
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
 # 'ncons' - the number of dof constraints
 # 'cCons' - an array of the parameters needed to define the constituitive law
@@ -90,32 +91,32 @@ def gaussIntKMat(dims, xa, cCons=0):
 
 # The outputs are:
 # 'kmat' - the global stiffness matrix of size
-#		[(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
+#               [(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
 def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
-	dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
-	numA = 2**dims	# the number of element basis functions
-	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
-	# the return global stiffness matrix
-	kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
-	
-	for i in range(len(ien)):  # for every element...
-		xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
-                if cCons != 0:  # if we get a parameter definition...
-                        ke = gaussIntKMat(dims, xa, cCons)
-                else:
-                        ke = gaussIntKMat(dims, xa)
+    dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
+    numA = 2**dims  # the number of element basis functions
+    totA = len(nodes)*dims - ncons  # the number of stiffness matrix equations
+    # the return global stiffness matrix
+    kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
+    
+    for i in range(len(ien)):  # for every element...
+        xa = getXaArray(i, nodes, ien)  # get the element nodal locations (global)
+        if cCons != 0:  # if we get a parameter definition...
+            ke = gaussIntKMat(dims, xa, cCons)
+        else:
+            ke = gaussIntKMat(dims, xa)
+        
+        for j in range(len(ke)):  # for every row in 'ke'...
+            for k in range(len(ke[0])):      # for every column in 'ke'...
+                P = int(ien[i][j/dims])  # the global node row number
+                Q = int(ien[i][k/dims])  # the global node column number
+                pp = j%dims      # the dof num. for the row number
+                qq = k%dims      # the dof num. for the column number
                 
-		for j in range(len(ke)):  # for every row in 'ke'...
-			for k in range(len(ke[0])):	 # for every column in 'ke'...
-				P = int(ien[i][j/dims])	 # the global node row number
-				Q = int(ien[i][k/dims])	 # the global node column number
-				pp = j%dims	 # the dof num. for the row number
-				qq = k%dims	 # the dof num. for the column number
-				
-				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
-					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
-	return kmat
+                if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
+                    kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
+    return kmat
 
 #############################################################################################
 
@@ -131,19 +132,19 @@ def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
 # 'deform0' - the deformation array with the appropriate constrained dof's added
 
 def getFullDVec(ida, deform, cons):
-        deform0 = []  # initializes the array
-        numD = len(cons)  # this should correspond to the number of dimensions
+    deform0 = []  # initializes the array
+    numD = len(cons)  # this should correspond to the number of dimensions
+    
+    for i in range(len(ida)):  # for every part of the id array...
+        a = i/numD  # the equation number (node #)
+        dof = i%numD  # the degree of freedom number
         
-        for i in range(len(ida)):  # for every part of the id array...
-                a = i/numD  # the equation number (node #)
-                dof = i%numD  # the degree of freedom number
-                
-                if ida[i] != 'n':  # if 'i' maps to an unconstrained dof...
-                        deform0.append(deform[ida[i]])
-                else:
-                        deform0.append(cons[dof][a])
-        
-        return deform0
+        if ida[i] != 'n':  # if 'i' maps to an unconstrained dof...
+            deform0.append(deform[ida[i]])
+        else:
+            deform0.append(cons[dof][a])
+    
+    return deform0
 
 ############################################################################################
 
@@ -162,46 +163,45 @@ def getFullDVec(ida, deform, cons):
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 
 # The outputs are:
-# 'dFinal' - the final deformation vector giving the nodal deformations in all dof
+# 'dFinal' - final deformation vector giving the nodal deformations in all dof
 
 def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
-        basis = getBasis(numD)
-        imax = 10  # the maximum number of iterations tolerable
-        extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
-        deform = np.array((numD*len(nodes) - ncons)*[0.0])  # deformation array missing dof's
-        deform0 =  getFullDVec(ida, deform, cons) # the complete deformation array
-        i = 0  # starting iteration
+    basis = getBasis(numD)
+    imax = 10  # the maximum number of iterations tolerable
+    extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
+    deform = np.array((numD*len(nodes) - ncons)*[0.0])  # def array missing dof's
+    deform0 =  getFullDVec(ida, deform, cons) # the complete deformation array
+    i = 0  # starting iteration
+    
+    while i < imax:
+        if cCons != 0:
+            stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
+            intFV = intForceVec(nodes, ien, ida, ncons, numD,
+                    len(ien), deform0, cCons)
+        else:
+            stiff = getStiffMatrix(nodes, ien, ida, ncons)
+            intFV = intForceVec(nodes, ien, ida, ncons, numD,
+                    len(ien), deform0)
         
-        while i < imax:
-                if cCons != 0:
-                        stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
-                        intFV = intForceVec(nodes, ien, ida, ncons, numD,
-                                    len(ien), deform0, cCons)
-                else:
-                        stiff = getStiffMatrix(nodes, ien, ida, ncons)
-                        intFV = intForceVec(nodes, ien, ida, ncons, numD,
-                                    len(ien), deform0)
-                
-                residual = np.array(extFV) - np.array(intFV)
-                
-                # if the error is small...
-                if abs(np.linalg.norm(residual)) < 10.0**(-7):
-                        deform0 = getFullDVec(ida, deform, cons)
-                        return deform0, i
-                
-                Kinv = np.linalg.inv(np.array(stiff))
-                b = np.transpose(np.array(residual))
-                du = np.dot(Kinv, b)
-                
-                deform += du
-                deform0 = getFullDVec(ida, deform, cons)
-                i += 1
-                
-        return deform0, i
+        residual = np.array(extFV) - np.array(intFV)
+        
+        # if the error is small...
+        if abs(np.linalg.norm(residual)) < 10.0**(-7):
+            deform0 = getFullDVec(ida, deform, cons)
+            return deform0, i
+        
+        Kinv = np.linalg.inv(np.array(stiff))
+        b = np.transpose(np.array(residual))
+        du = np.dot(Kinv, b)
+        
+        deform += du
+        deform0 = getFullDVec(ida, deform, cons)
+        i += 1
+        
+    return deform0, i
 
 
-###############################################################################################
-
+###############################################################################
 
 
 

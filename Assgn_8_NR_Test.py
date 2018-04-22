@@ -5,7 +5,6 @@ import unittest
 import numpy as np
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
-from Assignment_6 import getStiff
 from Assignment_8 import getFullDVec, solver
 
 
@@ -266,6 +265,6 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest2D('test_2DTrac1Elem'))
+SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
 
 unittest.TextTestRunner(verbosity=2).run(FullSuite)

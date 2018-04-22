@@ -5,7 +5,7 @@ import unittest
 from Assignment_1 import *
 from Assignment_2 import *
 from Assignment_4 import getBasis
-from Assignment_6 import getBandScale, getStiff
+from Assignment_6_Utils import getBandScale, getStiff
 from Assignment_8 import getEnergyDensity, gaussIntKMat, getStiffMatrix
 
 
@@ -22,7 +22,7 @@ class EnergyDensityTest(unittest.TestCase):
         xa = [[0, 0, 0], [1, 0, 0]]
         basis = getBasis(dims)
         Bmats, scale = getBandScale(dims, basis, intpt, xa)
-        D = getStiff(dims)  # the 'D' matrix
+        D = getStiff(dims, 'n', 'es')  # the 'D' matrix
 
         # Next, we test for all combinations of 'a' and 'b'
         for i in range(2):  # for every 'a' or local element #...
@@ -39,7 +39,7 @@ class EnergyDensityTest(unittest.TestCase):
         b = 0
         basis = getBasis(dims)
         Bmats, scale = getBandScale(dims, basis, intpt, xa)
-        D = getStiff(dims)  # the 'D' matrix
+        D = getStiff(dims, 'n', 'es')  # the 'D' matrix
 
 
         kab = getEnergyDensity(D, Bmats[a], Bmats[b])
@@ -60,7 +60,7 @@ class EnergyDensityTest(unittest.TestCase):
         b = 0
         basis = getBasis(dims)
         Bmats, scale = getBandScale(dims, basis, intpt, xa)
-        D = getStiff(dims)  # the 'D' matrix
+        D = getStiff(dims, 'n', 'es')  # the 'D' matrix
 
         kab = getEnergyDensity(D, Bmats[a], Bmats[b])
         
