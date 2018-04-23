@@ -6,7 +6,8 @@ from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_4 import *
 from Assignment_5 import posAndJac, scaling, realN
 from Assignment_6_Utils import numElements, numDims, getXaArray, getBandScale
-from Assignment_6_Utils import getEulerStiff
+from Assignment_6_Utils import getEulerStiff, getElemDefs
+from Assignment_10 import getCauchy
 
 #################################################################################
 
@@ -23,17 +24,17 @@ from Assignment_6_Utils import getEulerStiff
 #           [1 - 1D, 3 - 2D, 6 - 3D]x[1]
 
 def strainVec(numD, e, deform, ien, Bmats):
-  sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
-  strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
-  
-  for k in range(len(Bmats)):  # for every element basis function...
-    first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
-    second = first + numD  # location of c_ky (2D) in global 'deform'
-    cmat = np.transpose(np.array([deform[first:second]]))
+    sDim = [1, 3, 6]  # the number of rows in the stress or strain vector
+    strain = np.array(sDim[numD-1]*[[0.0]])  # initialize the strain vector
     
-    strain += np.dot(np.array(Bmats[k]), cmat)
+    for k in range(len(Bmats)):  # for every element basis function...
+        first = int(numD*ien[e][k])  # location of c_kx in global 'deform'
+        second = first + numD  # location of c_ky (2D) in global 'deform'
+        cmat = np.transpose(np.array([deform[first:second]]))
+    
+        strain += np.dot(np.array(Bmats[k]), cmat)
   
-  return strain 
+    return strain 
 
 ########################################################################
 
@@ -73,21 +74,26 @@ def stressVec(numD, strain, cCons=0):
 
 def func(deform, basis, ien, e, i, xa, cCons=0):
     numD = len(basis[0][0][0]) - 1  # the number of dimensions
-    Bmats, scale = getBandScale(numD, basis, i, xa)
+    defE = getElemDefs(e, deform, ien)  # 3D deformation vectors at each node
+    ya = np.array(defE) + np.array(xa)  # get current element nodal postions
+    x, jacXxi = posAndJac(basis[0][i], xa)
+    Bmats, scaleYxi = getBandScale(numD, basis, i, ya)
     
-    strain = strainVec(numD, e, deform, ien, Bmats)
+    #strain = strainVec(numD, e, deform, ien, Bmats)
     if cCons != 0:
-        stress = stressVec(numD, strain, cCons)
+        #stress = stressVec(numD, strain, cCons)
+        stress = getCauchy(defE, basis[0][i], jacXxi, 'nl', cCons)
     else:
-        stress = stressVec(numD, strain)
+        #stress = stressVec(numD, strain)
+        stress = getCauchy(defE, basis[0][i], jacXxi, 'nl', cCons)
     
     # the force vector for all nodes 'a' over element 'e'
     f = np.array(numD*len(basis[0][0])*[[0.0]])  
     
     for k in range(len(basis[0][0])):  # for every element basis function...
-      ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scale
-      for j in range(numD):  # for every dimension
-        f[numD*k + j] = ff[j]
+        ff = np.dot(np.transpose(np.array(Bmats[k])), stress)*scaleYxi
+        for j in range(numD):  # for every dimension
+            f[numD*k + j] = ff[j]
     
     return f
 

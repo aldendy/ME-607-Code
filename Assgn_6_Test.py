@@ -232,13 +232,13 @@ class IntForceVectorFuncTest(unittest.TestCase):
         correct1 = [-1e10, 1e10]
         
         for i in range(len(answer1)):  # for every component of 'answer'
-            self.assertAlmostEqual(answer1[i], correct1[i])
+            self.assertAlmostEqual(answer1[i]/correct1[i], 1)
 
     # Here, we test the function outputs in 2D
     def test_funcOutput2D(self):
-        answer2 = func(self.deform2, self.b2, self.ien2, self.enum2,
+        ans2 = func(self.deform2, self.b2, self.ien2, self.enum2,
                   self.i2, self.xa2)
-        correct2 = [[ -3.94337567e+09],
+        crct2 = [[ -3.94337567e+09],
                 [  1.88034805e-07],
                 [  3.94337567e+09],
                 [  5.03837741e-08],
@@ -247,8 +247,8 @@ class IntForceVectorFuncTest(unittest.TestCase):
                 [  1.05662433e+09],
                 [ -5.03837741e-08]]
         
-        for i in range(len(answer2)):  # for every component of 'answer'
-            self.assertAlmostEqual(answer2[i][0]/correct2[i][0], 1, 5)
+        for i in range(len(ans2)):  # for every component of 'answer'
+            self.assertAlmostEqual((ans2[i][0]+1)/(crct2[i][0]+1), 1, 5)
 
 #####################################################################
 

@@ -166,8 +166,12 @@ def getCauchy(defE, pts, jac, nl, cCons=0):
     
     SSq = getSquareFromVoigt(S)
     F = np.array(getF(defE, pts, jac))
-    sigmaSq = np.dot(F, np.dot(SSq, np.transpose(F)))/np.linalg.det(F)
-    sigmaV = getVoigt(sigmaSq)
+    if nl == 'lin':  # for a linear analysis
+        sigmaV = S
+    elif nl == 'nl':  # for nonlinar analyses
+        sigmaSq = np.dot(F, np.dot(SSq, np.transpose(F)))/np.linalg.det(F)
+        sigmaV = getVoigt(sigmaSq)
+        
     return sigmaV
 
 ###########################################################################
