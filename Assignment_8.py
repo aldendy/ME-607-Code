@@ -9,7 +9,7 @@ from Assignment_6_Utils import getEulerStiff, getBandScale, getXaArray
 from Assignment_6_Utils import getElemDefs
 from Assignment_6 import intForceVec
 from Assignment_7 import getExtForceVec
-from Assignment_10 import getCauchy, getSquareFromVoigt
+from Assignment_10 import getF, getCauchy, getSquareFromVoigt
 
 
 ####################################################################
@@ -59,11 +59,6 @@ def gaussIntKMat(dims, xa, defE, cCons=0):
     numA = 2**dims
     ya = np.array(xa) + np.array(defE)
     
-    if cCons != 0:
-        D = getEulerStiff(np.identity(3), dims, cCons, 'es')  # the 'D' matrix
-    else:
-        D = getEulerStiff(np.identity(3), dims, 'n', 'es')
-    
     w = 1  # the gauss point integral weight (2 pts)
     ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
     
@@ -72,6 +67,12 @@ def gaussIntKMat(dims, xa, defE, cCons=0):
         Bmats, scaleYxi = getBandScale(dims, basis, i, ya)
         y, jacYxi = posAndJac(basis[0][i], ya)
         x, jacXxi = posAndJac(basis[0][i], xa)
+
+        F = getF(defE, basis[0][i], jacXxi)
+        if cCons != 0:
+            D = getEulerStiff(F, dims, cCons, 'es')  # 'D' matrix
+        else:
+            D = getEulerStiff(F, dims, 'n', 'es')
         
         for j in range(numA):  # for the 'a'-th basis function...
             for k in range(numA):  # for the 'b'-th basis function...
