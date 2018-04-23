@@ -4,9 +4,12 @@
 
 import numpy as np
 from Assignment_4 import getBasis
+from Assignment_5 import posAndJac, realN
 from Assignment_6_Utils import getEulerStiff, getBandScale, getXaArray
+from Assignment_6_Utils import getElemDefs
 from Assignment_6 import intForceVec
 from Assignment_7 import getExtForceVec
+from Assignment_10 import getCauchy, getSquareFromVoigt
 
 
 ####################################################################
@@ -43,6 +46,7 @@ def getEnergyDensity(D, Ba, Bb):
 # The inputs are:
 # 'dims' - the number of problem dimensions
 # 'xa' - the 3D real coordinates of the element nodes arranged in a list
+# 'defE' - a list of the 3D deformations at every elemental node
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 
@@ -50,28 +54,46 @@ def getEnergyDensity(D, Ba, Bb):
 # 'ke' - the element stiffness matrix of dimensions
 #               [(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
 
-def gaussIntKMat(dims, xa, cCons=0):
+def gaussIntKMat(dims, xa, defE, cCons=0):
     basis = getBasis(dims)
     numA = 2**dims
+    ya = np.array(xa) + np.array(defE)
+    
     if cCons != 0:
         D = getEulerStiff(np.identity(3), dims, cCons, 'es')  # the 'D' matrix
     else:
         D = getEulerStiff(np.identity(3), dims, 'n', 'es')
+    
     w = 1  # the gauss point integral weight (2 pts)
     ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
     
     for i in range(len(basis[0])):  # for every integration point...
         # now, get the 'Bmat' for the integration point
-        Bmats, scale = getBandScale(dims, basis, i, xa)
+        Bmats, scaleYxi = getBandScale(dims, basis, i, ya)
+        y, jacYxi = posAndJac(basis[0][i], ya)
+        x, jacXxi = posAndJac(basis[0][i], xa)
         
         for j in range(numA):  # for the 'a'-th basis function...
             for k in range(numA):  # for the 'b'-th basis function...
                 kab = getEnergyDensity(D, Bmats[j], Bmats[k])
+
+                # Next, we get the geometric stiffness
+                gradNa = realN(basis[0][i], j, jacYxi)
+                gradNb = realN(basis[0][i], k, jacYxi)
+
+                if cCons != 0:
+                    sigmaV = getCauchy(defE, basis[0][i], jacXxi, 'nl', cCons)
+                else:
+                    sigmaV = getCauchy(defE, basis[0][i], jacXxi, 'nl')
+
+                sigmaSq = getSquareFromVoigt(sigmaV)
+                kabG = np.eye(dims)*np.dot(gradNa, np.dot(sigmaSq, gradNb))
+                kab += kabG  # add the geometric stiffness
                 
                 # then, we assemble 'kab' into the appropriate slot in 'ke'
                 for m in range(len(kab)):  # for every row...
                     for n in range(len(kab[0])):  # for every column...
-                        ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
+                        ke[j*dims + m][k*dims + n] += kab[m][n]*scaleYxi*w
     return ke
 
 ############################################################################################
@@ -85,6 +107,7 @@ def gaussIntKMat(dims, xa, cCons=0):
 # 'ien' - the ien array for the problem implementing the map
 #                 [global eqn. #] = ien[elem. #][local basis func. #]
 # 'ida' - an array mapping (Eqn. #) = ID[Eqn. # including restrained dof's]
+# 'deform0' - deformation array with the appropriate constrained dof's added
 # 'ncons' - the number of dof constraints
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
@@ -93,7 +116,7 @@ def gaussIntKMat(dims, xa, cCons=0):
 # 'kmat' - the global stiffness matrix of size
 #               [(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
-def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
+def getStiffMatrix(nodes, ien, ida, deform0, ncons, cCons=0):
     dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
     numA = 2**dims  # the number of element basis functions
     totA = len(nodes)*dims - ncons  # the number of stiffness matrix equations
@@ -101,11 +124,13 @@ def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
     kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
     
     for i in range(len(ien)):  # for every element...
-        xa = getXaArray(i, nodes, ien)  # get the element nodal locations (global)
+        xa = getXaArray(i, nodes, ien)  # get element nodal locations (global)
+        defE = getElemDefs(i, deform0, ien)
+        
         if cCons != 0:  # if we get a parameter definition...
-            ke = gaussIntKMat(dims, xa, cCons)
+            ke = gaussIntKMat(dims, xa, defE, cCons)
         else:
-            ke = gaussIntKMat(dims, xa)
+            ke = gaussIntKMat(dims, xa, defE)
         
         for j in range(len(ke)):  # for every row in 'ke'...
             for k in range(len(ke[0])):      # for every column in 'ke'...
@@ -167,7 +192,7 @@ def getFullDVec(ida, deform, cons):
 
 def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
     basis = getBasis(numD)
-    imax = 10  # the maximum number of iterations tolerable
+    imax = 20  # the maximum number of iterations tolerable
     extFV = getExtForceVec(loads, basis, nodes, ien, ida, ncons)
     deform = np.array((numD*len(nodes) - ncons)*[0.0])  # def array missing dof's
     deform0 =  getFullDVec(ida, deform, cons) # the complete deformation array
@@ -175,11 +200,11 @@ def solver(numD, loads, nodes, ien, ida, ncons, cons, cCons=0):
     
     while i < imax:
         if cCons != 0:
-            stiff = getStiffMatrix(nodes, ien, ida, ncons, cCons)
+            stiff = getStiffMatrix(nodes, ien, ida, deform0, ncons, cCons)
             intFV = intForceVec(nodes, ien, ida, ncons, numD,
                     len(ien), deform0, cCons)
         else:
-            stiff = getStiffMatrix(nodes, ien, ida, ncons)
+            stiff = getStiffMatrix(nodes, ien, ida, deform0, ncons)
             intFV = intForceVec(nodes, ien, ida, ncons, numD,
                     len(ien), deform0)
         
