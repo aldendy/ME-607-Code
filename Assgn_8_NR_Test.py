@@ -123,7 +123,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons1[1][0] = 0.0
         self.cons1[0][2] = 0.0
         
-        self.load1[2][0] = [2.0e6, 0, 0]  # load to right end
+        self.load1[2][0] = [3.0e10, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
         # For the pressure load...
@@ -155,21 +155,23 @@ class SolverTest2D(unittest.TestCase):
                                                self.numD)
         self.cons4[0][0] = 0.0
         self.cons4[1][0] = 0.0
-        self.cons4[0][2] = 1.0e-5
+        self.cons4[0][2] = 1.0e-1
         self.cons4[0][3] = 0.0
-        self.cons4[0][5] = 1.0e-5
+        self.cons4[0][5] = 1.0e-1
         self.cons4[0][6] = 0.0
-        self.cons4[0][8] = 1.0e-5
+        self.cons4[0][8] = 1.0e-1
         
         self.ida4, self.ncons4 = getIDArray(self.cons4)
 
     # Now, we simulate the deformation behavior
     def test_2DTrac1Elem(self):
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
-                               self.ida1, self.ncons1, self.cons1)
-        
-        correct = [0.0, 0.0, 1.0e-5, 0.0, 0.0, -0.3e-5, 1.0e-5, -0.3e-5]
-        
+                               self.ida1, self.ncons1, self.cons1, [2e11,
+                                                                    0.43])
+        d = 0.11358
+        n = -0.06098
+        correct = [0, 0, d, 0, 0, n, d, n]
+        print(result)
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
@@ -209,12 +211,16 @@ class SolverTest2D(unittest.TestCase):
     # Now, we test the effect of a deformation load on the 2x2 element set
     def test_2DDef4Elem(self):
         result, steps = solver(self.numD, self.load4, self.nodes3, self.ien3,
-                               self.ida4, self.ncons4, self.cons4)
-        
-        correct = [0.0, 0.0, 5.0e-6, 0.0, 1.0e-5, 0.0,
-                   0.0, -1.5e-6, 5.0e-6, -1.5e-6, 1.0e-5, -1.5e-6,
-                   0.0, -3.0e-6, 5.0e-6, -3.0e-6, 1.0e-5, -3.0e-6]
-        
+                               self.ida4, self.ncons4, self.cons4, [2.0e11,
+                                                                    0.33])
+        d = 0.05
+        D = 0.1
+        N = -0.053127
+        n = N/2
+        correct = [0, 0, d, 0, D, 0,
+                   0, n, d, n, D, n,
+                   0, N, d, N, D, N]
+        print(result)
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
@@ -227,9 +233,9 @@ class SolverTest3D(unittest.TestCase):
     def setUp(self):
         self.numD = 3  # the number of problem dimensions
         enum = [1, 2]  # number of elements
-        self.eLx = 2.0  # element length in the x-direction
-        self.eLy = 2.0  # element length in the y-direction
-        self.eLz = 2.0  # element length in the z-direction
+        self.eLx = 1.0  # element length in the x-direction
+        self.eLy = 1.0  # element length in the y-direction
+        self.eLz = 1.0  # element length in the z-direction
         self.t = 2.0e10  # traction stress
         self.nodes1 = nodeList(self.eLx, self.eLy, self.eLz, enum[0],
                                enum[0], enum[0])
@@ -270,6 +276,6 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
+SingleSuite.addTest(SolverTest2D('test_2DTrac1Elem'))
 
 unittest.TextTestRunner(verbosity=2).run(SingleSuite)
