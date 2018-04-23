@@ -208,6 +208,26 @@ def getCijkl(i, j, k, l, F, C):
 
 ################################################################################
 
+# In this function, we expand 'F' to fill a 3x3 array. The additional entries, if
+# needed are taken from an identity matrix.
+
+# The inputs are:
+# 'F' - the deformation gradient
+
+# The outputs are:
+# 'F' - a 3x3 deformation gradient
+
+def get3x3F(F):
+    newF = np.eye(3)
+
+    for i in range(len(F)):  # for every row in 'F'...
+        for j in range(len(F[0])):  # for every column in 'F'...
+            newF[i][j] = F[i][j]
+
+    return newF
+
+################################################################################
+
 # In this function, we get the elasticity tensor in the current (Eulerian)
 # frame.
 
@@ -224,7 +244,8 @@ def getCijkl(i, j, k, l, F, C):
 
 def getEulerStiff(F, n, cCons, es):
     D = getStiff(n, cCons, es)
-
+    newF = get3x3F(F)  # get full-size 'F'
+    
     if n == 1:  # make the matrix 6x6
         ym = D
         D = [[0.0 for i in range(6)] for j in range(6)]
@@ -241,7 +262,7 @@ def getEulerStiff(F, n, cCons, es):
     
     for i in range(6):  # for every row of 'D'...
         for j in range(6):  # for every column of 'D'...
-            d[i][j] = getCijkl(p[0][i], p[1][i], p[0][j], p[1][j], F, D[i][j])
+            d[i][j] = getCijkl(p[0][i], p[1][i], p[0][j], p[1][j], newF, D[i][j])
     
     if n == 1:
         dd = d[0][0]
