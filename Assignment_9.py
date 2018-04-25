@@ -192,7 +192,8 @@ def getSigmaR(pt, s, p, axis):
 # 'ien' - an array mapping (Global node #) = ien[element #][element node #]
 # 'nodes' - an array of the 3D locations of all nodes in the mesh
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
-#           'tau_yz', 'tau_zx', 'von Mises', 'sigma_r', 'sigma_t', 'd_abs')
+#           'tau_yz', 'tau_zx', 'von Mises', 'sigma_r', 'sigma_t', 'd_abs',
+#            'd_x', 'd_y', 'd_z')
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 
@@ -300,8 +301,11 @@ def plotResults(deform, nodes, selSet, plotDir, dof, s='no'):
 # 'ien' - array mapping (global node #) = ien[element #][element node #]
 # 'nodes' - a list of all the 3D locations of each node
 # 'stype' - the type of stress ('sigma_x', 'sigma_y', 'sigma_z', 'tau_xy',
-#           'tau_yz', 'tau_zx', 'von Mises')
+#           'tau_yz', 'tau_zx', 'von Mises', 'sigma_r', 'sigma_t', 'd_abs',
+#           'd_x', 'd_y', 'd_z')
 # 'view' - picks on of the cardinal directions ('x', 'y', 'z') as the viewpoint
+# 'selset' - the list locations (0, 1, 2...) of nodes to plot and the view
+#            direction and elements [[locations], [elems], 'x', 'y' or 'z']
 # 'cCons' - an array of the parameters needed to define the constituitive law
 #           that contains ['Young's Modulus', 'Poisson's Ratio']
 # 's' - if not 'no', show the plot
@@ -310,7 +314,8 @@ def plotResults(deform, nodes, selSet, plotDir, dof, s='no'):
 # The outputs are:
 # '0' - indicating it ran successfully
 
-def contourPlot(deform, ien, nodes, stype, view, cCons=0, s='no', size=None):
+def contourPlot(deform, ien, nodes, stype, view, selset='none', cCons=0, s='no',
+                size=None):
     viewMap = {'x':0, 'y':1, 'z':2}
     titleMap = {'tau_xy':'tau_{xy}', 'tau_yz':'tau_{yz}', 'tau_zx':'tau_{zx}',
                 'd_abs':'delta_{abs}', 'd_x':'delta_x', 'd_y':'delta_y',
@@ -327,16 +332,28 @@ def contourPlot(deform, ien, nodes, stype, view, cCons=0, s='no', size=None):
     z = []  # stores the desired simulation value
     triang = []  # stores the particular trianglulation used to plot results
 
-    for i in range(len(nodes)):  # for each node...
-        x.append(nodes[i][0])
-        y.append(nodes[i][1])
-        z.append(data[i])
+    if selset != 'none':  # if a selected set of nodes is provided...
+        for i in selset[0]:  # for each node...
+            x.append(nodes[i][0])
+            y.append(nodes[i][1])
+            z.append(data[i])
 
-    for i in range(len(ien)):  # for each element...
-        a = [ien[i][0], ien[i][1], ien[i][3]]  # first triangle
-        b = [ien[i][0], ien[i][3], ien[i][2]]  # second triangle
-        triang.append(a)  # assemble triangulation for ith element
-        triang.append(b)
+        for i in selset[1]:  # for each element...
+            a = [ien[i][0], ien[i][1], ien[i][3]]  # first triangle
+            b = [ien[i][0], ien[i][3], ien[i][2]]  # second triangle
+            triang.append(a)  # assemble triangulation for ith element
+            triang.append(b)
+    else:
+        for i in range(len(nodes)):  # for each node...
+            x.append(nodes[i][0])
+            y.append(nodes[i][1])
+            z.append(data[i])
+
+        for i in range(len(ien)):  # for each element...
+            a = [ien[i][0], ien[i][1], ien[i][3]]  # first triangle
+            b = [ien[i][0], ien[i][3], ien[i][2]]  # second triangle
+            triang.append(a)  # assemble triangulation for ith element
+            triang.append(b)
     
     mesh = tri.Triangulation(x, y, triang)
     lvs = 0
