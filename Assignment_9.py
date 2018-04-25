@@ -9,9 +9,11 @@ import numpy as np
 from Assignment_1 import getIDArray
 from Assignment_2 import load_and_cons
 from Assignment_4 import getBasis
+from Assignment_5 import posAndJac
 from Assignment_6 import getXaArray, getBandScale, strainVec, stressVec
+from Assignment_6_Utils import getElemDefs
 from Assignment_8 import solver
-
+from Assignment_10 import getCauchy
 
 #######################################################################
 
@@ -215,11 +217,17 @@ def get_stress_sol(deform, ien, nodes, stype, cCons=0):
                 basis = getBasis(dims, 1.0)  # get basis evals at corners
                 xa = getXaArray(i, nodes, ien)  # get the element nodes
                 Bmats, scale = getBandScale(dims, basis, j, xa)
-                strain = strainVec(dims, i, deform, ien, Bmats)
+                #strain = strainVec(dims, i, deform, ien, Bmats)
+
+                defE = getElemDefs(i, deform, ien)
+                x, jac = posAndJac(basis[0][j], xa)
+                
                 if cCons != 0:
-                    s = stressVec(dims, strain, cCons)
+                    #s = stressVec(dims, strain, cCons)
+                    s = getCauchy(defE, basis[0][j], jac, 'nl', cCons)
                 else:
-                    s = stressVec(dims, strain)
+                    #s = stressVec(dims, strain)
+                    s = getCauchy(defE, basis[0][j], jac, 'nl')
                 
                 if stype == 'von Mises':
                     data[int(ien[i][j])] = getMises(s)

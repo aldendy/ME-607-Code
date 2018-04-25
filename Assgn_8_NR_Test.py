@@ -233,15 +233,14 @@ class SolverTest3D(unittest.TestCase):
     # first, define important preliminary data
     def setUp(self):
         self.numD = 3  # the number of problem dimensions
-        enum = [1, 2]  # number of elements
+        enum = 2  # number of elements
         self.eLx = 1.0  # element length in the x-direction
         self.eLy = 1.0  # element length in the y-direction
         self.eLz = 1.0  # element length in the z-direction
         self.t = 2.0e10  # traction stress
-        self.nodes1 = nodeList(self.eLx, self.eLy, self.eLz, enum[0],
-                               enum[0], enum[0])
-        self.ien1 = get_ien(enum[0], enum[0], enum[0])
-        self.cons1, self.load1 = load_and_cons(enum[0], len(self.nodes1),
+        self.nodes1 = nodeList(self.eLx, self.eLy, self.eLz, enum, enum, enum)
+        self.ien1 = get_ien(enum, enum, enum)
+        self.cons1, self.load1 = load_and_cons(enum, len(self.nodes1),
                                                self.numD)
         self.cons1[1][0] = 0.0  # constrain node 0 in all dof
         self.cons1[2][0] = 0.0
@@ -263,6 +262,9 @@ class SolverTest3D(unittest.TestCase):
                    0.0, 0.0, -nn, dd, 0.0, -nn,
                    0.0, -nn, -nn, dd, -nn, -nn]
         print(result)
+        selset = [[0, 1, 2, 3], [0], 'z']
+        contourPlot(result, self.ien1, self.nodes1, 'sigma_x', 'z', selset,
+                    [2e11, 0.3], 'yes')
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1, 5)
 
@@ -277,6 +279,6 @@ Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
 FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
 
 SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest2D('test_2DTrac1Elem'))
+SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
 
 unittest.TextTestRunner(verbosity=2).run(SingleSuite)
