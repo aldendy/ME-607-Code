@@ -1,0 +1,5 @@
+Assignment 3
+
+Implement a 1D 2-point Gaussian quadrature rule. Write tests to ensure that using this rule, you can integrate all monomials of degree 3 or less exactly.
+
+Implement a 2D, 4-point tensor product Gaussian quadrature rule and a 3D, 8-point tensor product Gaussian quadrature rule using the storage scheme described in the notes. Write a test to ensure that using this rule you can integrate all binomials of total degree 3 or less exactly. Only test the element interior rule and use the storage scheme in the test.

@@ -1,0 +1,5 @@
+Assignment 6
+
+Expanding on the looping structure you implemented and tested in Assignment 5, create an internal force routine which returns F^int wavy underscore. This should require you to exercise most of the functionality you-ve implemented up to this point.
+
+Test your internal force calculations on a one-element mesh with a linear displacement profile.

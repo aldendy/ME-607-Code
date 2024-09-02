@@ -1,0 +1,3 @@
+Assignment 7
+
+Repeat Assignment 6 but now compute F^ext underscore for several different loading scenarios such as external traction and body orce and combined loading. Implement simple one element tests to verify your code works correctly.

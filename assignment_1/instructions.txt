@@ -1,0 +1,5 @@
+Assigment 1
+
+Implement the algorithms to compute nodal positions and IEN arrays for 1D, 2D and 3D linear tensor product meshes.
+
+Turn in a copy of your code and plots of the meshes (just edges and vertices) for a 1D, 2D and 3D mesh.

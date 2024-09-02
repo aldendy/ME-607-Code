@@ -6,11 +6,10 @@
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
-from Assignment_1 import getIDArray
-from Assignment_2 import load_and_cons
-from Assignment_4 import getBasis
-from Assignment_6 import getXaArray, getBandScale, strainVec, stressVec
-from Assignment_8 import solver
+from assignment_1.assignment_1 import getIDArray
+from assignment_2.assignment_2 import load_and_cons
+from assignment_4.assignment_4 import getBasis
+from assignment_6.assignment_6 import getXaArray, getBandScale, strainVec, stressVec
 
 
 #######################################################################

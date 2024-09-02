@@ -1,0 +1,5 @@
+Assignment 2
+
+Implement the data structures to store a prescribed set of loads and constraints over a 1D, 2D and 3D mesh.
+
+Implement at least one test case to verify your data structures are operating properly. Turn in a copy of your code and a description of your test case and the test case output.

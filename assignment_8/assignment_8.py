@@ -3,9 +3,11 @@
 
 
 import numpy as np
-from Assignment_4 import getBasis
-from Assignment_6 import getStiff, getBandScale, getXaArray, intForceVec
-from Assignment_7 import getExtForceVec
+from math import floor
+
+from assignment_4.assignment_4 import getBasis
+from assignment_6.assignment_6 import getStiff, getBandScale, getXaArray, intForceVec
+from assignment_7.assignment_7 import getExtForceVec
 
 
 ####################################################################
@@ -49,29 +51,30 @@ def getEnergyDensity(D, Ba, Bb):
 # 'ke' - the element stiffness matrix of dimensions
 #		[(# dims)x(# element basis funcs.)] x [(# dims)x(# element basis funcs.)]
 
-def gaussIntKMat(dims, xa, cCons=0):
-	basis = getBasis(dims)
-	numA = 2**dims
-	if cCons != 0:
-        	D = getStiff(dims, cCons)  # the 'D' matrix
-        else:
-                D = getStiff(dims)
-	w = 1  # the gauss point integral weight (2 pts)
-	ke = np.array([[0.0 for i in range(dims*numA)] for j in range(dims*numA)])
+def gaussIntKMat(dims: int, xa, cCons=0):
+    basis = getBasis(dims)
+    numA = int(2**dims)
+    if cCons != 0:
+        D = getStiff(dims, cCons)  # the 'D' matrix
+    else:
+        D = getStiff(dims)
+    w = 1  # the gauss point integral weight (2 pts)
+    n = int(dims * numA)
+    ke = np.array([[0.0 for i in range(n)] for j in range(n)])
 	
-	for i in range(len(basis[0])):	# for every integration point...
-		# now, get the 'Bmat' for the integration point
-		Bmats, scale = getBandScale(dims, basis, i, xa)
-                
-		for j in range(numA):  # for the 'a'-th basis function...
-			for k in range(numA):  # for the 'b'-th basis function...
-				kab = getEnergyDensity(D, Bmats[j], Bmats[k])
-				
-				# then, we assemble 'kab' into the appropriate slot in 'ke'
-				for m in range(len(kab)):  # for every row...
-					for n in range(len(kab[0])):  # for every column...
-						ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
-	return ke
+    for i in range(len(basis[0])):	# for every integration point...
+        # now, get the 'Bmat' for the integration point
+        Bmats, scale = getBandScale(dims, basis, i, xa)
+
+        for j in range(numA):  # for the 'a'-th basis function...
+            for k in range(numA):  # for the 'b'-th basis function...
+                kab = getEnergyDensity(D, Bmats[j], Bmats[k])
+
+                # then, we assemble 'kab' into the appropriate slot in 'ke'
+                for m in range(len(kab)):  # for every row...
+                    for n in range(len(kab[0])):  # for every column...
+                        ke[j*dims + m][k*dims + n] += kab[m][n]*scale*w
+    return ke
 
 ############################################################################################
 
@@ -93,29 +96,31 @@ def gaussIntKMat(dims, xa, cCons=0):
 #		[(# dims)x(# global basis funcs.)] x [(# dims)x(# global basis funcs.)]
 
 def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
-	dims = len(ida)/len(nodes)  # 'ida' has (# dims) as many
-	numA = 2**dims	# the number of element basis functions
-	totA = len(nodes)*dims - ncons	# the number of stiffness matrix equations
-	# the return global stiffness matrix
-	kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
-	
-	for i in range(len(ien)):  # for every element...
-		xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
-                if cCons != 0:  # if we get a parameter definition...
-                        ke = gaussIntKMat(dims, xa, cCons)
-                else:
-                        ke = gaussIntKMat(dims, xa)
+    dims = int(len(ida)/len(nodes))  # 'ida' has (# dims) as many
+    numA = 2**dims	# the number of element basis functions
+    totA = int(len(nodes)*dims - ncons)	 # number of stiffness matrix equations
+    # the return global stiffness matrix
+    kmat = np.array([[0.0 for i in range(totA)] for j in range(totA)])
+
+    for i in range(len(ien)):  # for every element...
+        xa = getXaArray(i, nodes, ien)	# get the element nodal locations (global)
+        if cCons != 0:  # if we get a parameter definition...
+            ke = gaussIntKMat(dims, xa, cCons)
+        else:
+            ke = gaussIntKMat(dims, xa)
                 
-		for j in range(len(ke)):  # for every row in 'ke'...
-			for k in range(len(ke[0])):	 # for every column in 'ke'...
-				P = int(ien[i][j/dims])	 # the global node row number
-				Q = int(ien[i][k/dims])	 # the global node column number
-				pp = j%dims	 # the dof num. for the row number
-				qq = k%dims	 # the dof num. for the column number
-				
-				if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
-					kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
-	return kmat
+        for j in range(len(ke)):  # for every row in 'ke'...
+            for k in range(len(ke[0])):	 # for every column in 'ke'...
+                local_row_num = floor(j/dims)
+                local_node_num = floor(k/dims)
+                P = int(ien[i][local_row_num])	  # global node row number
+                Q = int(ien[i][local_node_num])   # global node column number
+                pp = j%dims	 # the dof num. for the row number
+                qq = k%dims	 # the dof num. for the column number
+
+                if (ida[P*dims + pp] != 'n') and (ida[Q*dims + qq] != 'n'):
+                    kmat[ida[P*dims + pp]][ida[Q*dims + qq]] += ke[j][k]
+    return kmat
 
 #############################################################################################
 
@@ -131,19 +136,17 @@ def getStiffMatrix(nodes, ien, ida, ncons, cCons=0):
 # 'deform0' - the deformation array with the appropriate constrained dof's added
 
 def getFullDVec(ida, deform, cons):
-        deform0 = []  # initializes the array
-        numD = len(cons)  # this should correspond to the number of dimensions
-        
-        for i in range(len(ida)):  # for every part of the id array...
-                a = i/numD  # the equation number (node #)
-                dof = i%numD  # the degree of freedom number
-                
-                if ida[i] != 'n':  # if 'i' maps to an unconstrained dof...
-                        deform0.append(deform[ida[i]])
-                else:
-                        deform0.append(cons[dof][a])
-        
-        return deform0
+    deform0 = []  # initializes the array
+    numD = len(cons)  # this should correspond to the number of dimensions
+
+    for i in range(len(ida)):  # for every part of the id array...
+        a = floor(i/numD)      # the equation number (node #)
+        dof = i%numD           # the degree of freedom number
+        if ida[i] != 'n':      # if 'i' maps to an unconstrained dof...
+            deform0.append(deform[ida[i]])
+        else:
+            deform0.append(cons[dof][a])
+    return deform0
 
 ############################################################################################
 

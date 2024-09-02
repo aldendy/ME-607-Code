@@ -2,9 +2,9 @@
 
 
 import unittest
-from Assignment_1 import get_ien
-from Assignment_8 import solver
-from Assignment_9 import getMises, constrain, contourPlot
+from assignment_1.assignment_1 import get_ien
+from assignment_8.assignment_8 import solver
+from assignment_9.assignment_9 import getMises, constrain, contourPlot
 
 
 ###########################################################################

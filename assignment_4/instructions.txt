@@ -1,0 +1,3 @@
+Assignment 4
+
+Implement 1D, 2D and 3D linear basis functions and derivatives. Evaluate and store them as described in the notes. Write a test which determines if the values are being computed correctly.
