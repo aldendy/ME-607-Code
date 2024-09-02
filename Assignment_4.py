@@ -82,20 +82,20 @@ def b(xi, a):
 # over domain xi (-1, 1).
 
 def oneDBasis(d):
-	intpts = getIntPts(1, d)
+    intpts = getIntPts(1, d)
+
+    # Next, we intialize and fill and array with basis function evaluations at quadrature poins where the
+    # array is indexed by [element location (0 - interior, 1,2,... walls)][int. point #][basis function #]
+    # [0 - function, 1 - df/dxi, 2 - df/deta ...]
+    basis = []  # stores the basis data at each quadrature point
+    for i in range(len(intpts)):  # for each element region...
+        basis.append([])
+        for j in range(len(intpts[i])):  # for each integration point...
+            f1, f1d = b(intpts[i][j][0][0], 0)  # get the function evaluations and derivatives
+            f2, f2d = b(intpts[i][j][0][0], 1)
+            basis[i].append([[f1, f1d], [f2, f2d]])  # assemble
 	
-	# Next, we intialize and fill and array with basis function evaluations at quadrature poins where the
-	# array is indexed by [element location (0 - interior, 1,2,... walls)][int. point #][basis function #]
-	# [0 - function, 1 - df/dxi, 2 - df/deta ...]
-	basis = []  # stores the basis data at each quadrature point
-	for i in range(len(intpts)):  # for each element region...
-                basis.append([])
-                for j in range(len(intpts[i])):  # for each integration point...
-        		f1, f1d = b(intpts[i][j][0][0], 0)  # get the function evaluations and derivatives
-                	f2, f2d = b(intpts[i][j][0][0], 1)
-                        basis[i].append([[f1, f1d], [f2, f2d]])  # assemble
-	
-	return basis
+    return basis
 
 #########################################################
 
