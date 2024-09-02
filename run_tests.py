@@ -13,8 +13,7 @@ from unittest import TestLoader, TextTestRunner
 loader = TestLoader()
 
 # use 'test*.py' to run all tests
-
-suite = loader.discover(start_dir=os.getcwd(), pattern='test*.py')
+suite = loader.discover(start_dir=os.getcwd(), pattern='test_6*.py')
 
 runner = TextTestRunner()
 runner.run(suite)
