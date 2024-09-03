@@ -148,7 +148,8 @@ class MechanicsTest(unittest.TestCase):
                 strain0[3 + (2 + m) % numD] = 0.12
 
                 for i in range(len(strain)):
-                    self.assertAlmostEqual(strain[i][0], strain0[i][0], places=4)
+                    self.assertAlmostEqual(strain[i][0], strain0[i][0],
+                                           places=4)
 
     def test_stressVecSimpleNormal(self):
         nodes = nodeList(1, 1, 1, 1, 1, 1)  # single 3D element
@@ -209,13 +210,11 @@ class MechanicsTest(unittest.TestCase):
                 for i in range(len(strain)):
                     self.assertAlmostEqual(stress[i][0], stress0[i], places=4)
 
-############################################################################
-
-# Another important test that must be run will determine if the internal
-# force vector is assembled properly.
-
 
 class IntForceVectorFuncTest(unittest.TestCase):
+    """Another important test that must be run will determine if the internal
+    force vector is assembled properly."""
+
     # Here, we initialize the variables needed to test the function
     def setUp(self):
         self.b1 = getBasis(1)
@@ -258,12 +257,12 @@ class IntForceVectorFuncTest(unittest.TestCase):
         for i in range(len(ans2)):  # for every component of 'answer'
             self.assertAlmostEqual((ans2[i][0]+1)/(crct2[i][0]+1), 1, 5)
 
-#####################################################################
-
-# Now, we must test the internal force vector assembly process to ensure that it functions properly.
-
 
 class IntForceVecAssemblyTest(unittest.TestCase):
+    """Now, we must test the internal force vector assembly process to ensure
+    that it functions properly.
+    """
+
     # Here, we initialize the necessary variables for the test case
     def setUp(self):
         self.nodes1 = nodeList(1, 1, 1, 1)  # for one dimension...

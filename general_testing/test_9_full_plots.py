@@ -1,5 +1,4 @@
-# In this file, we test the code needed to guarantee full plot flexibility
-
+"""In this file, we test the code needed to guarantee full plot flexibility."""
 
 import unittest
 import copy
@@ -8,15 +7,14 @@ from math import pi, cos, sin
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
 from Assignment_8 import solver
-from Assignment_9 import nsel, constrain, get_stress_sol, contourPlot, getSigmaR
+from Assignment_9 import nsel, constrain, get_stress_sol, getSigmaR
 from Assignment_9 import plotResults
 
 
-##########################################################################
-
-# This first class tests the ability of the stress solution function to operate
-
 class StressSolutionTest(unittest.TestCase):
+    """This first class tests the ability of the stress solution function to
+    operate."""
+
     # Here, we initialize solution dat needed for the tests
     def setUp(self):
         self.numD = [1, 2, 3]  # the number of problem dimensions
@@ -43,9 +41,9 @@ class StressSolutionTest(unittest.TestCase):
         self.loadTxy = copy.deepcopy(self.load3)
         self.loadTxz = copy.deepcopy(self.load3)
         self.loadVM = copy.deepcopy(self.load3)
-        
+
         self.load3[2][0] = [2.0e8, 0, 0]  # load to right end
-        
+
         self.loadTxy[2][0] = [0, 2.0e8, 0]  # shear at the right face
         self.loadTxy[1][0] = [0, -2.0e8, 0]
         self.loadTxy[3][0] = [-2.0e8, 0, 0]
@@ -60,92 +58,91 @@ class StressSolutionTest(unittest.TestCase):
         self.loadVM[2][0] = [-1260.0, 0, 500.0]
         self.loadVM[5][0] = [-500.0, 0, -800.0]
         self.loadVM[6][0] = [500.0, 0, 800.0]
-        
+
         self.ida3, self.ncons3 = getIDArray(self.cons3)
 
     # Now we test the solution process for a 1D problem
     def test_stressSolution1D1Elem(self):
-        result, steps = solver(self.numD[0], self.load1, self.nodes1, self.ien1,
-                               self.ida1, self.ncons1, self.cons1)
-        
+        result, steps = solver(self.numD[0], self.load1, self.nodes1,
+                               self.ien1, self.ida1, self.ncons1, self.cons1)
+
         stress = get_stress_sol(result, self.ien1, self.nodes1, 'sigma_x')
         correct = [2.0e6, 2.0e6]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i])
 
-    # Here, we test the solution process for 3D in every dof (x, y, z, von mises)
+    # Here, test the solution process for 3D in every dof (x, y, z, von mises)
     # first we check sigma_x
     def test_stressSol3D1ElemX(self):
-        result, steps = solver(self.numD[2], self.load3, self.nodes3, self.ien3,
-                               self.ida3, self.ncons3, self.cons3)
+        result, steps = solver(self.numD[2], self.load3, self.nodes3,
+                               self.ien3, self.ida3, self.ncons3, self.cons3)
 
         stress = get_stress_sol(result, self.ien3, self.nodes3, 'sigma_x')
         correct = [2.0e8, 2.0e8, 2.0e8, 2.0e8, 2.0e8, 2.0e8, 2.0e8, 2.0e8]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i], 3)
 
     # Now, check sigma_y
     def test_stressSol3D1ElemY(self):
-        result, steps = solver(self.numD[2], self.load3, self.nodes3, self.ien3,
-                               self.ida3, self.ncons3, self.cons3)
+        result, steps = solver(self.numD[2], self.load3, self.nodes3,
+                               self.ien3, self.ida3, self.ncons3, self.cons3)
 
         stress = get_stress_sol(result, self.ien3, self.nodes3, 'sigma_y')
         correct = 8*[0.0]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i], 3)
 
     # Now, check sigma_z
     def test_stressSol3D1ElemZ(self):
-        result, steps = solver(self.numD[2], self.load3, self.nodes3, self.ien3,
-                               self.ida3, self.ncons3, self.cons3)
+        result, steps = solver(self.numD[2], self.load3, self.nodes3,
+                               self.ien3, self.ida3, self.ncons3, self.cons3)
 
         stress = get_stress_sol(result, self.ien3, self.nodes3, 'sigma_z')
         correct = 8*[0.0]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i], 3)
 
     # Here, check shear in xz
     def test_stressSol3D1ElemXY(self):
-        result, steps = solver(self.numD[2], self.loadTxy, self.nodes3, self.ien3,
-                               self.ida3, self.ncons3, self.cons3)
-        
+        result, steps = solver(self.numD[2], self.loadTxy, self.nodes3,
+                               self.ien3, self.ida3, self.ncons3, self.cons3)
+
         stress = get_stress_sol(result, self.ien3, self.nodes3, 'tau_xy')
         correct = 8*[2.0e8]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i], 3)
 
     # Finally, we verify shear stresses in xz
     def test_stressSol3D1ElemXZ(self):
-        result, steps = solver(self.numD[2], self.loadTxz, self.nodes3, self.ien3,
-                               self.ida3, self.ncons3, self.cons3)
-        
+        result, steps = solver(self.numD[2], self.loadTxz, self.nodes3,
+                               self.ien3, self.ida3, self.ncons3, self.cons3)
+
         stress = get_stress_sol(result, self.ien3, self.nodes3, 'tau_zx')
         correct = 8*[2.0e8]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i], 3)
 
     # Our last major test verifies the von Mises calculations made previously
     def test_stressSol3D1ElemVM(self):
-        result, steps = solver(self.numD[2], self.loadVM, self.nodes3, self.ien3,
-                               self.ida3, self.ncons3, self.cons3)
-        
+        result, steps = solver(self.numD[2], self.loadVM, self.nodes3,
+                               self.ien3, self.ida3, self.ncons3, self.cons3)
+
         stress = get_stress_sol(result, self.ien3, self.nodes3, 'von Mises')
         correct = 8*[1996.4]
-        
+
         for i in range(len(correct)):  # for each node...
             self.assertAlmostEqual(correct[i], stress[i], 1)
 
-########################################################################################
-
-# In this next class, we test the correctness of the plotting process
 
 class contourPlotTest(unittest.TestCase):
+    """In this next class, we test the correctness of the plotting process."""
+
     # first we define important necessary variables
     def setUp(self):
         # Here, we generate the mesh
@@ -158,7 +155,8 @@ class contourPlotTest(unittest.TestCase):
         self.p = -2.0e6  # the pressure (Pa) (against the surface normal)
 
         for i in range(self.nr+1):  # for every node in the r-direction...
-            for j in range(self.nt+1):  # for every node in the theta-direction...
+            # for every node in the theta-direction...
+            for j in range(self.nt+1):
                 radius = i*(self.ro - self.ri)/self.nr + self.ri
                 theta = j*thetaDomain/self.nt
                 self.nodes.append([radius*sin(theta), radius*cos(theta), 0])
@@ -176,14 +174,15 @@ class contourPlotTest(unittest.TestCase):
         for i in range(self.nt):  # for every inner element...
             loads[3][i] = self.p
 
-        self.deform, i = solver(2, loads, self.nodes, self.ien, ida, ncons, cons)
+        self.deform, i = solver(2, loads, self.nodes,
+                                self.ien, ida, ncons, cons)
         self.ps0 = nsel('y', 'n', 0, 0.01, self.nodes)
-    
+
     # Here, we test the plotting process.
     def test_stressPressCylinSol(self):
         E = 2.0e11
         nu = 0.3
-        #c = contourPlot(self.deform, self.ien, self.nodes, 'sigma_t', 'x')
+        # c = contourPlot(self.deform, self.ien, self.nodes, 'sigma_t', 'x')
         c = plotResults(self.deform, self.nodes, self.ps0, [1, 0, 0], 'x')
         r = 1.8
         a = self.p*self.ri**2/(self.ro**2 - self.ri**2)
@@ -203,11 +202,10 @@ class contourPlotTest(unittest.TestCase):
         print('Tangential Stress:', tstress)
         print('Radial def:', ur)
 
-############################################################################
-
-# Here, we test the radial stress function
 
 class getSigmaRTest(unittest.TestCase):
+    """Here, we test the radial stress function."""
+
     # Here, we run a basic test
     def test_getSigmaR2D(self):
         ang1 = (90.0 - 25.7)*pi/180.0
@@ -227,22 +225,3 @@ class getSigmaRTest(unittest.TestCase):
         s = [[4000], [-2000], [3000], [-1000], [400], [1500]]
         num = getSigmaR(pt, s, 'r', [1, 1, 2])
         self.assertAlmostEqual(num, 3066.66666667, 4)
-
-#############################################################################
-
-# Now the testing
-
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(StressSolutionTest)
-Suite2 = unittest.TestLoader().loadTestsFromTestCase(contourPlotTest)
-Suite3 = unittest.TestLoader().loadTestsFromTestCase(getSigmaRTest)
-
-FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
-
-SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(StressSolutionTest('test_stressSolution1D1Elem'))
-
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
-
-
-
-

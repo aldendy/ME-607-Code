@@ -1,5 +1,5 @@
-# In this file, we perform further testing to ensure that the code is functioning as planned
-
+"""In this file, we perform further testing to ensure that the code is
+functioning as planned."""
 
 import unittest
 from Assignment_1 import get_ien
@@ -7,18 +7,16 @@ from Assignment_8 import solver
 from Assignment_9 import getMises, constrain, contourPlot
 
 
-###########################################################################
-
-# In this first class, we test the getMises function
-
 class MisesTest(unittest.TestCase):
+    """In this first class, we test the getMises function."""
+
     # Here, we test multiple 2D stress states
     def test_2DMises(self):
         s1 = [[120.0], [-40.0], [50.0]]
         s2 = [[68.0], [32.0], [0]]
         sm1 = getMises(s1)
         sm2 = getMises(s2)
-        
+
         self.assertAlmostEqual(sm1, 168.226, 2)
         self.assertAlmostEqual(sm2, 58.924, 2)
 
@@ -28,16 +26,15 @@ class MisesTest(unittest.TestCase):
         s2 = [[80.0], [50.0], [20.0], [40.0], [40.0], [40.0]]
         sm1 = getMises(s1)
         sm2 = getMises(s2)
-        
+
         self.assertAlmostEqual(sm1, 224.054, 2)
         self.assertAlmostEqual(sm2, 130.767, 2)
 
-##########################################################################
-
-# Now, we define a tilted element test to ensure that rotation does not
-# affect solutions
 
 class RotatedElementTest(unittest.TestCase):
+    """Now, we define a tilted element test to ensure that rotation does not
+    affect solutions."""
+
     # Here, we set up the problem
     def setUp(self):
         self.nodes = [[1.0, 2.0, 0.0], [2.0, 1.0, 0.0], [2.0, 3.0, 0.0],
@@ -56,17 +53,3 @@ class RotatedElementTest(unittest.TestCase):
     # Here, we simulate a tilted 2D solution
     def test_2DTiltedElement(self):
         c = contourPlot(self.deform, self.ien, self.nodes, 'd_abs', 'z')
-
-##########################################################################
-
-# Now testing
-
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(MisesTest)
-Suite2 = unittest.TestLoader().loadTestsFromTestCase(RotatedElementTest)
-
-FullSuite = unittest.TestSuite([Suite1, Suite2])
-
-SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(MisesTest('test_2DMises'))
-
-unittest.TextTestRunner(verbosity=2).run(FullSuite)

@@ -1,18 +1,17 @@
-# In this file, we create the plots needed to demonstrate the solving capability
-# of the non-linear solver
+"""In this file, we create the plots needed to demonstrate the solving
+capability of the non-linear solver."""
 
 import unittest
-import numpy as np
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
-from Assignment_8 import getFullDVec, solver
+from Assignment_8 import solver
 from Assignment_9 import contourPlot
 
-############################################################################
-
-# Here, we write a class that performs some basic testing for a 3D element
 
 class get3D_Trac_Plot(unittest.TestCase):
+    """Here, we write a class that performs some basic testing for a 3D
+    element."""
+
     # first, define important preliminary data
     def setUp(self):
         self.numD = 3  # the number of problem dimensions
@@ -23,21 +22,23 @@ class get3D_Trac_Plot(unittest.TestCase):
         self.t = 2.0e10  # traction stress
         self.nodes1 = nodeList(self.eLx, self.eLy, self.eLz, enum, enum, enum)
         self.ien1 = get_ien(enum, enum, enum)
-        self.cons1, self.load1 = load_and_cons(enum, len(self.nodes1), self.numD)
-        self.cons2, self.load2 = load_and_cons(enum, len(self.nodes1), self.numD)
+        self.cons1, self.load1 = load_and_cons(enum, len(self.nodes1),
+                                               self.numD)
+        self.cons2, self.load2 = load_and_cons(enum, len(self.nodes1),
+                                               self.numD)
         self.cons1[1][0] = 0.0  # constrain node 0 in all dof
         self.cons1[2][0] = 0.0
         self.cons1[2][2] = 0.0  # prevent rotation about x
         for i in [0, 2, 4, 6]:  # for every constrained node
             self.cons1[0][i] = 0.0
-        
+
         self.load1[2][0] = [self.t, 0, 0]  # load to right end
 
         self.load2[1][0] = [0, -self.t, 0]  # shear xy
         self.load2[2][0] = [0, self.t, 0]
         self.load2[3][0] = [-self.t, 0, 0]
         self.load2[4][0] = [self.t, 0, 0]
-        
+
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
     # Here, we plot the tension 3D stresses
@@ -52,8 +53,8 @@ class get3D_Trac_Plot(unittest.TestCase):
                    0.0, -nn, -nn, dd, -nn, -nn]
 
         selset = [[0, 1, 2, 3], [0], 'z']
-        f = contourPlot(result, self.ien1, self.nodes1, 'd_x', 'z', selset,
-                        [2e11, 0.3], 'yes')
+        contourPlot(result, self.ien1, self.nodes1, 'd_x', 'z', selset,
+                    [2e11, 0.3], 'yes')
         self.assertEqual(0, 0)
 
     # Here, we plot the shear stress results
@@ -68,22 +69,6 @@ class get3D_Trac_Plot(unittest.TestCase):
                    0.0, -nn, -nn, dd, -nn, -nn]
 
         selset = [[0, 1, 2, 3], [0], 'z']
-        f = contourPlot(result, self.ien1, self.nodes1, 'd_x', 'z', selset,
-                        [2e11, 0.3], 'yes')
+        contourPlot(result, self.ien1, self.nodes1, 'd_x', 'z', selset,
+                    [2e11, 0.3], 'yes')
         self.assertEqual(0, 0)
-
-##############################################################################
-
-# now, the testing
-
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(get3D_Trac_Plot)
-
-FullSuite = unittest.TestSuite([Suite1])
-
-SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(get3D_Trac_Plot('test_3DplotShear'))
-
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)
-
-
-

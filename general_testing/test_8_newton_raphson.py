@@ -1,22 +1,18 @@
-# This file tests the netwton-raphson algorithm discussed in the notes
-
+"""This file tests the netwton-raphson algorithm discussed in the notes."""
 
 import unittest
-import numpy as np
 from Assignment_1 import nodeList, get_ien, getIDArray
 from Assignment_2 import load_and_cons
 from Assignment_8 import getFullDVec, solver
 from Assignment_9 import contourPlot
 
 
-######################################################################
-
-# This class tests the operation of the solver using a single element
-# problem as described in Assignment 8. We also perform tests on 2D elements
-# using traction and displacement loads to ensure that 1D elements function
-# properly
-
 class SolverTest1D(unittest.TestCase):
+    """This class tests the operation of the solver using a single element
+    problem as described in Assignment 8. We also perform tests on 2D elements
+    using traction and displacement loads to ensure that 1D elements function
+    properly."""
+
     # In this first function, we test the solver written in Assignment_8
     def setUp(self):
         self.numD = [1, 2, 3]  # the number of problem dimensions
@@ -52,7 +48,7 @@ class SolverTest1D(unittest.TestCase):
         self.cons4[0][0] = 0.0
         self.load4[2][1] = 2.0e6
         self.ida4, self.ncons4 = getIDArray(self.cons4)
-        
+
     # Another important test that we can run handles the merging process
     # between the partial deformation vector and the complete version.
     def test_deformationVectorMerge(self):
@@ -65,52 +61,51 @@ class SolverTest1D(unittest.TestCase):
 
     # Here, we test the 1D solution process for a single element and traction
     def test_solver_1D1Elem(self):
-        result, steps = solver(self.numD[0], self.load1, self.nodes1, self.ien1,
-                               self.ida1, self.ncons1, self.cons1)
-        
+        result, steps = solver(self.numD[0], self.load1, self.nodes1,
+                               self.ien1, self.ida1, self.ncons1, self.cons1)
+
         correct = [0.0, self.load1[2][0][0]/(200e9)]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
     # The next test to run involves applying a traction load to two 1D elements
     def test_solver1D2ElemTrac(self):
-        result, steps = solver(self.numD[0], self.load2, self.nodes2, self.ien2,
-                               self.ida2, self.ncons2, self.cons2)
-        
+        result, steps = solver(self.numD[0], self.load2, self.nodes2,
+                               self.ien2, self.ida2, self.ncons2, self.cons2)
+
         correct = [0.0, 0.5*self.load1[2][0][0]/(200e9),
                    self.load1[2][0][0]/(200e9)]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
     # Now, we perform the same test but with a perscribed displacement on both
     # ends of the two element, 1D problem.
     def test_solver1D2ElemDisp(self):
-        result, steps = solver(self.numD[0], self.load3, self.nodes2, self.ien2,
-                               self.ida3, self.ncons3, self.cons3)
-        
+        result, steps = solver(self.numD[0], self.load3, self.nodes2,
+                               self.ien2, self.ida3, self.ncons3, self.cons3)
+
         correct = [0.0, 5.0e-6, 1.0e-5]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
     # Finally, we test the pressure load case in a 1D problem
     def test_solver1D2ElemPressure(self):
-        result, steps = solver(self.numD[0], self.load4, self.nodes2, self.ien2,
-                               self.ida4, self.ncons4, self.cons4)
-        
+        result, steps = solver(self.numD[0], self.load4, self.nodes2,
+                               self.ien2, self.ida4, self.ncons4, self.cons4)
+
         correct = [0.0, 5.0e-6, 1.0e-5]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
-    
-###############################################################################
 
-# In this class, we implement testing on 2D elements to ensure that they respond
-# properly to different displacement, traction and pressure loads
 
 class SolverTest2D(unittest.TestCase):
+    """Here, we implement testing on 2D elements to ensure that they respond
+    properly to different displacement, traction and pressure loads."""
+
     # Here, we initialize all the variables and arrays that will be needed in
     # the analysis
     def setUp(self):
@@ -123,7 +118,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons1[0][0] = 0.0
         self.cons1[1][0] = 0.0
         self.cons1[0][2] = 0.0
-        
+
         self.load1[2][0] = [3.0e10, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
@@ -133,7 +128,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons2[0][0] = 0.0
         self.cons2[1][0] = 0.0
         self.cons2[1][1] = 0.0
-        
+
         self.load2[4][0] = 2.0e6  # pressure load to the top
         self.ida2, self.ncons2 = getIDArray(self.cons2)
 
@@ -146,7 +141,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons3[1][0] = 0.0
         self.cons3[0][3] = 0.0
         self.cons3[0][6] = 0.0
-        
+
         self.load3[2][1] = [2.0e6, 0, 0]  # load to right end
         self.load3[2][3] = [2.0e6, 0, 0]
         self.ida3, self.ncons3 = getIDArray(self.cons3)
@@ -161,7 +156,7 @@ class SolverTest2D(unittest.TestCase):
         self.cons4[0][5] = 1.0e-1
         self.cons4[0][6] = 0.0
         self.cons4[0][8] = 1.0e-1
-        
+
         self.ida4, self.ncons4 = getIDArray(self.cons4)
 
     # Now, we simulate the deformation behavior
@@ -181,9 +176,9 @@ class SolverTest2D(unittest.TestCase):
         self.load1[0][0] = [2.0e6, 0, 0]  # body force
         result, steps = solver(self.numD, self.load1, self.nodes1, self.ien1,
                                self.ida1, self.ncons1, self.cons1)
-        
+
         correct = [0.0, 0.0, 5.0e-6, 0.0, 0.0, -1.5e-6, 5.0e-6, -1.5e-6]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
@@ -191,9 +186,9 @@ class SolverTest2D(unittest.TestCase):
     def test_2DPress1Elem(self):
         result, steps = solver(self.numD, self.load2, self.nodes1, self.ien1,
                                self.ida2, self.ncons2, self.cons2)
-        
+
         correct = [0.0, 0.0, -0.3e-5, 0.0, 0.0, 1.0e-5, -0.3e-5, 1.0e-5]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
@@ -201,11 +196,11 @@ class SolverTest2D(unittest.TestCase):
     def test_2DTrac4Elem(self):
         result, steps = solver(self.numD, self.load3, self.nodes3, self.ien3,
                                self.ida3, self.ncons3, self.cons3)
-        
+
         correct = [0.0, 0.0, 5.0e-6, 0.0, 1.0e-5, 0.0,
                    0.0, -1.5e-6, 5.0e-6, -1.5e-6, 1.0e-5, -1.5e-6,
                    0.0, -3.0e-6, 5.0e-6, -3.0e-6, 1.0e-5, -3.0e-6]
-        
+
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
@@ -225,11 +220,11 @@ class SolverTest2D(unittest.TestCase):
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1)
 
-##############################################################################
-
-# Here, we write a class that performs some basic testing for a 3D element
 
 class SolverTest3D(unittest.TestCase):
+    """Here, we write a class that performs some basic testing for a 3D
+    element."""
+
     # first, define important preliminary data
     def setUp(self):
         self.numD = 3  # the number of problem dimensions
@@ -247,7 +242,7 @@ class SolverTest3D(unittest.TestCase):
         self.cons1[2][2] = 0.0  # prevent rotation about x
         for i in [0, 2, 4, 6]:  # for every constrained node
             self.cons1[0][i] = 0.0
-        
+
         self.load1[2][0] = [self.t, 0, 0]  # load to right end
         self.ida1, self.ncons1 = getIDArray(self.cons1)
 
@@ -267,18 +262,3 @@ class SolverTest3D(unittest.TestCase):
                     [2e11, 0.3], 'yes')
         for i in range(len(result)):  # for every component...
             self.assertAlmostEqual((result[i] + 1)/(correct[i] + 1), 1, 5)
-
-##############################################################################
-
-# now, the testing
-
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(SolverTest1D)
-Suite2 = unittest.TestLoader().loadTestsFromTestCase(SolverTest2D)
-Suite3 = unittest.TestLoader().loadTestsFromTestCase(SolverTest3D)
-
-FullSuite = unittest.TestSuite([Suite1, Suite2, Suite3])
-
-SingleSuite = unittest.TestSuite()
-SingleSuite.addTest(SolverTest3D('test_3DTrac1Elem'))
-
-unittest.TextTestRunner(verbosity=2).run(SingleSuite)

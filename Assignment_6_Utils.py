@@ -1,6 +1,6 @@
-# In this file, we store various useful functions needed by the internal
-# force calculation in Assignment 6.
-
+"""In this file, we store various useful functions needed by the internal
+force calculation in Assignment 6.
+"""
 
 import numpy as np
 from Assignment_5 import posAndJac, scaling, realN

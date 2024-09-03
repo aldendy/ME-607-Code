@@ -1,12 +1,13 @@
-# In this file, we test the functions and operations in 'Assignment_7' needed
-# to assemble the external force vector
+"""In this file, we test the functions and operations in 'Assignment_7' needed
+to assemble the external force vector."""
 
 import unittest
-from Assignment_1 import *
-from Assignment_2 import *
-from Assignment_5 import *
-from Assignment_6 import *
-from Assignment_7 import *
+
+from Assignment_1 import getIDArray, nodeList, get_ien
+from Assignment_2 import load_and_cons
+from Assignment_4 import getBasis
+from Assignment_7 import integrand, gaussInt, getExtForceVec
+
 
 class BasicTest(unittest.TestCase):
     # We first test the integrand
@@ -14,7 +15,7 @@ class BasicTest(unittest.TestCase):
         basis = []  # a set of all the bases
         for i in range(3):  # for each dimension...
             basis.append(getBasis(i+1))
-        
+
         fj = 2
         jj = 0
         scale = 2
@@ -25,20 +26,21 @@ class BasicTest(unittest.TestCase):
 
         for j in range(3):  # for each 'faj'
             for i in range(len(faj[j])):  # for every item in the array...
-                if i%(j+1) == jj:
-                    self.assertAlmostEqual(faj[j][i], basis[j][0][0][int(i/(j+1))][0]*fj*scale*w)
+                if i % (j+1) == jj:
+                    self.assertAlmostEqual(
+                        faj[j][i], basis[j][0][0][int(i/(j+1))][0]*fj*scale*w)
                 else:
-                    self.assertAlmostEqual(faj[j][i],0.0)
-    
+                    self.assertAlmostEqual(faj[j][i], 0.0)
+
     # This function tests the Gaussian integration process
     def test_gaussInt(self):
         basis = []  # a set of all the bases
         for i in range(3):  # for each dimension...
             basis.append(getBasis(i+1))
-        
+
         fj = 3
         xa0 = [[[0, 0, 0], [1, 0, 0]], [], []]  # 1D
-        for i in range(2):   # generate the 'xa' arrays for a unit cube 
+        for i in range(2):   # generate the 'xa' arrays for a unit cube
             for j in range(2):
                 xa0[1].append([j, i, 0])
         for i in range(2):  # for every dimension...
@@ -48,7 +50,7 @@ class BasicTest(unittest.TestCase):
         scale = [0.5, 0.25, 0.125]
         w = 1
         area = []
-        
+
         for i in range(3):  # for each dimensional basis...
             area.append([])
             for j in range(i+1):  # for each degree of freedom...
@@ -56,14 +58,14 @@ class BasicTest(unittest.TestCase):
 
         for i in range(3):  # for every dimension...
             for j in range(len(area[i])):  # for every degree of fredom...
-                for k in range(len(area[i][j])):  # for every 
-                    if k%(len(area[i])) == j:
+                for k in range(len(area[i][j])):  # for every
+                    if k % (len(area[i])) == j:
                         self.assertAlmostEqual(area[i][j][k], fj*scale[i]*w)
                     else:
                         self.assertAlmostEqual(area[i][j][k], 0.0)
 
-
     # Next, we test integration of a traction force for a boundary
+
     def test_gaussIntTraction(self):
         basis = []  # a set of all the bases
         for i in range(2):  # for 2D and 3D...
@@ -71,15 +73,14 @@ class BasicTest(unittest.TestCase):
 
         hj = 5
         xa0 = [[[0, 0, 0], [1, 0, 0]], [], []]  # 1D
-        for i in range(2):   # generate the 'xa' arrays for a unit cube 
+        for i in range(2):   # generate the 'xa' arrays for a unit cube
             for j in range(2):
                 xa0[1].append([j, i, 0])
         for i in range(2):  # for every dimension...
             for j in range(2):
                 for k in range(2):
                     xa0[2].append([k, j, i])
-                    
-        area = []  # stores the integrals
+
         jj = 0  # degree of freedom number
         s = 4  # the element region
         dim = 2  # the dimension
@@ -88,13 +89,12 @@ class BasicTest(unittest.TestCase):
         for i in range(len(other)):  # for every component of the vector...
             self.assertAlmostEqual(other[i], correct[i])
 
-        
-######################################################################
-
-# Now, we test the external force vector assembly and integration with other load capability
-# implemented in Assignment_2
 
 class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
+    """Now, we test the external force vector assembly and integration with
+    other load capability implemented in Assignment_2.
+    """
+
     # Here, we initialize the necessary load data for the test
     def setUp(self):
         cons2, loads2 = load_and_cons(1, 4, 2)  # one 2D element
@@ -103,7 +103,7 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
         cons2[0][3] = 0
         cons2[1][3] = 0
         self.ida2, self.ncons2 = getIDArray(cons2)
-                
+
         loads2[0][0] = [-1, 0, 0]  # body force
         loads2[2][0] = [1, 0, 0]  # traction force (right face)
         loads2[4][0] = 3
@@ -122,7 +122,7 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
         cons3[2][3] = 0
         cons3[0][6] = 0
         self.ida3, self.ncons3 = getIDArray(cons3)
-        
+
         loads3[0][0] = [0, 0, -4]  # body force
         loads3[2][0] = [1, 0, 0]  # traction force (right face)
         loads3[4][0] = 8
@@ -132,30 +132,20 @@ class ExtForceVecLoadAndAssemblyTest(unittest.TestCase):
 
         self.nodes3 = nodeList(1, 1, 1, 1, 1, 1)
         self.ien3 = get_ien(1, 1, 1)
-        
+
     # Next, we test the force vector generator ability to process loads
     def test_ExtForceVecLoadProcessing2D(self):
         correct = [0.25,  0,   -0.25,  1.5]
         for i in range(len(correct)):  # for every component of 'correct'...
-            self.assertAlmostEqual(getExtForceVec(self.loads2, self.b2, self.nodes2, self.ien2,
-                                                  self.ida2, self.ncons2)[i], correct[i])
+            value = getExtForceVec(self.loads2, self.b2, self.nodes2,
+                                   self.ien2, self.ida2, self.ncons2)[i]
+            self.assertAlmostEqual(value, correct[i])
 
     # Next, we perform this test for a 3D case
     def test_ExtForceVecLoadProcess3D(self):
-        correct = [ 0.25, 0, -0.5, 0, 2, -0.5, 0.5,
-                    0, -0.5, 0.75, 0, -0.5, 2, -0.5, 0.75, 2, -0.5]
-        answer = getExtForceVec(self.loads3, self.b3, self.nodes3, self.ien3, self.ida3, self.ncons3)
+        correct = [0.25, 0, -0.5, 0, 2, -0.5, 0.5,
+                   0, -0.5, 0.75, 0, -0.5, 2, -0.5, 0.75, 2, -0.5]
+        answer = getExtForceVec(self.loads3, self.b3,
+                                self.nodes3, self.ien3, self.ida3, self.ncons3)
         for i in range(len(correct)):  # for every component of 'correct'...
             self.assertAlmostEqual(answer[i], correct[i])
-        
-
-#########################################################################
-
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(BasicTest)
-Suite2 = unittest.TestLoader().loadTestsFromTestCase(ExtForceVecLoadAndAssemblyTest)
-FullSuite = unittest.TestSuite([Suite1, Suite2])
-
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
-
-
-

@@ -1,5 +1,5 @@
-# In this file, we test the ability of the Cauchy stress function to simulate
-# linear stress relationships (small strain)
+"""In this file, we test the ability of the Cauchy stress function to simulate
+linear stress relationships (small strain)."""
 
 import unittest
 from Assignment_1 import nodeList
@@ -7,10 +7,11 @@ from Assignment_4 import getBasis
 from Assignment_5 import posAndJac
 from Assignment_10 import getCauchy
 
-############################################################################
 
-# Here, we test the linear stress small strain capabilities of the function
 class SmallStressStrainCauchyTest(unittest.TestCase):
+    """Here, we test the linear stress small strain capabilities of the
+    function."""
+
     # Here, we test 1D small strain
     def test_1D_Linear_Stress(self):
         ym = 2.0e11  # Young's modulus
@@ -46,17 +47,3 @@ class SmallStressStrainCauchyTest(unittest.TestCase):
 
         for i in range(len(S)):  # for every row...
             self.assertAlmostEqual(S[i][0], correct[i][0], 3)
-
-#############################################################################
-
-# Now the testing
-
-Suite1 = unittest.TestLoader().loadTestsFromTestCase(SmallStressStrainCauchyTest)
-
-FullSuite = unittest.TestSuite([Suite1])
-
-#SingleSuite = unittest.TestSuite()
-#SingleSuite.addTest(TestCauchyStressTensor('test_sigma_3D_1Elem_example'))
-
-unittest.TextTestRunner(verbosity=2).run(FullSuite)
-        
