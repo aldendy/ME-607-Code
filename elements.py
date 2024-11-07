@@ -6,7 +6,7 @@ Created on Sat Sep  7 19:24:15 2024
 """
 
 from math import floor
-from utils import is_scalar
+from utils import is_scalar, domain_names
 
 
 class IntegrationPoint:
@@ -42,14 +42,12 @@ class LinearElement:
     def __init__(self, num_integration_points: int = 1,
                  num_dimensions: int = 1):
         """By default, set the number of integration points to 1."""
-        self.data = {'num_integration_points': num_integration_points,
-                     'num dimensions': num_dimensions}
-        pts = self.get_gaussian_quad_points(num_integration_points,
-                                              num_dimensions)
-        self.data['integration points'] = pts
+        self.__data = {'num quad points': num_integration_points,
+                       'num dimensions': num_dimensions}
+        self.__data['element quad points'] = self.__element_quad_points()
 
-    def get_gaussian_quad_points(self, num_points: int = 1,
-                                 num_dimensions: int = 1) -> dict:
+    @staticmethod
+    def quad_points(num_points: int = 1, num_dimensions: int = 1) -> dict:
         """Return a dictionary where the keys are integers beginning with '0'
         and the values are integration point objects for the element dimension
         and number of quadrature points in a single dimension. The integration
@@ -57,7 +55,11 @@ class LinearElement:
         etc."""
         if num_points == 1:  # for a single integration point...
             points = [0]
-            weights = [2]
+            if num_dimensions == 0:
+                # if we integrate at the boundary of a 1D line...
+                weights = [1]
+            else:
+                weights = [2]
         elif num_points == 2:  # for two integration points...
             points = [-1/3**0.5, 1/3**0.5]
             weights = [1, 1]
@@ -97,8 +99,30 @@ class LinearElement:
                 quad_pnts[number] = IntegrationPoint([xi, nu, ze], weight)
         return quad_pnts
 
-    def assemble_element_quad_points(self):
+    def __element_quad_points(self) -> dict[dict[IntegrationPoint]]:
         """This method assembles the quadrature points into a single dictionary
         where the keys are the domain number (0, 1, 2 ...) and the values are
         dictionaries of integration points."""
-        pass
+        elem_quad_points = {}
+        num = self.__data['num quad points']
+        if self.__data['num dimensions'] == 1:
+            elem_quad_points[] = self.quad_points(num, 1)
+            elem_quad_points['left bound'] = self.quad_points(num, 0)
+            elem_quad_points['right bound'] = self.quad_points(num, 0)
+        elif self.__data['num dimensions'] == 2:
+            elem_quad_points['interior'] = self.quad_points(num, 2)
+            elem_quad_points['left bound'] = self.quad_points(num, 1)
+            elem_quad_points['bottom bound'] = self.quad_points(num, 1)
+            elem_quad_points['right bound'] = self.quad_points(num, 1)
+            elem_quad_points['top bound'] = self.quad_points(num, 1)
+        elif self.__data['num dimensions'] == 3:
+            elem_quad_points['interior'] = self.quad_points(num, 3)
+            for name in domain_names.three_d:
+                elem_quad_points[name] = self.quad_points(num, 2)
+        return elem_quad_points
+
+    @property
+    def element_quad_points(self) -> dict[dict[IntegrationPoint]]:
+        """Return a dictionary of dictionaries of integration point objects
+        grouped by element region."""
+        return self.__data['element quad points']
